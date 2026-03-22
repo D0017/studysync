@@ -7,6 +7,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import com.StudySync.backend.dto.LoginRequest;
 import com.StudySync.backend.dto.AuthResponse;
+import java.util.List;
 
 @Service
 public class UserService {
@@ -44,5 +45,16 @@ public class UserService {
                 user.getRole().name(),
                 user.getUniversityId()
         );
+    }
+    public List<User> getAllUsers() {
+        return userRepository.findAll();
+    }
+
+    public User updateUserRole(Long id, User.Role role) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
+
+        user.setRole(role);
+        return userRepository.save(user);
     }
 }

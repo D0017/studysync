@@ -33,4 +33,20 @@ public class UserController {
             return ResponseEntity.status(401).body(e.getMessage());
         }
     }
+    // Get all users for the management table
+    @GetMapping("/all")
+    public ResponseEntity<?> getAllUsers() {
+        return ResponseEntity.ok(userService.getAllUsers());
+    }
+
+    // Update a user's role
+    @PutMapping("/{id}/role")
+    public ResponseEntity<?> updateUserRole(@PathVariable Long id, @RequestBody String newRole) {
+        try {
+            String roleStr = newRole.replace("\"", "");
+            return ResponseEntity.ok(userService.updateUserRole(id, User.Role.valueOf(roleStr)));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Invalid Role or User ID");
+        }
+    }
 }
