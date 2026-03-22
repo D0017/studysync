@@ -15,11 +15,23 @@ const Register = () => {
 
     const validate = () => {
         let tempErrors = {};
-        if (!formData.universityId) tempErrors.universityId = "University ID is required";
+        // EXACT 8 CHARACTERS VALIDATION
+        if (!formData.universityId) {
+            tempErrors.universityId = "University ID is required";
+        } else if (formData.universityId.length !== 8) {
+            tempErrors.universityId = "University ID must be exactly 8 characters";
+        }
+
         if (!formData.fullName) tempErrors.fullName = "Full Name is required";
         if (!/\S+@\S+\.\S+/.test(formData.email)) tempErrors.email = "Invalid email format";
-        if (formData.password.length < 8) tempErrors.password = "Minimum 8 characters required";
-        if (formData.password !== formData.confirmPassword) tempErrors.confirmPassword = "Passwords do not match";
+        
+        // PASSWORD STRENGTH VALIDATION
+        if (formData.password.length < 8) {
+            tempErrors.password = "Password must be at least 8 characters";
+        }
+        if (formData.password !== formData.confirmPassword) {
+            tempErrors.confirmPassword = "Passwords do not match";
+        }
         
         setErrors(tempErrors);
         return Object.keys(tempErrors).length === 0;
@@ -30,7 +42,6 @@ const Register = () => {
         setServerMessage({ type: '', text: '' });
         
         if (validate()) {
-        
             const { confirmPassword: _, ...dataToSend } = formData; 
             try {
                 await registerUser(dataToSend);
@@ -38,7 +49,7 @@ const Register = () => {
                 setFormData({ universityId: '', fullName: '', email: '', password: '', confirmPassword: '', role: 'STUDENT' });
                 setErrors({});
             } catch (err) {
-                setServerMessage({ type: 'error', text: typeof err === 'string' ? err : 'Validation failed on server' });
+                setServerMessage({ type: 'error', text: typeof err === 'string' ? err : 'Server connection failed' });
             }
         }
     };
@@ -52,26 +63,26 @@ const Register = () => {
         <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
             <div className="bg-white p-8 rounded-xl shadow-lg w-full max-w-md border border-gray-100">
                 <h2 className="text-3xl font-extrabold mb-2 text-gray-900 text-center">Join StudySync</h2>
-                <p className="text-gray-500 text-center mb-8 text-sm">Create your account to start collaborating</p>
+                <p className="text-gray-500 text-center mb-8 text-sm">Create your secured account</p>
                 
                 <form onSubmit={handleSubmit} className="space-y-5">
                     <div>
                         <label className="block text-xs font-bold text-gray-600 uppercase mb-1">Full Name</label>
-                        <input type="text" className={inputClass('fullName')} placeholder="Enter your full name"
+                        <input type="text" className={inputClass('fullName')} placeholder="Enter full name"
                                value={formData.fullName} onChange={(e) => setFormData({...formData, fullName: e.target.value})} />
                         {errors.fullName && <p className="text-red-500 text-xs mt-1">{errors.fullName}</p>}
                     </div>
 
                     <div>
-                        <label className="block text-xs font-bold text-gray-600 uppercase mb-1">University ID</label>
-                        <input type="text" className={inputClass('universityId')} placeholder="e.g. IT23774384"
+                        <label className="block text-xs font-bold text-gray-600 uppercase mb-1">University ID (8 Digits)</label>
+                        <input type="text" className={inputClass('universityId')} placeholder="e.g. XXXXXXXX"
                                value={formData.universityId} onChange={(e) => setFormData({...formData, universityId: e.target.value})} />
                         {errors.universityId && <p className="text-red-500 text-xs mt-1">{errors.universityId}</p>}
                     </div>
 
                     <div>
-                        <label className="block text-xs font-bold text-gray-600 uppercase mb-1">Campus Email</label>
-                        <input type="email" className={inputClass('email')} placeholder="name@campus.edu"
+                        <label className="block text-xs font-bold text-gray-600 uppercase mb-1"> Email</label>
+                        <input type="email" className={inputClass('email')} placeholder="id@uni.edu"
                                value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} />
                         {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
                     </div>
@@ -89,12 +100,12 @@ const Register = () => {
                         </div>
                     </div>
                     {(errors.password || errors.confirmPassword) && (
-                        <p className="text-red-500 text-xs">{errors.password || errors.confirmPassword}</p>
+                        <p className="text-red-500 text-xs mt-1">{errors.password || errors.confirmPassword}</p>
                     )}
 
                     <div>
                         <label className="block text-xs font-bold text-gray-600 uppercase mb-1">Account Type</label>
-                        <select className="w-full p-2.5 border border-gray-300 rounded-lg text-sm bg-white focus:ring-1 focus:ring-blue-500" 
+                        <select className="w-full p-2.5 border border-gray-300 rounded-lg text-sm bg-white" 
                                 value={formData.role} onChange={(e) => setFormData({...formData, role: e.target.value})}>
                             <option value="STUDENT">Student</option>
                             <option value="LECTURER">Lecturer</option>

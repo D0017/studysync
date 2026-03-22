@@ -14,7 +14,7 @@ public class User {
     private Long id;
 
     @NotBlank(message = "University ID is required")
-    @Pattern(regexp = "^[A-Za-z0-9]{3,15}$", message = "University ID must be 3-15 alphanumeric characters")
+    @Pattern(regexp = "^[A-Za-z0-9]{8}$", message = "University ID must be exactly 8 alphanumeric characters")
     @Column(nullable = false, unique = true)
     private String universityId;
 
