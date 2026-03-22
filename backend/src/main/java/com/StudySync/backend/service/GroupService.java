@@ -95,4 +95,30 @@ public class GroupService {
 
         return "Leadership request sent to admin.";
     }
+
+    // ADMIN FUNCTION: CREATE MODULE & EMPTY GROUPS
+
+    @Transactional
+    public String createModuleWithGroups(StudyModule moduleRequest, int numberOfGroups) {
+
+        // Save the new Module
+        StudyModule savedModule = studyModuleRepository.save(moduleRequest);
+
+        // Loop to generate the empty slots
+
+        for (int i = 1; i <= numberOfGroups; i++) {
+            ProjectGroup group = new ProjectGroup();
+
+            // Automatically names assign
+            String groupNumber = String.format("%02d", i);
+            group.setGroupName(savedModule.getModuleCode() + "_Group_" + groupNumber);
+
+            group.setModule(savedModule);
+            group.setMaxCapacity(5);
+
+            projectGroupRepository.save(group);
+        }
+
+        return "Successfully created module " + savedModule.getModuleCode() + " with " + numberOfGroups + " empty groups.";
+    }
 }
