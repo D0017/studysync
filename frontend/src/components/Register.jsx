@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { registerUser } from '../services/userService';
+import { Link } from 'react-router-dom';
 
 const Register = () => {
     const [formData, setFormData] = useState({
@@ -15,7 +16,7 @@ const Register = () => {
 
     const validate = () => {
         let tempErrors = {};
-        // EXACT 8 CHARACTERS VALIDATION
+        
         if (!formData.universityId) {
             tempErrors.universityId = "University ID is required";
         } else if (formData.universityId.length !== 8) {
@@ -25,7 +26,7 @@ const Register = () => {
         if (!formData.fullName) tempErrors.fullName = "Full Name is required";
         if (!/\S+@\S+\.\S+/.test(formData.email)) tempErrors.email = "Invalid email format";
         
-        // PASSWORD STRENGTH VALIDATION
+   
         if (formData.password.length < 8) {
             tempErrors.password = "Password must be at least 8 characters";
         }
@@ -116,6 +117,9 @@ const Register = () => {
                         Create Account
                     </button>
                 </form>
+                    <p className="mt-6 text-center text-sm text-gray-600">
+                        Already have an account? <Link to="/login" className="text-blue-600 font-bold hover:underline">Sign In</Link>
+                    </p>
 
                 {serverMessage.text && (
                     <div className={`mt-6 p-4 rounded-lg text-sm font-medium text-center ${serverMessage.type === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
