@@ -3,12 +3,13 @@ import Register from './components/Register';
 import Login from './components/Login';
 import CreateModule from './components/CreateModule';
 import AdminUserManagement from './components/AdminUserManagement';
+import StudentDashboard from './components/StudentDashboard';
+import ModuleGroups from './components/ModuleGroups';
 
 function App() {
   return (
     <Router>
       <div className="min-h-screen bg-gray-50">
-        {/* Simple Navigation Bar */}
         <nav className="bg-white shadow-sm p-4 flex justify-between items-center">
           <h1 className="text-xl font-bold text-blue-600">StudySync</h1>
           <div className="space-x-4">
@@ -19,7 +20,6 @@ function App() {
           </div>
         </nav>
 
-        {/* Route Definitions */}
         <Routes>
           <Route path="/" element={
             <div className="text-center mt-20">
@@ -27,11 +27,13 @@ function App() {
               <p className="mt-4 text-gray-600">Academic Group & Learning Management System</p>
             </div>
           } />
-          
+
           <Route path="/register" element={<Register />} />
           <Route path="/login" element={<Login />} />
           <Route path="/admin/create-module" element={<CreateModule />} />
           <Route path="/admin-dashboard" element={<AdminUserManagement />} />
+          <Route path="/student-dashboard" element={<StudentDashboard />} />
+          <Route path="/student/modules/:moduleId" element={<ModuleGroups />} />
         </Routes>
       </div>
     </Router>

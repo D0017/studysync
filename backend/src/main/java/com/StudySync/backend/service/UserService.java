@@ -40,6 +40,7 @@ public class UserService {
         }
 
         return new AuthResponse(
+                user.getId(),
                 user.getFullName(),
                 user.getEmail(),
                 user.getRole().name(),
