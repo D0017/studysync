@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import Register from './components/Register';
 import Login from './components/Login';
 import CreateModule from './components/CreateModule';
+import AdminUserManagement from './components/AdminUserManagement';
 
 function App() {
   return (
@@ -30,6 +31,7 @@ function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/login" element={<Login />} />
           <Route path="/admin/create-module" element={<CreateModule />} />
+          <Route path="/admin-dashboard" element={<AdminUserManagement />} />
         </Routes>
       </div>
     </Router>
