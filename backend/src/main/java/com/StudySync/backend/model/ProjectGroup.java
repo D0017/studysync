@@ -1,5 +1,6 @@
 package com.StudySync.backend.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -21,6 +22,7 @@ public class ProjectGroup {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "module_id", nullable = false)
+    @JsonIgnore
     private StudyModule module;
 
     @Column(nullable = false)
@@ -38,7 +40,6 @@ public class ProjectGroup {
     @JoinColumn(name = "leader_id")
     private User leader;
 
-    // Tracks the user who clicked "Request to be Group Leader"
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "requested_leader_id")
     private User requestedLeader;

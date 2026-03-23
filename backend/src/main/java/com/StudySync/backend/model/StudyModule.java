@@ -1,5 +1,6 @@
 package com.StudySync.backend.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -29,5 +30,6 @@ public class StudyModule {
     private String enrollmentKey;
 
     @OneToMany(mappedBy = "module", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
     private List<ProjectGroup> projectGroups = new ArrayList<>();
 }
