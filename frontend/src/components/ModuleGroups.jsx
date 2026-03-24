@@ -215,6 +215,15 @@ const ModuleGroups = () => {
                                             >
                                                 Request Leadership
                                             </button>
+
+                                            {joined && (
+                                                <button
+                                                    onClick={() => navigate(`/groups/${group.id}/project`)}
+                                                    className="px-4 py-2 rounded-lg font-semibold text-white transition bg-emerald-600 hover:bg-emerald-700"
+                                                >
+                                                    Open Project Board
+                                                </button>
+                                            )}
                                         </div>
                                     </div>
                                 );

@@ -5,6 +5,7 @@ import CreateModule from './components/CreateModule';
 import AdminUserManagement from './components/AdminUserManagement';
 import StudentDashboard from './components/StudentDashboard';
 import ModuleGroups from './components/ModuleGroups';
+import GroupProjectBoard from './components/projectmanagement/GroupProjectBoard';
 
 function App() {
   return (
@@ -34,6 +35,7 @@ function App() {
           <Route path="/admin-dashboard" element={<AdminUserManagement />} />
           <Route path="/student-dashboard" element={<StudentDashboard />} />
           <Route path="/student/modules/:moduleId" element={<ModuleGroups />} />
+          <Route path="/groups/:groupId/project" element={<GroupProjectBoard />} />
         </Routes>
       </div>
     </Router>
