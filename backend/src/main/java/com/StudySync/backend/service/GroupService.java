@@ -9,6 +9,8 @@ import com.StudySync.backend.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.StudySync.backend.dto.LeadershipRequestResponse;
+import java.util.stream.Collectors;
 
 import java.util.List;
 
@@ -243,5 +245,51 @@ public class GroupService {
     @Transactional(readOnly = true)
     public List<StudyModule> getAllModules() {
         return studyModuleRepository.findAll();
+    }
+
+    @Transactional(readOnly = true)
+    public List<LeadershipRequestResponse> getPendingLeadershipRequests() {
+        List<ProjectGroup> pendingGroups = projectGroupRepository.findByRequestedLeaderIsNotNullAndLeaderIsNull();
+
+        return pendingGroups.stream()
+                .map(group -> new LeadershipRequestResponse(
+                        group.getId(),
+                        group.getGroupName(),
+                        group.getModule().getId(),
+                        group.getModule().getModuleCode(),
+                        group.getModule().getModuleName(),
+                        group.getRequestedLeader().getId(),
+                        group.getRequestedLeader().getFullName(),
+                        group.getRequestedLeader().getUniversityId(),
+                        group.getCurrentMembers().size(),
+                        group.getMaxCapacity()
+                ))
+                .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public String approveLeadershipRequest(Long groupId) {
+        ProjectGroup group = projectGroupRepository.findById(groupId)
+                .orElseThrow(() -> new RuntimeException("Group not found."));
+
+        if (group.getLeader() != null) {
+            throw new RuntimeException("This group already has an approved leader.");
+        }
+
+        if (group.getRequestedLeader() == null) {
+            throw new RuntimeException("No pending leadership request found for this group.");
+        }
+
+        User requestedStudent = group.getRequestedLeader();
+
+        if (!group.getCurrentMembers().contains(requestedStudent)) {
+            throw new RuntimeException("Requested student is not a member of this group.");
+        }
+
+        group.setLeader(requestedStudent);
+        group.setRequestedLeader(null);
+        projectGroupRepository.save(group);
+
+        return requestedStudent.getFullName() + " has been approved as leader of " + group.getGroupName() + ".";
     }
 }
