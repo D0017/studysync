@@ -162,12 +162,20 @@ const GroupProjectBoard = () => {
                         <p className="text-gray-500 mt-1">Manage project issues for your existing group.</p>
                     </div>
 
-                    <button
-                        onClick={() => navigate(-1)}
-                        className="bg-gray-700 hover:bg-gray-800 text-white px-4 py-2 rounded-lg font-semibold transition"
-                    >
-                        Back
-                    </button>
+                    <div className="flex gap-3">
+                        <button
+                            onClick={() => navigate(`/groups/${groupId}/jira-board`)}
+                            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold transition"
+                        >
+                            📊 Jira Board
+                        </button>
+                        <button
+                            onClick={() => navigate(-1)}
+                            className="bg-gray-700 hover:bg-gray-800 text-white px-4 py-2 rounded-lg font-semibold transition"
+                        >
+                            Back
+                        </button>
+                    </div>
                 </div>
 
                 {message.text && (
