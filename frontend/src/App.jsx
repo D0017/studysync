@@ -10,8 +10,14 @@ import AdminModuleDetails from './components/AdminModuleDetails';
 import LeadershipRequests from './components/LeadershipRequests';
 import StudentDashboard from './components/StudentDashboard';
 import ModuleGroups from './components/ModuleGroups';
-import LecturerDashboard from './components/LecturerDashboard';
 import ProtectedRoute from './components/ProtectedRoute';
+import LecturerDashboard from './components/LecturerDashboard';
+import LecturerLayout from './components/lecturer/LecturerLayout';
+import LecturerNotices from './components/lecturer/LecturerNotices';
+import LecturerVivaSchedule from './components/lecturer/LecturerVivaSchedule';
+import LecturerEvaluations from './components/lecturer/LecturerEvaluations';
+import LecturerAssignments from './components/lecturer/LecturerAssignments';
+import LecturerModules from './components/lecturer/LecturerModules';
 
 function AppContent() {
   const location = useLocation();
@@ -19,7 +25,8 @@ function AppContent() {
   const hideTopNavbar =
     location.pathname.startsWith('/admin') ||
     location.pathname.startsWith('/student') ||
-    location.pathname.startsWith('/lecturer');
+    location.pathname.startsWith('/lecturer') ||
+    location.pathname === '/lecturer-dashboard'; 
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -81,7 +88,14 @@ function AppContent() {
 
         {/* Lecturer routes */}
         <Route element={<ProtectedRoute allowedRoles={['LECTURER']} />}>
-          <Route path="/lecturer-dashboard" element={<LecturerDashboard />} />
+          <Route element={<LecturerLayout />}>
+            <Route path="/lecturer-dashboard" element={<LecturerDashboard />} />
+            <Route path="/lecturer/notices" element={<LecturerNotices />} />
+            <Route path="/lecturer/viva-schedule" element={<LecturerVivaSchedule />} />
+            <Route path="/lecturer/evaluations" element={<LecturerEvaluations />} />
+            <Route path="/lecturer/assignments" element={<LecturerAssignments />} />
+            <Route path="/lecturer/modules" element={<LecturerModules />} />
+          </Route>
         </Route>
       </Routes>
     </div>
