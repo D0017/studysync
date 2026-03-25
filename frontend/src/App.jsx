@@ -11,6 +11,8 @@ import StudentDashboard from './components/StudentDashboard';
 import ModuleGroups from './components/ModuleGroups';
 import LecturerDashboard from './components/LecturerDashboard';
 import ProtectedRoute from './components/ProtectedRoute';
+import ResourceLibrary from "./components/resources/ResourceLibrary";
+import UploadResource from "./components/resources/UploadResource";
 
 function App() {
   return (
@@ -66,7 +68,13 @@ function App() {
           <Route element={<ProtectedRoute allowedRoles={['LECTURER']} />}>
             <Route path="/lecturer-dashboard" element={<LecturerDashboard />} />
           </Route>
+
+          <Route path="/resources" element={<ResourceLibrary />} />
+          <Route path="/upload-resource" element={<UploadResource />} />
+
         </Routes>
+  
+
       </div>
     </Router>
   );
