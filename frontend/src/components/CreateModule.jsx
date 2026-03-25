@@ -1,6 +1,16 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 
+const getErrorMessage = (error, fallback) => {
+    const data = error?.response?.data;
+
+    if (typeof data === 'string') return data;
+    if (data?.message) return data.message;
+    if (data?.error) return data.error;
+
+    return fallback;
+};
+
 const CreateModule = () => {
     const [moduleData, setModuleData] = useState({
         moduleCode: '',
@@ -38,18 +48,31 @@ const CreateModule = () => {
         if (!moduleData.moduleCode.trim()) {
             return 'Module code is required.';
         }
+
         if (!moduleData.moduleName.trim()) {
             return 'Module name is required.';
         }
+
         if (!moduleData.enrollmentKey.trim()) {
             return 'Enrollment key is required.';
         }
+
+        if (moduleData.year <= 0) {
+            return 'Year must be greater than 0.';
+        }
+
+        if (moduleData.semester <= 0) {
+            return 'Semester must be greater than 0.';
+        }
+
         if (groupData.numberOfGroups <= 0) {
             return 'Number of groups must be greater than 0.';
         }
+
         if (groupData.maxCapacity <= 0) {
             return 'Max capacity must be greater than 0.';
         }
+
         return null;
     };
 
@@ -81,13 +104,11 @@ const CreateModule = () => {
         try {
             setLoading(true);
 
-            // Create module
-            const moduleResponse = await axios.post('http://localhost:8090/api/admin/modules', moduleData);
+            const moduleResponse = await axios.post('/api/admin/modules', moduleData);
             const createdModule = moduleResponse.data;
 
-            // Create groups for modules
             const groupsResponse = await axios.post(
-                `http://localhost:8090/api/admin/modules/${createdModule.id}/groups`,
+                `/api/admin/modules/${createdModule.id}/groups`,
                 groupData
             );
 
@@ -100,110 +121,140 @@ const CreateModule = () => {
         } catch (error) {
             console.error('Create module/groups failed:', error);
 
-            const errorMessage =
-                error.response?.data ||
-                'Something went wrong while creating module and groups.';
-
-            setMessage({ type: 'error', text: errorMessage });
+            setMessage({
+                type: 'error',
+                text: getErrorMessage(
+                    error,
+                    'Something went wrong while creating module and groups.'
+                )
+            });
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 p-6">
-            <div className="max-w-3xl mx-auto bg-white rounded-2xl shadow-lg border border-gray-100 p-8">
-                <h1 className="text-3xl font-bold text-gray-900 mb-2">Create Module</h1>
-                <p className="text-gray-500 mb-8">
+        <div>
+            {/* Header */}
+            <div className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-2xl p-6 md:p-7 mb-6">
+                <p className="text-xs uppercase tracking-[0.2em] text-cyan-300 font-semibold">
+                    Admin Management
+                </p>
+                <h2 className="mt-2 text-2xl md:text-3xl font-black text-white">
+                    Create Module
+                </h2>
+                <p className="mt-2 text-sm md:text-base text-slate-300">
                     Create a module first, then generate empty groups for students to join.
                 </p>
+            </div>
 
-                <form onSubmit={handleSubmit} className="space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-1">
-                                Module Code
-                            </label>
-                            <input
-                                type="text"
-                                name="moduleCode"
-                                value={moduleData.moduleCode}
-                                onChange={handleModuleChange}
-                                placeholder="e.g. IT3040"
-                                className="w-full border border-gray-300 rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-500"
-                                required
-                            />
-                        </div>
+            {/* Message */}
+            {message.text && (
+                <div
+                    className={`mb-6 rounded-2xl border p-4 text-sm font-medium ${
+                        message.type === 'success'
+                            ? 'border-green-400/20 bg-green-500/10 text-green-300'
+                            : 'border-red-400/20 bg-red-500/10 text-red-300'
+                    }`}
+                >
+                    {message.text}
+                </div>
+            )}
 
-                        <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-1">
-                                Module Name
-                            </label>
-                            <input
-                                type="text"
-                                name="moduleName"
-                                value={moduleData.moduleName}
-                                onChange={handleModuleChange}
-                                placeholder="e.g. Software Engineering"
-                                className="w-full border border-gray-300 rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-500"
-                                required
-                            />
-                        </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-1">
-                                Year
-                            </label>
-                            <input
-                                type="number"
-                                name="year"
-                                min="1"
-                                value={moduleData.year}
-                                onChange={handleModuleChange}
-                                className="w-full border border-gray-300 rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-500"
-                                required
-                            />
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-1">
-                                Semester
-                            </label>
-                            <input
-                                type="number"
-                                name="semester"
-                                min="1"
-                                value={moduleData.semester}
-                                onChange={handleModuleChange}
-                                className="w-full border border-gray-300 rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-500"
-                                required
-                            />
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-1">
-                                Enrollment Key
-                            </label>
-                            <input
-                                type="text"
-                                name="enrollmentKey"
-                                value={moduleData.enrollmentKey}
-                                onChange={handleModuleChange}
-                                placeholder="e.g. MATH2026"
-                                className="w-full border border-gray-300 rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-500"
-                                required
-                            />
-                        </div>
-                    </div>
-
-                    <div className="border-t pt-6">
-                        <h2 className="text-xl font-semibold text-gray-800 mb-4">Group Settings</h2>
+            {/* Form */}
+            <div className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-xl p-6 md:p-8">
+                <form onSubmit={handleSubmit} className="space-y-8">
+                    {/* Module Details */}
+                    <div>
+                        <h3 className="text-lg font-bold text-white mb-4">Module Details</h3>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-1">
+                                <label className="block text-sm font-semibold text-slate-200 mb-2">
+                                    Module Code
+                                </label>
+                                <input
+                                    type="text"
+                                    name="moduleCode"
+                                    value={moduleData.moduleCode}
+                                    onChange={handleModuleChange}
+                                    placeholder="e.g. IT3040"
+                                    className="w-full rounded-2xl border border-white/10 bg-slate-900/70 px-4 py-3 text-white placeholder:text-slate-500 outline-none focus:ring-2 focus:ring-cyan-400"
+                                    required
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-semibold text-slate-200 mb-2">
+                                    Module Name
+                                </label>
+                                <input
+                                    type="text"
+                                    name="moduleName"
+                                    value={moduleData.moduleName}
+                                    onChange={handleModuleChange}
+                                    placeholder="e.g. Software Engineering"
+                                    className="w-full rounded-2xl border border-white/10 bg-slate-900/70 px-4 py-3 text-white placeholder:text-slate-500 outline-none focus:ring-2 focus:ring-cyan-400"
+                                    required
+                                />
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                            <div>
+                                <label className="block text-sm font-semibold text-slate-200 mb-2">
+                                    Year
+                                </label>
+                                <input
+                                    type="number"
+                                    name="year"
+                                    min="1"
+                                    value={moduleData.year}
+                                    onChange={handleModuleChange}
+                                    className="w-full rounded-2xl border border-white/10 bg-slate-900/70 px-4 py-3 text-white outline-none focus:ring-2 focus:ring-cyan-400"
+                                    required
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-semibold text-slate-200 mb-2">
+                                    Semester
+                                </label>
+                                <input
+                                    type="number"
+                                    name="semester"
+                                    min="1"
+                                    value={moduleData.semester}
+                                    onChange={handleModuleChange}
+                                    className="w-full rounded-2xl border border-white/10 bg-slate-900/70 px-4 py-3 text-white outline-none focus:ring-2 focus:ring-cyan-400"
+                                    required
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-semibold text-slate-200 mb-2">
+                                    Enrollment Key
+                                </label>
+                                <input
+                                    type="text"
+                                    name="enrollmentKey"
+                                    value={moduleData.enrollmentKey}
+                                    onChange={handleModuleChange}
+                                    placeholder="e.g. MATH2026"
+                                    className="w-full rounded-2xl border border-white/10 bg-slate-900/70 px-4 py-3 text-white placeholder:text-slate-500 outline-none focus:ring-2 focus:ring-cyan-400"
+                                    required
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Group Settings */}
+                    <div className="border-t border-white/10 pt-8">
+                        <h3 className="text-lg font-bold text-white mb-4">Group Settings</h3>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-sm font-semibold text-slate-200 mb-2">
                                     Number of Groups
                                 </label>
                                 <input
@@ -212,13 +263,13 @@ const CreateModule = () => {
                                     min="1"
                                     value={groupData.numberOfGroups}
                                     onChange={handleGroupChange}
-                                    className="w-full border border-gray-300 rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-500"
+                                    className="w-full rounded-2xl border border-white/10 bg-slate-900/70 px-4 py-3 text-white outline-none focus:ring-2 focus:ring-cyan-400"
                                     required
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-1">
+                                <label className="block text-sm font-semibold text-slate-200 mb-2">
                                     Max Capacity Per Group
                                 </label>
                                 <input
@@ -227,37 +278,37 @@ const CreateModule = () => {
                                     min="1"
                                     value={groupData.maxCapacity}
                                     onChange={handleGroupChange}
-                                    className="w-full border border-gray-300 rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-500"
+                                    className="w-full rounded-2xl border border-white/10 bg-slate-900/70 px-4 py-3 text-white outline-none focus:ring-2 focus:ring-cyan-400"
                                     required
                                 />
                             </div>
                         </div>
                     </div>
 
-                    <button
-                        type="submit"
-                        disabled={loading}
-                        className={`w-full py-3 rounded-lg font-bold text-white transition ${
-                            loading
-                                ? 'bg-blue-400 cursor-not-allowed'
-                                : 'bg-blue-600 hover:bg-blue-700'
-                        }`}
-                    >
-                        {loading ? 'Creating...' : 'Create Module & Groups'}
-                    </button>
-                </form>
+                    {/* Submit */}
+                    <div className="flex flex-col sm:flex-row gap-3">
+                        <button
+                            type="submit"
+                            disabled={loading}
+                            className={`rounded-2xl px-6 py-3 text-sm font-bold text-white shadow-lg transition ${
+                                loading
+                                    ? 'bg-blue-400 cursor-not-allowed'
+                                    : 'bg-linear-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400'
+                            }`}
+                        >
+                            {loading ? 'Creating...' : 'Create Module & Groups'}
+                        </button>
 
-                {message.text && (
-                    <div
-                        className={`mt-6 p-4 rounded-lg text-sm font-medium ${
-                            message.type === 'success'
-                                ? 'bg-green-50 text-green-700 border border-green-200'
-                                : 'bg-red-50 text-red-700 border border-red-200'
-                        }`}
-                    >
-                        {message.text}
+                        <button
+                            type="button"
+                            onClick={resetForm}
+                            disabled={loading}
+                            className="rounded-2xl border border-white/10 bg-white/10 px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/20 disabled:opacity-50"
+                        >
+                            Reset
+                        </button>
                     </div>
-                )}
+                </form>
             </div>
         </div>
     );
