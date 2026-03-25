@@ -54,7 +54,7 @@ const AdminModules = () => {
                             Module Management
                         </h2>
                         <p className="mt-2 text-sm md:text-base text-slate-300">
-                            View all created modules and move into group-level management.
+                            View created modules, inspect groups, and assign lecturers.
                         </p>
                     </div>
 
@@ -88,7 +88,7 @@ const AdminModules = () => {
                 </div>
             )}
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                 <div className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-xl p-5">
                     <p className="text-sm text-slate-300">Total Modules</p>
                     <h3 className="mt-2 text-3xl font-black text-emerald-400">
@@ -96,19 +96,12 @@ const AdminModules = () => {
                     </h3>
                 </div>
 
-             {/*  <div className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-xl p-5">
-                    <p className="text-sm text-slate-300">Available for Management</p>
-                    <h3 className="mt-2 text-3xl font-black text-blue-400">
-                        {loading ? '...' : modules.length}
+                <div className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-xl p-5">
+                    <p className="text-sm text-slate-300">Lecturer Assigned</p>
+                    <h3 className="mt-2 text-3xl font-black text-cyan-300">
+                        {loading ? '...' : modules.filter((m) => m.lecturer).length}
                     </h3>
                 </div>
-
-                <div className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-xl p-5">
-                    <p className="text-sm text-slate-300">Status</p>
-                    <h3 className="mt-2 text-3xl font-black text-cyan-300">
-                        {loading ? '...' : 'Ready'}
-                    </h3>
-                </div>    */}
             </div>
 
             <div className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-xl p-6">
@@ -162,8 +155,10 @@ const AdminModules = () => {
                                             {module.enrollmentKey}
                                         </p>
                                         <p>
-                                            <span className="font-semibold text-white">Module ID:</span>{' '}
-                                            {module.id}
+                                            <span className="font-semibold text-white">Assigned Lecturer:</span>{' '}
+                                            {module.lecturer
+                                                ? `${module.lecturer.fullName} (${module.lecturer.universityId})`
+                                                : 'Not assigned'}
                                         </p>
                                     </div>
 
@@ -172,7 +167,7 @@ const AdminModules = () => {
                                             onClick={() => navigate(`/admin/modules/${module.id}`)}
                                             className="rounded-2xl bg-linear-to-r from-green-600 to-emerald-500 px-4 py-3 text-sm font-bold text-white shadow-lg transition hover:from-green-500 hover:to-emerald-400"
                                         >
-                                            Manage Groups
+                                            Manage Module
                                         </button>
                                     </div>
                                 </div>
