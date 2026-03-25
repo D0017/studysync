@@ -2,10 +2,19 @@ import React, { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
 import { useNavigate, useParams } from 'react-router-dom';
 
+const getErrorMessage = (error, fallback) => {
+    const data = error?.response?.data;
+
+    if (typeof data === 'string') return data;
+    if (data?.message) return data.message;
+    if (data?.error) return data.error;
+
+    return fallback;
+};
+
 const AdminModuleDetails = () => {
     const { moduleId } = useParams();
     const navigate = useNavigate();
-    const storedUser = JSON.parse(localStorage.getItem('user'));
 
     const [groups, setGroups] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -19,13 +28,15 @@ const AdminModuleDetails = () => {
     const fetchGroups = useCallback(async () => {
         try {
             setLoading(true);
-            const response = await axios.get(`http://localhost:8090/api/groups/modules/${moduleId}/all`);
+            setMessage({ type: '', text: '' });
+
+            const response = await axios.get(`/api/groups/modules/${moduleId}/all`);
             setGroups(Array.isArray(response.data) ? response.data : []);
         } catch (error) {
             console.error('Failed to fetch module groups:', error);
             setMessage({
                 type: 'error',
-                text: error.response?.data || 'Failed to load groups for this module.'
+                text: getErrorMessage(error, 'Failed to load groups for this module.')
             });
             setGroups([]);
         } finally {
@@ -61,7 +72,7 @@ const AdminModuleDetails = () => {
 
         try {
             const response = await axios.post(
-                `http://localhost:8090/api/admin/modules/${moduleId}/groups`,
+                `/api/admin/modules/${moduleId}/groups`,
                 groupForm
             );
 
@@ -72,14 +83,9 @@ const AdminModuleDetails = () => {
             console.error('Failed to create more groups:', error);
             setMessage({
                 type: 'error',
-                text: error.response?.data || 'Failed to create additional groups.'
+                text: getErrorMessage(error, 'Failed to create additional groups.')
             });
         }
-    };
-
-    const handleLogout = () => {
-        localStorage.removeItem('user');
-        window.location.href = '/login';
     };
 
     const memberCount = (group) => {
@@ -87,192 +93,199 @@ const AdminModuleDetails = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 p-6">
-            <div className="max-w-6xl mx-auto">
-                <div className="bg-white rounded-2xl shadow border border-gray-100 p-6 mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+            {/* Header */}
+            <div className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-2xl p-6 md:p-7 mb-6">
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                     <div>
-                        <h1 className="text-3xl font-bold text-gray-900">Admin Module Details</h1>
-                        <p className="text-gray-600 mt-1">
-                            Welcome, <span className="font-semibold">{storedUser?.fullName || 'Admin'}</span>
+                        <p className="text-xs uppercase tracking-[0.2em] text-cyan-300 font-semibold">
+                            Admin Management
                         </p>
-                        <p className="text-sm text-gray-500">
-                            Manage groups for this module and monitor current group status.
+                        <h2 className="mt-2 text-2xl md:text-3xl font-black text-white">
+                            Module Group Details
+                        </h2>
+                        <p className="mt-2 text-sm md:text-base text-slate-300">
+                            Manage group creation and monitor group status inside this module.
                         </p>
                     </div>
 
                     <div className="flex flex-wrap gap-3">
                         <button
                             onClick={() => navigate('/admin/modules')}
-                            className="bg-gray-700 hover:bg-gray-800 text-white font-semibold px-4 py-2 rounded-lg transition"
+                            className="rounded-2xl border border-white/10 bg-white/10 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/20"
                         >
                             Back to Modules
                         </button>
 
                         <button
-                            onClick={handleLogout}
-                            className="bg-red-500 hover:bg-red-600 text-white font-semibold px-4 py-2 rounded-lg transition"
-                        >
-                            Logout
-                        </button>
-                    </div>
-                </div>
-
-                {message.text && (
-                    <div
-                        className={`mb-6 p-4 rounded-lg text-sm font-medium ${
-                            message.type === 'success'
-                                ? 'bg-green-50 text-green-700 border border-green-200'
-                                : 'bg-red-50 text-red-700 border border-red-200'
-                        }`}
-                    >
-                        {message.text}
-                    </div>
-                )}
-
-                <div className="bg-white rounded-2xl shadow border border-gray-100 p-6 mb-6">
-                    <h2 className="text-2xl font-bold text-gray-800 mb-2">Create More Groups</h2>
-                    <p className="text-gray-500 mb-6">
-                        Add additional empty groups to this module whenever needed.
-                    </p>
-
-                    <form onSubmit={handleCreateMoreGroups} className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-1">
-                                Number of Groups
-                            </label>
-                            <input
-                                type="number"
-                                name="numberOfGroups"
-                                min="1"
-                                value={groupForm.numberOfGroups}
-                                onChange={handleGroupFormChange}
-                                className="w-full border border-gray-300 rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-500"
-                                required
-                            />
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-1">
-                                Max Capacity
-                            </label>
-                            <input
-                                type="number"
-                                name="maxCapacity"
-                                min="1"
-                                value={groupForm.maxCapacity}
-                                onChange={handleGroupFormChange}
-                                className="w-full border border-gray-300 rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-500"
-                                required
-                            />
-                        </div>
-
-                        <div className="flex items-end">
-                            <button
-                                type="submit"
-                                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition"
-                            >
-                                Add Groups
-                            </button>
-                        </div>
-                    </form>
-                </div>
-
-                <div className="bg-white rounded-2xl shadow border border-gray-100 p-6">
-                    <div className="flex justify-between items-center mb-6">
-                        <div>
-                            <h2 className="text-2xl font-bold text-gray-800">Existing Groups</h2>
-                            <p className="text-gray-500 text-sm mt-1">
-                                Current groups created under this module.
-                            </p>
-                        </div>
-
-                        <button
                             onClick={fetchGroups}
-                            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold transition"
+                            className="rounded-2xl bg-linear-to-r from-blue-600 to-cyan-500 px-5 py-3 text-sm font-bold text-white shadow-lg transition hover:from-blue-500 hover:to-cyan-400"
                         >
-                            Refresh
+                            Refresh Groups
                         </button>
                     </div>
+                </div>
+            </div>
 
-                    {loading ? (
-                        <p className="text-gray-500">Loading groups...</p>
-                    ) : groups.length === 0 ? (
-                        <div className="text-center py-10 text-gray-500">
-                            No groups found for this module yet.
-                        </div>
-                    ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {groups.map((group) => (
-                                <div
-                                    key={group.id}
-                                    className="border border-gray-200 rounded-xl p-5 bg-gray-50 hover:shadow-md transition"
-                                >
+            {/* Message */}
+            {message.text && (
+                <div
+                    className={`mb-6 rounded-2xl border p-4 text-sm font-medium ${
+                        message.type === 'success'
+                            ? 'border-green-400/20 bg-green-500/10 text-green-300'
+                            : 'border-red-400/20 bg-red-500/10 text-red-300'
+                    }`}
+                >
+                    {message.text}
+                </div>
+            )}
+
+            {/* Create groups form */}
+            <div className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-xl p-6 mb-6">
+                <h3 className="text-xl font-bold text-white mb-2">Create More Groups</h3>
+                <p className="text-sm text-slate-400 mb-6">
+                    Add additional empty groups to this module whenever needed.
+                </p>
+
+                <form
+                    onSubmit={handleCreateMoreGroups}
+                    className="grid grid-cols-1 md:grid-cols-3 gap-4"
+                >
+                    <div>
+                        <label className="block text-sm font-semibold text-slate-200 mb-2">
+                            Number of Groups
+                        </label>
+                        <input
+                            type="number"
+                            name="numberOfGroups"
+                            min="1"
+                            value={groupForm.numberOfGroups}
+                            onChange={handleGroupFormChange}
+                            className="w-full rounded-2xl border border-white/10 bg-slate-900/70 px-4 py-3 text-white outline-none focus:ring-2 focus:ring-cyan-400"
+                            required
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-semibold text-slate-200 mb-2">
+                            Max Capacity
+                        </label>
+                        <input
+                            type="number"
+                            name="maxCapacity"
+                            min="1"
+                            value={groupForm.maxCapacity}
+                            onChange={handleGroupFormChange}
+                            className="w-full rounded-2xl border border-white/10 bg-slate-900/70 px-4 py-3 text-white outline-none focus:ring-2 focus:ring-cyan-400"
+                            required
+                        />
+                    </div>
+
+                    <div className="flex items-end">
+                        <button
+                            type="submit"
+                            className="w-full rounded-2xl bg-linear-to-r from-blue-600 to-cyan-500 px-4 py-3 text-sm font-bold text-white shadow-lg transition hover:from-blue-500 hover:to-cyan-400"
+                        >
+                            Add Groups
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            {/* Groups list */}
+            <div className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-xl p-6">
+                <div className="mb-6">
+                    <h3 className="text-xl font-bold text-white">Existing Groups</h3>
+                    <p className="mt-1 text-sm text-slate-400">
+                        Current groups created under this module.
+                    </p>
+                </div>
+
+                {loading ? (
+                    <div className="rounded-2xl border border-white/10 bg-slate-900/40 p-8 text-center text-slate-300">
+                        Loading groups...
+                    </div>
+                ) : groups.length === 0 ? (
+                    <div className="rounded-2xl border border-white/10 bg-slate-900/40 p-10 text-center text-slate-400">
+                        No groups found for this module yet.
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        {groups.map((group) => (
+                            <div
+                                key={group.id}
+                                className="overflow-hidden rounded-3xl border border-white/10 bg-white/5 shadow-xl backdrop-blur-xl"
+                            >
+                                <div className="h-2 bg-linear-to-r from-emerald-500 to-cyan-500" />
+
+                                <div className="p-6">
                                     <div className="flex justify-between items-start gap-3">
                                         <div>
-                                            <h3 className="text-xl font-bold text-gray-900">
+                                            <h4 className="text-xl font-bold text-white">
                                                 {group.groupName}
-                                            </h3>
-                                            <p className="text-sm text-gray-500 mt-1">
+                                            </h4>
+                                            <p className="text-sm text-slate-400 mt-1">
                                                 Members: {memberCount(group)} / {group.maxCapacity}
                                             </p>
                                         </div>
 
                                         {group.leader ? (
-                                            <span className="bg-green-100 text-green-700 text-xs font-bold px-2 py-1 rounded-full">
+                                            <span className="rounded-full border border-green-400/20 bg-green-500/10 px-3 py-1 text-xs font-bold text-green-300">
                                                 Leader Assigned
                                             </span>
                                         ) : group.requestedLeader ? (
-                                            <span className="bg-yellow-100 text-yellow-700 text-xs font-bold px-2 py-1 rounded-full">
+                                            <span className="rounded-full border border-yellow-400/20 bg-yellow-500/10 px-3 py-1 text-xs font-bold text-yellow-300">
                                                 Leader Pending
                                             </span>
                                         ) : (
-                                            <span className="bg-gray-100 text-gray-600 text-xs font-bold px-2 py-1 rounded-full">
+                                            <span className="rounded-full border border-slate-400/20 bg-slate-500/10 px-3 py-1 text-xs font-bold text-slate-300">
                                                 No Leader
                                             </span>
                                         )}
                                     </div>
 
-                                    <div className="mt-4">
-                                        <h4 className="text-sm font-semibold text-gray-700 mb-2">
+                                    <div className="mt-5">
+                                        <h5 className="text-sm font-semibold text-white mb-3">
                                             Current Members
-                                        </h4>
+                                        </h5>
 
-                                        {Array.isArray(group.currentMembers) && group.currentMembers.length > 0 ? (
+                                        {Array.isArray(group.currentMembers) &&
+                                        group.currentMembers.length > 0 ? (
                                             <ul className="space-y-2">
                                                 {group.currentMembers.map((member) => (
                                                     <li
                                                         key={member.id}
-                                                        className="text-sm text-gray-700 bg-white border border-gray-200 rounded-lg px-3 py-2"
+                                                        className="rounded-2xl border border-white/10 bg-slate-900/50 px-3 py-2 text-sm text-slate-200"
                                                     >
                                                         {member.fullName} ({member.universityId})
                                                     </li>
                                                 ))}
                                             </ul>
                                         ) : (
-                                            <p className="text-sm text-gray-500">No members yet.</p>
+                                            <p className="text-sm text-slate-400">No members yet.</p>
                                         )}
                                     </div>
 
-                                    <div className="mt-4 space-y-1 text-sm text-gray-600">
+                                    <div className="mt-4 space-y-2 text-sm text-slate-300">
                                         {group.leader && (
                                             <p>
-                                                <span className="font-semibold text-gray-700">Leader:</span>{' '}
+                                                <span className="font-semibold text-white">Leader:</span>{' '}
                                                 {group.leader.fullName} ({group.leader.universityId})
                                             </p>
                                         )}
 
                                         {group.requestedLeader && !group.leader && (
                                             <p>
-                                                <span className="font-semibold text-gray-700">Pending Request:</span>{' '}
+                                                <span className="font-semibold text-white">Pending Request:</span>{' '}
                                                 {group.requestedLeader.fullName} ({group.requestedLeader.universityId})
                                             </p>
                                         )}
                                     </div>
                                 </div>
-                            ))}
-                        </div>
-                    )}
-                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
             </div>
         </div>
     );
