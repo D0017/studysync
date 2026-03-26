@@ -18,7 +18,6 @@ import ProtectedRoute from './components/ProtectedRoute';
 
 import UploadResource from "./components/resources/UploadResource";
 import ResourceDashboard from "./components/resources/ResourceDashboard";
-
 import FacultyModules from "./components/resources/FacultyModules";
 import ModuleResources from "./components/resources/ModuleResources";
 
@@ -33,23 +32,17 @@ function App() {
         <nav className="bg-white shadow-sm p-4 flex justify-between items-center">
 
           <h1 className="text-xl font-bold text-blue-600">
-
             StudySync
-
           </h1>
 
           <div className="space-x-4">
 
             <Link to="/" className="text-gray-600">
-
               Home
-
             </Link>
 
             <Link to="/register" className="bg-blue-600 text-white px-4 py-2 rounded">
-
               Get Started
-
             </Link>
 
           </div>
@@ -63,11 +56,22 @@ function App() {
 
           <Route path="/" element={<Login />} />
 
-          <Route path="/register" element={<Register />} />
-
           <Route path="/login" element={<Login />} />
 
-          <Route path="/resources" element={<ResourceDashboard />} />
+          <Route path="/register" element={<Register />} />
+
+
+          {/* RESOURCES FOR ALL LOGGED USERS */}
+
+          <Route element={<ProtectedRoute allowedRoles={['ADMIN','LECTURER','STUDENT']} />}>
+
+            <Route path="/resources" element={<ResourceDashboard />} />
+
+            <Route path="/resources/:facultyName" element={<FacultyModules />} />
+
+            <Route path="/resources/:facultyName/:moduleName" element={<ModuleResources />} />
+
+          </Route>
 
 
           {/* ADMIN */}
@@ -93,19 +97,9 @@ function App() {
 
           <Route element={<ProtectedRoute allowedRoles={['STUDENT']} />}>
 
-            {/* resources FIRST */}
+            <Route path="/student-dashboard" element={<StudentDashboard />} />
 
-          <Route path="/resources" element={<ResourceDashboard />} />
-
-          <Route path="/resources/:facultyName" element={<FacultyModules />} />
-
-          <Route path="/resources/:facultyName/:moduleName" element={<ModuleResources />} />
-
-            {/* student pages AFTER */}
-
-          <Route path="/student-dashboard" element={<StudentDashboard />} />
-
-          <Route path="/student/modules/:moduleId" element={<ModuleGroups />} />
+            <Route path="/student/modules/:moduleId" element={<ModuleGroups />} />
 
           </Route>
 
@@ -114,21 +108,12 @@ function App() {
 
           <Route element={<ProtectedRoute allowedRoles={['LECTURER']} />}>
 
-            {/* resources FIRST */}
+            <Route path="/lecturer-dashboard" element={<LecturerDashboard />} />
 
-          <Route path="/resources" element={<ResourceDashboard />} />
-
-          <Route path="/resources/:facultyName" element={<FacultyModules />} />
-
-          <Route path="/resources/:facultyName/:moduleName" element={<ModuleResources />} />
-
-            {/* lecturer pages AFTER */}
-
-          <Route path="/lecturer-dashboard" element={<LecturerDashboard />} />
-
-          <Route path="/upload-resource" element={<UploadResource />} />
+            <Route path="/upload-resource" element={<UploadResource />} />
 
           </Route>
+
 
         </Routes>
 

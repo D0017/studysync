@@ -4,18 +4,78 @@ export default function ModuleResources() {
 
   const { facultyName, moduleName } = useParams();
 
-  const storedUser = JSON.parse(localStorage.getItem("user"));
+  const storedUser =
+    JSON.parse(localStorage.getItem("user"));
 
-  const role = storedUser?.role;
+  const role =
+    storedUser?.role;
 
-  // dummy files
-  const files = [
 
-    { name: "Past Paper 2024.pdf" },
 
-    { name: "Lecture 1.pdf" }
+  const allResources =
+    JSON.parse(
+      localStorage.getItem("resources")
+    ) || [];
 
-  ];
+
+  const moduleResources =
+    allResources.filter(r =>
+
+      r.module.toLowerCase() ===
+      moduleName.toLowerCase()
+
+    );
+
+
+
+  const deleteResource = id => {
+
+    const confirmDelete =
+      window.confirm(
+        "Are you sure you want to delete?"
+      );
+
+    if (!confirmDelete) return;
+
+
+    const updated =
+      allResources.filter(
+        r => r.id !== id
+      );
+
+
+    localStorage.setItem(
+
+      "resources",
+
+      JSON.stringify(updated)
+
+    );
+
+
+    window.location.reload();
+
+  };
+
+
+
+  const editResource = resource => {
+
+    localStorage.setItem(
+
+      "editResource",
+
+      JSON.stringify(resource)
+
+    );
+
+
+    window.location.href =
+      "/upload-resource";
+
+  };
+
+
 
   return (
 
@@ -32,43 +92,90 @@ export default function ModuleResources() {
       </div>
 
 
+
       <div className="max-w-4xl mx-auto py-10 space-y-4">
 
-        {files.map(file => (
+        {moduleResources.length === 0 && (
+
+          <p className="text-center text-gray-500">
+
+            No resources uploaded yet
+
+          </p>
+
+        )}
+
+
+
+        {moduleResources.map(file => (
 
           <div
 
-            key={file.name}
+            key={file.id}
 
             className="bg-white rounded-xl shadow p-4 flex justify-between"
+
           >
 
             <span>
 
-              📄 {file.name}
+              📄 {file.title}.pdf
 
             </span>
 
+
+
             <div className="space-x-3">
 
-              <button className="text-blue-600">
+              <a
+
+                href={file.fileURL}
+
+                download={file.fileName}
+
+                className="text-blue-600"
+
+              >
 
                 Download
 
-              </button>
+              </a>
+
 
 
               {role === "LECTURER" && (
 
                 <>
 
-                  <button className="text-green-600">
+                  <button
+
+                    onClick={() =>
+
+                      editResource(file)
+
+                    }
+
+                    className="text-green-600"
+
+                  >
 
                     Edit
 
                   </button>
 
-                  <button className="text-red-600">
+
+
+                  <button
+
+                    onClick={() =>
+
+                      deleteResource(file.id)
+
+                    }
+
+                    className="text-red-600"
+
+                  >
 
                     Delete
 
@@ -85,13 +192,17 @@ export default function ModuleResources() {
         ))}
 
 
+
         {role === "LECTURER" && (
 
           <Link
 
             to="/upload-resource"
 
+            state={{ moduleName }}
+
             className="block mt-6 text-center bg-[#FF6A00] text-white py-3 rounded-xl shadow"
+
           >
 
             + Add Resource

@@ -1,35 +1,31 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-    
+import { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 
 export default function UploadResource() {
 
-const navigate = useNavigate();
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const storedUser = JSON.parse(localStorage.getItem("user"));
 
+  const editingResource =
+    JSON.parse(localStorage.getItem("editResource"));
+
+  const moduleFromPage =
+    location.state?.moduleName || "";
+
   const [form, setForm] = useState({
-
-    title: "",
-
-    module: "",
-
-    year: "",
-
-    semester: "",
-
+    title: editingResource?.title || "",
+    module: editingResource?.module || moduleFromPage || "",
+    year: editingResource?.year || "",
+    semester: editingResource?.semester || "",
     lecturerName: storedUser?.fullName || ""
-
   });
 
   const [file, setFile] = useState(null);
-
   const [errors, setErrors] = useState({});
-
   const [success, setSuccess] = useState("");
-
   const [dragActive, setDragActive] = useState(false);
-
 
 
   const validate = () => {
@@ -37,46 +33,36 @@ const navigate = useNavigate();
     let newErrors = {};
 
     if (!form.title || form.title.trim().length < 5)
-
-      newErrors.title = "Title must contain at least 5 characters";
+      newErrors.title =
+        "Title must contain at least 5 characters";
 
     if (!form.module)
-
-      newErrors.module = "Module is required";
+      newErrors.module =
+        "Module is required";
 
     if (!form.year)
-
-      newErrors.year = "Year is required";
+      newErrors.year =
+        "Year is required";
 
     if (!form.semester)
+      newErrors.semester =
+        "Semester is required";
 
-      newErrors.semester = "Semester is required";
+    if (!editingResource && !file)
+      newErrors.file =
+        "PDF document required";
 
-    if (!form.lecturerName)
-
-      newErrors.lecturerName = "Lecturer name missing";
-
-
-
-    if (!file)
-
-      newErrors.file = "PDF document required";
-
-    else {
+    if (file) {
 
       if (file.type !== "application/pdf")
-
-        newErrors.file = "Only PDF files allowed";
-
-
+        newErrors.file =
+          "Only PDF files allowed";
 
       if (file.size < 2000)
-
-        newErrors.file = "File must be larger than 2KB";
+        newErrors.file =
+          "File must be larger than 2KB";
 
     }
-
-
 
     setErrors(newErrors);
 
@@ -85,62 +71,170 @@ const navigate = useNavigate();
   };
 
 
+  const convertToBase64 = file => {
+  return new Promise((resolve, reject) => {
 
-  const handleSubmit = (e) => {
+    const reader = new FileReader();
 
-    e.preventDefault();
+    reader.readAsDataURL(file);
+
+    reader.onload = () => resolve(reader.result);
+
+    reader.onerror = error => reject(error);
+
+  });
+};
 
 
+  const handleSubmit = async (e) => {
 
-    if (!validate()) return;
+  e.preventDefault();
 
+  if (!validate()) return;
 
-
-    const confirmUpload = window.confirm(
-
-      "Are you sure you want to upload this document?"
-
+  const confirmUpload =
+    window.confirm(
+      "Are you sure you want to save this document?"
     );
 
+  if (!confirmUpload) return;
 
 
-    if (!confirmUpload) return;
+  const allResources =
+    JSON.parse(
+      localStorage.getItem("resources")
+    ) || [];
+
+
+  let base64File = null;
+
+  if (file) {
+
+    base64File =
+      await convertToBase64(file);
+
+  }
+
+
+  let updatedResources;
+
+
+  if (editingResource) {
+
+    updatedResources =
+      allResources.map(r =>
+
+        r.id === editingResource.id
+
+          ? {
+
+              ...r,
+
+              title: form.title,
+
+              module: form.module,
+
+              year: form.year,
+
+              semester: form.semester,
+
+              fileName:
+                file ? file.name : r.fileName,
+
+              fileURL:
+                file ? base64File : r.fileURL
+
+            }
+
+          : r
+
+      );
+
+  }
+
+  else {
+
+    const newResource = {
+
+      id: Date.now(),
+
+      title: form.title,
+
+      module: form.module,
+
+      year: form.year,
+
+      semester: form.semester,
+
+      lecturer: form.lecturerName,
+
+      fileName: file.name,
+
+      fileURL: base64File
+
+    };
+
+    updatedResources =
+      [...allResources, newResource];
+
+  }
+
+
+  localStorage.setItem(
+
+    "resources",
+
+    JSON.stringify(updatedResources)
+
+  );
+
+
+  localStorage.removeItem("editResource");
+
+
+  setSuccess(
+    "Document saved successfully"
+  );
+
+
+  setTimeout(() => {
+
+    navigate(-1);
+
+  }, 1000);
+
+};
 
 
 
-    setSuccess("Document uploaded successfully");
+  const handleFileChange =
+    selectedFile => {
 
-    setTimeout(() => {
+      setFile(selectedFile);
 
-    navigate("/resources");
-
-    }, 1000);
-
-  };
+    };
 
 
 
-  const handleFileChange = (selectedFile) => {
-
-    setFile(selectedFile);
-
-  };
-
-
-
-  const handleDrag = (e) => {
+  const handleDrag = e => {
 
     e.preventDefault();
 
     e.stopPropagation();
 
+    if (
 
+      e.type === "dragenter" ||
 
-    if (e.type === "dragenter" || e.type === "dragover") {
+      e.type === "dragover"
+
+    ) {
 
       setDragActive(true);
 
-    } else if (e.type === "dragleave") {
+    }
+
+    else {
 
       setDragActive(false);
 
@@ -150,7 +244,7 @@ const navigate = useNavigate();
 
 
 
-  const handleDrop = (e) => {
+  const handleDrop = e => {
 
     e.preventDefault();
 
@@ -158,11 +252,19 @@ const navigate = useNavigate();
 
     setDragActive(false);
 
+    if (
 
+      e.dataTransfer.files &&
 
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      e.dataTransfer.files[0]
 
-      handleFileChange(e.dataTransfer.files[0]);
+    ) {
+
+      handleFileChange(
+
+        e.dataTransfer.files[0]
+
+      );
 
     }
 
@@ -184,7 +286,11 @@ const navigate = useNavigate();
 
         <h2 className="text-3xl font-bold text-[#FF6A00]">
 
-          Upload Resource
+          {editingResource
+
+            ? "Edit Resource"
+
+            : "Upload Resource"}
 
         </h2>
 
@@ -200,15 +306,29 @@ const navigate = useNavigate();
 
           <input
 
-            placeholder="Eg: ITPM Past Paper 2024"
+            value={form.title}
 
-            className="mt-1 bg-[#0A0A0C] border border-gray-700 p-3 w-full rounded-lg focus:ring-2 focus:ring-[#FF6A00] outline-none"
+            onChange={(e)=>
 
-            onChange={(e)=>setForm({...form,title:e.target.value})}
+              setForm({
+
+                ...form,
+
+                title:e.target.value
+
+              })
+
+            }
+
+            className="mt-1 bg-[#0A0A0C] border border-gray-700 p-3 w-full rounded-lg"
 
           />
 
-          <p className="text-red-400 text-sm mt-1">{errors.title}</p>
+          <p className="text-red-400 text-sm mt-1">
+
+            {errors.title}
+
+          </p>
 
         </div>
 
@@ -224,15 +344,29 @@ const navigate = useNavigate();
 
           <input
 
-            placeholder="Eg: ITPM"
+            value={form.module}
 
-            className="mt-1 bg-[#0A0A0C] border border-gray-700 p-3 w-full rounded-lg focus:ring-2 focus:ring-[#FF6A00] outline-none"
+            onChange={(e)=>
 
-            onChange={(e)=>setForm({...form,module:e.target.value})}
+              setForm({
+
+                ...form,
+
+                module:e.target.value
+
+              })
+
+            }
+
+            className="mt-1 bg-[#0A0A0C] border border-gray-700 p-3 w-full rounded-lg"
 
           />
 
-          <p className="text-red-400 text-sm mt-1">{errors.module}</p>
+          <p className="text-red-400 text-sm mt-1">
+
+            {errors.module}
+
+          </p>
 
         </div>
 
@@ -240,81 +374,67 @@ const navigate = useNavigate();
 
         <div className="grid grid-cols-2 gap-4">
 
-          <div>
-
-            <label className="text-sm text-gray-400">
-
-              Year *
-
-            </label>
-
-            <input
-
-              placeholder="Eg: 2"
-
-              className="mt-1 bg-[#0A0A0C] border border-gray-700 p-3 w-full rounded-lg focus:ring-2 focus:ring-[#FF6A00] outline-none"
-
-              onChange={(e)=>setForm({...form,year:e.target.value})}
-
-            />
-
-            <p className="text-red-400 text-sm mt-1">{errors.year}</p>
-
-          </div>
-
-
-
-          <div>
-
-            <label className="text-sm text-gray-400">
-
-              Semester *
-
-            </label>
-
-            <input
-
-              placeholder="Eg: 1"
-
-              className="mt-1 bg-[#0A0A0C] border border-gray-700 p-3 w-full rounded-lg focus:ring-2 focus:ring-[#FF6A00] outline-none"
-
-              onChange={(e)=>setForm({...form,semester:e.target.value})}
-
-            />
-
-            <p className="text-red-400 text-sm mt-1">{errors.semester}</p>
-
-          </div>
-
-        </div>
-
-
-
-        <div>
-
-          <label className="text-sm text-gray-400">
-
-            Lecturer Name *
-
-          </label>
-
           <input
 
-            value={form.lecturerName}
+            placeholder="Year"
 
-            readOnly
+            value={form.year}
 
-            className="mt-1 bg-gray-900 border border-gray-700 p-3 w-full rounded-lg text-gray-300"
+            onChange={(e)=>
+
+              setForm({
+
+                ...form,
+
+                year:e.target.value
+
+              })
+
+            }
+
+            className="bg-[#0A0A0C] border border-gray-700 p-3 rounded-lg"
 
           />
 
-          <p className="text-red-400 text-sm mt-1">{errors.lecturerName}</p>
+
+
+          <input
+
+            placeholder="Semester"
+
+            value={form.semester}
+
+            onChange={(e)=>
+
+              setForm({
+
+                ...form,
+
+                semester:e.target.value
+
+              })
+
+            }
+
+            className="bg-[#0A0A0C] border border-gray-700 p-3 rounded-lg"
+
+          />
 
         </div>
 
 
 
-        {/* drag drop area */}
+        <input
+
+          value={form.lecturerName}
+
+          readOnly
+
+          className="bg-gray-900 border border-gray-700 p-3 w-full rounded-lg text-gray-400"
+
+        />
+
+
 
         <div
 
@@ -322,9 +442,13 @@ const navigate = useNavigate();
 
           border-2 border-dashed rounded-xl p-10 text-center cursor-pointer
 
-          transition
+          ${dragActive
 
-          ${dragActive ? "border-[#FF6A00] bg-[#FF6A00]/10" : "border-gray-600"}
+            ? "border-[#FF6A00]"
+
+            : "border-gray-600"
+
+          }
 
           `}
 
@@ -338,19 +462,7 @@ const navigate = useNavigate();
 
         >
 
-          <p className="text-gray-300">
-
-            Drag & drop PDF here
-
-          </p>
-
-
-
-          <p className="text-sm text-gray-500 mt-2">
-
-            or click to browse
-
-          </p>
+          Drag PDF here
 
 
 
@@ -360,66 +472,41 @@ const navigate = useNavigate();
 
             accept="application/pdf"
 
-            className="hidden"
+            onChange={(e)=>
 
-            id="fileUpload"
+              handleFileChange(
 
-            onChange={(e)=>handleFileChange(e.target.files[0])}
+                e.target.files[0]
+
+              )
+
+            }
 
           />
-
-
-
-          <label
-
-            htmlFor="fileUpload"
-
-            className="text-[#FF6A00] underline cursor-pointer"
-
-          >
-
-            Choose File
-
-          </label>
-
-
-
-          {file && (
-
-            <p className="mt-3 text-green-400">
-
-              Selected: {file.name}
-
-            </p>
-
-          )}
 
         </div>
 
 
 
-        <p className="text-red-400 text-sm">{errors.file}</p>
-
-
-
         <button
 
-          className="bg-[#FF6A00] hover:bg-orange-600 text-white w-full py-3 rounded-xl font-semibold shadow-lg transition"
+          className="bg-[#FF6A00] w-full py-3 rounded-xl"
 
         >
 
-          Upload Document
+          Save
 
         </button>
 
 
+
         {success && (
 
-            <div className="mt-4 bg-green-500/20 border border-green-400 text-green-300 p-3 rounded-lg text-center">
+          <div className="bg-green-500/20 p-3 rounded-lg text-center">
 
-                {success}
+            {success}
 
-            </div>
+          </div>
 
         )}
 
