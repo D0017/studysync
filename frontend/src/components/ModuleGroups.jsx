@@ -91,7 +91,7 @@ const ModuleGroups = () => {
 
         try {
             const response = await axios.post(
-                `http://localhost:8090/api/groups/${groupId}/request-leadership`,
+                `http://localhost:8090/api/groups/${groupId}/request-leader`,
                 null,
                 {
                     params: { studentId: storedUser.id }
@@ -126,57 +126,71 @@ const ModuleGroups = () => {
 
     const moduleInfo = groups.length > 0 ? groups[0].module : null;
 
+    const glassPanel =
+        'rounded-[30px] border border-white/10 bg-white/5 shadow-[0_20px_60px_rgba(0,0,0,0.25)] backdrop-blur-xl';
+
     return (
-        <div className="min-h-screen bg-gray-50 p-6">
-            <div className="max-w-6xl mx-auto">
-                <div className="bg-white rounded-2xl shadow border border-gray-100 p-6 mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                    <div>
-                        <h1 className="text-3xl font-bold text-gray-900">Module Groups</h1>
-                        <p className="text-gray-600 mt-1">
-                            {moduleInfo
-                                ? `${moduleInfo.moduleCode} - ${moduleInfo.moduleName}`
-                                : `Module ID: ${moduleId}`}
-                        </p>
-                        <p className="text-sm text-gray-500">
-                            View available groups and manage your membership clearly.
-                        </p>
-                    </div>
+        <div className="relative min-h-screen overflow-hidden bg-[#0A0A0C] px-6 py-8">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,106,0,0.20),transparent_25%),radial-gradient(circle_at_left,rgba(255,255,255,0.05),transparent_22%)]" />
+            <div className="absolute -top-20 right-0 h-72 w-72 rounded-full bg-[#FF6A00]/10 blur-3xl" />
+            <div className="absolute bottom-0 left-0 h-72 w-72 rounded-full bg-white/5 blur-3xl" />
 
-                    <div className="flex flex-wrap gap-3">
-                        <button
-                            onClick={() => navigate('/student-dashboard')}
-                            className="bg-gray-700 hover:bg-gray-800 text-white font-semibold px-4 py-2 rounded-lg transition"
-                        >
-                            Back to Dashboard
-                        </button>
+            <div className="relative z-10 mx-auto max-w-7xl">
+                <div className={`${glassPanel} mb-6 p-6 md:p-8`}>
+                    <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+                        <div>
+                            <div className="mb-3 inline-flex items-center rounded-full border border-[#FF6A00]/20 bg-[#FF6A00]/10 px-4 py-2 text-sm font-medium text-[#FF6A00]">
+                                Module Collaboration
+                            </div>
+                            <h1 className="text-3xl font-black tracking-tight text-white md:text-4xl">
+                                Module Groups
+                            </h1>
+                            <p className="mt-2 text-base text-gray-300">
+                                {moduleInfo
+                                    ? `${moduleInfo.moduleCode} - ${moduleInfo.moduleName}`
+                                    : `Module ID: ${moduleId}`}
+                            </p>
+                            <p className="mt-1 text-sm text-gray-400">
+                                View available groups and manage your membership clearly.
+                            </p>
+                        </div>
 
-                        <button
-                            onClick={() => {
-                                localStorage.removeItem('user');
-                                window.location.href = '/login';
-                            }}
-                            className="bg-red-500 hover:bg-red-600 text-white font-semibold px-4 py-2 rounded-lg transition"
-                        >
-                            Logout
-                        </button>
+                        <div className="flex flex-wrap gap-3">
+                            <button
+                                onClick={() => navigate('/student-dashboard')}
+                                className="rounded-2xl border border-white/10 bg-white/5 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
+                            >
+                                Back to Dashboard
+                            </button>
+
+                            <button
+                                onClick={() => {
+                                    localStorage.removeItem('user');
+                                    window.location.href = '/login';
+                                }}
+                                className="rounded-2xl bg-[#FF6A00] px-5 py-3 text-sm font-semibold text-white shadow-[0_16px_35px_rgba(255,106,0,0.28)] transition hover:scale-[1.01] hover:bg-[#ff7b22]"
+                            >
+                                Logout
+                            </button>
+                        </div>
                     </div>
                 </div>
 
                 {myGroup && (
-                    <div className="bg-blue-50 border border-blue-200 rounded-2xl p-5 mb-6">
-                        <h2 className="text-xl font-bold text-blue-900">Your Current Group</h2>
-                        <p className="text-blue-800 mt-1">
-                            You are currently in <span className="font-semibold">{myGroup.groupName}</span>.
+                    <div className="mb-6 rounded-[28px] border border-[#FF6A00]/20 bg-[#FF6A00]/10 p-6 backdrop-blur-xl">
+                        <h2 className="text-xl font-black text-white">Your Current Group</h2>
+                        <p className="mt-2 text-sm text-gray-200">
+                            You are currently in <span className="font-semibold text-white">{myGroup.groupName}</span>.
                         </p>
 
                         {isMyApprovedLeaderGroup(myGroup) && (
-                            <p className="text-sm text-green-700 mt-2 font-semibold">
+                            <p className="mt-3 text-sm font-semibold text-green-300">
                                 You are the approved leader of this group.
                             </p>
                         )}
 
                         {isMyPendingLeaderGroup(myGroup) && !isMyApprovedLeaderGroup(myGroup) && (
-                            <p className="text-sm text-yellow-700 mt-2 font-semibold">
+                            <p className="mt-3 text-sm font-semibold text-yellow-300">
                                 Your leadership request is pending admin approval.
                             </p>
                         )}
@@ -185,41 +199,44 @@ const ModuleGroups = () => {
 
                 {message.text && (
                     <div
-                        className={`mb-6 p-4 rounded-lg text-sm font-medium ${
+                        className={`mb-6 rounded-2xl border px-5 py-4 text-sm font-medium backdrop-blur-xl ${
                             message.type === 'success'
-                                ? 'bg-green-50 text-green-700 border border-green-200'
-                                : 'bg-red-50 text-red-700 border border-red-200'
+                                ? 'border-green-400/20 bg-green-500/10 text-green-300'
+                                : 'border-red-400/20 bg-red-500/10 text-red-300'
                         }`}
                     >
                         {message.text}
                     </div>
                 )}
 
-                <div className="bg-white rounded-2xl shadow border border-gray-100 p-6">
-                    <div className="flex justify-between items-center mb-6">
+                <div className={`${glassPanel} p-6`}>
+                    <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                         <div>
-                            <h2 className="text-2xl font-bold text-gray-800">Available Groups</h2>
-                            <p className="text-gray-500 text-sm mt-1">
+                            <p className="text-sm font-bold uppercase tracking-[0.2em] text-[#FF6A00]">
+                                Groups
+                            </p>
+                            <h2 className="mt-2 text-2xl font-black text-white">Available Groups</h2>
+                            <p className="mt-2 text-sm leading-6 text-gray-400">
                                 Join one group only within this module.
                             </p>
                         </div>
 
                         <button
                             onClick={fetchGroups}
-                            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold transition"
+                            className="rounded-2xl border border-white/10 bg-white/5 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
                         >
                             Refresh
                         </button>
                     </div>
 
                     {loading ? (
-                        <p className="text-gray-500">Loading groups...</p>
+                        <p className="text-gray-400">Loading groups...</p>
                     ) : groups.length === 0 ? (
-                        <div className="text-center py-10 text-gray-500">
+                        <div className="rounded-3xl border border-white/10 bg-black/10 py-12 text-center text-gray-400">
                             No groups found for this module yet.
                         </div>
                     ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
                             {groups.map((group) => {
                                 const myGroupFlag = isMyGroup(group);
                                 const approvedLeaderFlag = isMyApprovedLeaderGroup(group);
@@ -229,85 +246,87 @@ const ModuleGroups = () => {
                                 return (
                                     <div
                                         key={group.id}
-                                        className="border border-gray-200 rounded-xl p-5 bg-gray-50 hover:shadow-md transition"
+                                        className="rounded-[28px] border border-white/10 bg-black/10 p-5 transition hover:border-[#FF6A00]/30 hover:bg-white/5"
                                     >
-                                        <div className="flex justify-between items-start gap-3">
+                                        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                                             <div>
-                                                <h3 className="text-xl font-bold text-gray-900">
+                                                <h3 className="text-xl font-black text-white">
                                                     {group.groupName}
                                                 </h3>
-                                                <p className="text-sm text-gray-500 mt-1">
+                                                <p className="mt-1 text-sm text-gray-400">
                                                     Members: {getMemberCount(group)} / {group.maxCapacity}
                                                 </p>
                                             </div>
 
-                                            <div className="flex flex-wrap gap-2 justify-end">
+                                            <div className="flex flex-wrap gap-2">
                                                 {myGroupFlag && (
-                                                    <span className="bg-blue-100 text-blue-700 text-xs font-bold px-2 py-1 rounded-full">
+                                                    <span className="rounded-full border border-[#FF6A00]/20 bg-[#FF6A00]/10 px-3 py-1 text-xs font-bold text-[#FF6A00]">
                                                         My Group
                                                     </span>
                                                 )}
 
                                                 {approvedLeaderFlag && (
-                                                    <span className="bg-green-100 text-green-700 text-xs font-bold px-2 py-1 rounded-full">
+                                                    <span className="rounded-full border border-green-400/20 bg-green-500/10 px-3 py-1 text-xs font-bold text-green-300">
                                                         My Leadership Approved
                                                     </span>
                                                 )}
 
                                                 {pendingLeaderFlag && !approvedLeaderFlag && (
-                                                    <span className="bg-yellow-100 text-yellow-700 text-xs font-bold px-2 py-1 rounded-full">
+                                                    <span className="rounded-full border border-yellow-400/20 bg-yellow-500/10 px-3 py-1 text-xs font-bold text-yellow-300">
                                                         My Request Pending
                                                     </span>
                                                 )}
 
                                                 {fullFlag && (
-                                                    <span className="bg-red-100 text-red-700 text-xs font-bold px-2 py-1 rounded-full">
+                                                    <span className="rounded-full border border-red-400/20 bg-red-500/10 px-3 py-1 text-xs font-bold text-red-300">
                                                         Full
                                                     </span>
                                                 )}
                                             </div>
                                         </div>
 
-                                        <div className="mt-4">
-                                            <h4 className="text-sm font-semibold text-gray-700 mb-2">Members</h4>
+                                        <div className="mt-5">
+                                            <h4 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-400">
+                                                Members
+                                            </h4>
 
                                             {Array.isArray(group.currentMembers) && group.currentMembers.length > 0 ? (
                                                 <ul className="space-y-2">
                                                     {group.currentMembers.map((member) => (
                                                         <li
                                                             key={member.id}
-                                                            className="text-sm text-gray-700 bg-white border border-gray-200 rounded-lg px-3 py-2"
+                                                            className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-gray-200"
                                                         >
                                                             {member.fullName} ({member.universityId})
                                                         </li>
                                                     ))}
                                                 </ul>
                                             ) : (
-                                                <p className="text-sm text-gray-500">No members yet.</p>
+                                                <p className="text-sm text-gray-400">No members yet.</p>
                                             )}
                                         </div>
 
-                                        <div className="mt-4 space-y-1 text-sm text-gray-600">
+                                        <div className="mt-5 space-y-2 text-sm text-gray-400">
                                             {group.leader && (
                                                 <p>
-                                                    <span className="font-semibold text-gray-700">Leader:</span>{' '}
+                                                    <span className="font-semibold text-gray-200">Leader:</span>{' '}
                                                     {group.leader.fullName} ({group.leader.universityId})
                                                 </p>
                                             )}
 
                                             {group.requestedLeader && !group.leader && (
                                                 <p>
-                                                    <span className="font-semibold text-gray-700">Pending Leadership Request:</span>{' '}
+                                                    <span className="font-semibold text-gray-200">Pending Leadership Request:</span>{' '}
                                                     {group.requestedLeader.fullName} ({group.requestedLeader.universityId})
                                                 </p>
                                             )}
                                         </div>
 
-                                        <div className="mt-5 flex flex-wrap gap-3">
+                                        <div className="mt-6 flex flex-wrap gap-3">
                                             {!hasJoinedAnyGroup && !fullFlag && (
                                                 <button
                                                     onClick={() => handleJoinGroup(group.id)}
-                                                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition"
+                                                    className="rounded-2xl bg-[#FF6A00] px-4 py-2.5 text-sm font-semibold text-white shadow-[0_16px_35px_rgba(255,106,0,0.22)] transition hover:bg-[#ff7b22]"
                                                 >
                                                     Join Group
                                                 </button>
@@ -316,7 +335,7 @@ const ModuleGroups = () => {
                                             {!hasJoinedAnyGroup && fullFlag && (
                                                 <button
                                                     disabled
-                                                    className="bg-gray-400 text-white px-4 py-2 rounded-lg text-sm font-semibold cursor-not-allowed"
+                                                    className="cursor-not-allowed rounded-2xl bg-gray-500 px-4 py-2.5 text-sm font-semibold text-white"
                                                 >
                                                     Group Full
                                                 </button>
@@ -325,7 +344,7 @@ const ModuleGroups = () => {
                                             {hasJoinedAnyGroup && !myGroupFlag && (
                                                 <button
                                                     disabled
-                                                    className="bg-gray-400 text-white px-4 py-2 rounded-lg text-sm font-semibold cursor-not-allowed"
+                                                    className="cursor-not-allowed rounded-2xl bg-gray-500 px-4 py-2.5 text-sm font-semibold text-white"
                                                 >
                                                     Already Joined Another Group
                                                 </button>
@@ -334,7 +353,7 @@ const ModuleGroups = () => {
                                             {myGroupFlag && !approvedLeaderFlag && !pendingLeaderFlag && !group.leader && (
                                                 <button
                                                     onClick={() => handleRequestLeadership(group.id)}
-                                                    className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition"
+                                                    className="rounded-2xl border border-green-400/20 bg-green-500/10 px-4 py-2.5 text-sm font-semibold text-green-300 transition hover:bg-green-500/15"
                                                 >
                                                     Request Leadership
                                                 </button>
@@ -343,7 +362,7 @@ const ModuleGroups = () => {
                                             {myGroupFlag && pendingLeaderFlag && !approvedLeaderFlag && (
                                                 <button
                                                     disabled
-                                                    className="bg-yellow-500 text-white px-4 py-2 rounded-lg text-sm font-semibold cursor-not-allowed"
+                                                    className="cursor-not-allowed rounded-2xl border border-yellow-400/20 bg-yellow-500/10 px-4 py-2.5 text-sm font-semibold text-yellow-300"
                                                 >
                                                     Leadership Requested
                                                 </button>
@@ -352,7 +371,7 @@ const ModuleGroups = () => {
                                             {myGroupFlag && approvedLeaderFlag && (
                                                 <button
                                                     disabled
-                                                    className="bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-semibold cursor-not-allowed"
+                                                    className="cursor-not-allowed rounded-2xl border border-green-400/20 bg-green-500/10 px-4 py-2.5 text-sm font-semibold text-green-300"
                                                 >
                                                     You Are Leader
                                                 </button>
@@ -361,7 +380,7 @@ const ModuleGroups = () => {
                                             {myGroupFlag && group.leader && !approvedLeaderFlag && (
                                                 <button
                                                     disabled
-                                                    className="bg-gray-400 text-white px-4 py-2 rounded-lg text-sm font-semibold cursor-not-allowed"
+                                                    className="cursor-not-allowed rounded-2xl bg-gray-500 px-4 py-2.5 text-sm font-semibold text-white"
                                                 >
                                                     Leader Already Assigned
                                                 </button>
