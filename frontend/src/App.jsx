@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import Register from './components/Register';
 import Login from './components/Login';
 import CreateModule from './components/CreateModule';
@@ -12,6 +12,8 @@ import StudentDashboard from './components/StudentDashboard';
 import ModuleGroups from './components/ModuleGroups';
 import LecturerDashboard from './components/LecturerDashboard';
 import ProtectedRoute from './components/ProtectedRoute';
+import Navbar from './components/Navbar';
+import LandingPage from './pages/LandingPage';
 
 function AppContent() {
   const location = useLocation();
@@ -19,45 +21,17 @@ function AppContent() {
   const hideTopNavbar =
     location.pathname.startsWith('/admin') ||
     location.pathname.startsWith('/student') ||
-    location.pathname.startsWith('/lecturer');
+    location.pathname.startsWith('/lecturer') ||
+    location.pathname === '/login' ||
+    location.pathname === '/register';
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {!hideTopNavbar && (
-        <nav className="bg-white shadow-sm p-4 flex justify-between items-center">
-          <h1 className="text-xl font-bold text-blue-600">StudySync</h1>
-          <div className="space-x-4">
-            <Link
-              title="Home"
-              to="/"
-              className="text-gray-600 hover:text-blue-600"
-            >
-              Home
-            </Link>
-            <Link
-              title="Register"
-              to="/register"
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
-            >
-              Get Started
-            </Link>
-          </div>
-        </nav>
-      )}
+    <div className="min-h-screen bg-[#F4F4F6]">
+      {!hideTopNavbar && <Navbar />}
 
       <Routes>
         {/* Public routes */}
-        <Route
-          path="/"
-          element={
-            <div className="text-center mt-20">
-              <h2 className="text-4xl font-bold">Welcome to StudySync</h2>
-              <p className="mt-4 text-gray-600">
-                Academic Group & Learning Management System
-              </p>
-            </div>
-          }
-        />
+        <Route path="/" element={<LandingPage />} />
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
 
