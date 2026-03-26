@@ -2,10 +2,107 @@ import React, { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
+const getErrorMessage = (error, fallback) => {
+    const data = error?.response?.data;
+    if (typeof data === 'string') return data;
+    if (data?.message) return data.message;
+    if (data?.error) return data.error;
+    return fallback;
+};
+
+const S = `
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+.pg { font-family:'Plus Jakarta Sans',sans-serif; color:#f4f4f6; }
+.card {
+    background:linear-gradient(135deg,#1e1e22 0%,#18181b 100%);
+    border:1px solid rgba(255,255,255,0.08);
+    border-radius:18px;
+}
+.card:hover { border-color:rgba(255,255,255,0.13); }
+.hero {
+    background:linear-gradient(135deg,#1e1e22 0%,#18181b 60%,#1c1a14 100%);
+    border:1px solid rgba(255,255,255,0.08);
+    border-radius:20px;
+    padding:34px 38px;
+    margin-bottom:22px;
+    position:relative;
+    overflow:hidden;
+}
+.hero::after {
+    content:'';position:absolute;bottom:0;left:0;right:0;height:1px;
+    background:linear-gradient(90deg,rgba(255,106,0,0.4),transparent 55%);
+}
+.hero-tag {
+    display:inline-flex;align-items:center;gap:6px;
+    background:rgba(255,106,0,0.1);border:1px solid rgba(255,106,0,0.2);
+    border-radius:20px;padding:4px 12px;
+    font-size:11px;font-weight:600;color:#ff8533;letter-spacing:.04em;margin-bottom:12px;
+}
+.hero-title { font-size:clamp(22px,3vw,32px);font-weight:800;color:#f4f4f6;letter-spacing:-.03em;margin-bottom:8px; }
+.hero-desc  { font-size:13px;color:rgba(244,244,246,.44);line-height:1.8; }
+.hero-row   { display:flex;flex-direction:column;gap:20px; }
+@media(min-width:768px){ .hero-row { flex-direction:row;align-items:center;justify-content:space-between; } }
+.btn-row { display:flex;gap:10px;flex-wrap:wrap; }
+.btn-primary {
+    padding:10px 20px;
+    background:linear-gradient(135deg,#ff6a00,#ff8533);
+    border:none;border-radius:10px;color:#fff;
+    font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;
+    box-shadow:0 4px 14px rgba(255,106,0,0.28);transition:all .18s;
+}
+.btn-primary:hover { transform:translateY(-1px);box-shadow:0 6px 20px rgba(255,106,0,.38); }
+.btn-ghost {
+    padding:10px 18px;background:rgba(255,255,255,.05);
+    border:1px solid rgba(255,255,255,.1);border-radius:10px;
+    color:rgba(244,244,246,.62);font-family:inherit;font-size:13px;font-weight:500;cursor:pointer;transition:all .18s;
+}
+.btn-ghost:hover { background:rgba(255,255,255,.09);color:#f4f4f6; }
+.msg { border-radius:12px;padding:12px 16px;font-size:13px;font-weight:500;margin-bottom:18px; }
+.msg.error   { background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.18);color:#fca5a5; }
+.msg.success { background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.18);color:#6ee7b7; }
+.stat-grid { display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px; }
+.stat-card { padding:20px 22px; }
+.stat-lbl { font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:rgba(244,244,246,.35);margin-bottom:10px; }
+.stat-val { font-size:36px;font-weight:800;letter-spacing:-.03em;line-height:1; }
+.stat-sub { font-size:11px;color:rgba(244,244,246,.3);margin-top:6px; }
+.sec-wrap { padding:24px 26px; }
+.sec-title { font-size:18px;font-weight:800;color:#f4f4f6;letter-spacing:-.02em;margin-bottom:4px; }
+.sec-sub   { font-size:12px;color:rgba(244,244,246,.38);margin-bottom:18px; }
+.mod-grid  { display:grid;grid-template-columns:1fr;gap:12px; }
+@media(min-width:640px){ .mod-grid { grid-template-columns:1fr 1fr; } }
+.mod-card  { border-radius:16px;overflow:hidden; }
+.mod-bar   { height:3px;background:linear-gradient(90deg,#ff6a00,#ff8533); }
+.mod-body  { padding:20px 22px; }
+.mod-top   { display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px; }
+.mod-code  { font-size:18px;font-weight:800;color:#f4f4f6;letter-spacing:-.02em; }
+.mod-name  { font-size:13px;color:rgba(244,244,246,.5);margin-top:3px; }
+.badge {
+    display:inline-block;padding:3px 10px;border-radius:20px;
+    font-size:11px;font-weight:700;white-space:nowrap;
+}
+.badge-blue   { background:rgba(59,130,246,.12);border:1px solid rgba(59,130,246,.2);color:#93c5fd; }
+.badge-green  { background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.2);color:#6ee7b7; }
+.badge-gray   { background:rgba(148,163,184,.1);border:1px solid rgba(148,163,184,.15);color:#94a3b8; }
+.mod-info  { display:flex;flex-direction:column;gap:7px;margin-bottom:16px; }
+.mod-row   { font-size:12.5px;color:rgba(244,244,246,.44); }
+.mod-row strong { color:#f4f4f6;font-weight:600; }
+.btn-manage {
+    width:100%;padding:10px;
+    background:linear-gradient(135deg,#ff6a00,#ff8533);
+    border:none;border-radius:10px;color:#fff;
+    font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;
+    box-shadow:0 3px 12px rgba(255,106,0,.22);transition:all .18s;
+}
+.btn-manage:hover { transform:translateY(-1px);box-shadow:0 5px 18px rgba(255,106,0,.32); }
+.empty {
+    background:rgba(255,255,255,.02);border:1px dashed rgba(255,255,255,.08);
+    border-radius:14px;padding:40px;text-align:center;
+    font-size:13px;color:rgba(244,244,246,.3);
+}
+`;
+
 const AdminModules = () => {
     const navigate = useNavigate();
-    const storedUser = JSON.parse(localStorage.getItem('user'));
-
     const [modules, setModules] = useState([]);
     const [loading, setLoading] = useState(true);
     const [message, setMessage] = useState({ type: '', text: '' });
@@ -13,147 +110,95 @@ const AdminModules = () => {
     const fetchModules = useCallback(async () => {
         try {
             setLoading(true);
-            const response = await axios.get('http://localhost:8090/api/admin/modules');
+            setMessage({ type: '', text: '' });
+            const response = await axios.get('/api/admin/modules');
             setModules(Array.isArray(response.data) ? response.data : []);
         } catch (error) {
             console.error('Failed to fetch modules:', error);
-            setMessage({
-                type: 'error',
-                text: error.response?.data || 'Failed to load modules.'
-            });
+            setMessage({ type: 'error', text: getErrorMessage(error, 'Failed to load modules.') });
             setModules([]);
         } finally {
             setLoading(false);
         }
     }, []);
 
-    useEffect(() => {
-        fetchModules();
-    }, [fetchModules]);
-
-    const handleLogout = () => {
-        localStorage.removeItem('user');
-        window.location.href = '/login';
-    };
+    useEffect(() => { fetchModules(); }, [fetchModules]);
 
     return (
-        <div className="min-h-screen bg-gray-50 p-6">
-            <div className="max-w-6xl mx-auto">
-                <div className="bg-white rounded-2xl shadow border border-gray-100 p-6 mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div className="pg">
+            <style>{S}</style>
+
+            {/* Hero */}
+            <div className="hero">
+                <div className="hero-row">
                     <div>
-                        <h1 className="text-3xl font-bold text-gray-900">Module Management</h1>
-                        <p className="text-gray-600 mt-1">
-                            Welcome, <span className="font-semibold">{storedUser?.fullName || 'Admin'}</span>
-                        </p>
-                        <p className="text-sm text-gray-500">
-                            View all created modules and manage the academic structure.
-                        </p>
+                        <div className="hero-tag">Admin Management</div>
+                        <h2 className="hero-title">Module Management</h2>
+                        <p className="hero-desc">View created modules, inspect groups, and assign lecturers.</p>
                     </div>
-
-                    <div className="flex flex-wrap gap-3">
-                        <button
-                            onClick={() => navigate('/admin-dashboard')}
-                            className="bg-gray-700 hover:bg-gray-800 text-white font-semibold px-4 py-2 rounded-lg transition"
-                        >
-                            Back to Dashboard
-                        </button>
-
-                        <button
-                            onClick={() => navigate('/admin/create-module')}
-                            className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded-lg transition"
-                        >
-                            Create Module
-                        </button>
-
-                        <button
-                            onClick={handleLogout}
-                            className="bg-red-500 hover:bg-red-600 text-white font-semibold px-4 py-2 rounded-lg transition"
-                        >
-                            Logout
-                        </button>
+                    <div className="btn-row">
+                        <button onClick={() => navigate('/admin/create-module')} className="btn-primary">+ Create Module</button>
+                        <button onClick={fetchModules} className="btn-ghost">Refresh</button>
                     </div>
                 </div>
+            </div>
 
-                {message.text && (
-                    <div
-                        className={`mb-6 p-4 rounded-lg text-sm font-medium ${
-                            message.type === 'success'
-                                ? 'bg-green-50 text-green-700 border border-green-200'
-                                : 'bg-red-50 text-red-700 border border-red-200'
-                        }`}
-                    >
-                        {message.text}
+            {message.text && <div className={`msg ${message.type}`}>{message.text}</div>}
+
+            {/* Stats */}
+            <div className="stat-grid">
+                <div className="card stat-card">
+                    <div className="stat-lbl">Total Modules</div>
+                    <div className="stat-val" style={{ color: '#34d399' }}>{loading ? '—' : modules.length}</div>
+                    <div className="stat-sub">In the system</div>
+                </div>
+                <div className="card stat-card">
+                    <div className="stat-lbl">Lecturer Assigned</div>
+                    <div className="stat-val" style={{ color: '#ff7a1a' }}>{loading ? '—' : modules.filter(m => m.lecturer).length}</div>
+                    <div className="stat-sub">Modules with lecturer</div>
+                </div>
+            </div>
+
+            {/* Module list */}
+            <div className="card sec-wrap">
+                <div className="sec-title">Created Modules</div>
+                <div className="sec-sub">All modules currently available in the system.</div>
+
+                {loading ? (
+                    <div className="empty">Loading modules...</div>
+                ) : modules.length === 0 ? (
+                    <div className="empty">No modules found yet.</div>
+                ) : (
+                    <div className="mod-grid">
+                        {modules.map((module) => (
+                            <div key={module.id} className="card mod-card">
+                                <div className="mod-bar" />
+                                <div className="mod-body">
+                                    <div className="mod-top">
+                                        <div>
+                                            <div className="mod-code">{module.moduleCode}</div>
+                                            <div className="mod-name">{module.moduleName}</div>
+                                        </div>
+                                        <span className="badge badge-blue">Year {module.year}</span>
+                                    </div>
+                                    <div className="mod-info">
+                                        <div className="mod-row"><strong>Semester:</strong> {module.semester}</div>
+                                        <div className="mod-row"><strong>Enrollment Key:</strong> {module.enrollmentKey}</div>
+                                        <div className="mod-row">
+                                            <strong>Assigned Lecturer:</strong>{' '}
+                                            {module.lecturer
+                                                ? `${module.lecturer.fullName} (${module.lecturer.universityId})`
+                                                : <span style={{ color: 'rgba(244,244,246,.3)' }}>Not assigned</span>}
+                                        </div>
+                                    </div>
+                                    <button onClick={() => navigate(`/admin/modules/${module.id}`)} className="btn-manage">
+                                        Manage Module →
+                                    </button>
+                                </div>
+                            </div>
+                        ))}
                     </div>
                 )}
-
-                <div className="bg-white rounded-2xl shadow border border-gray-100 p-6">
-                    <div className="flex justify-between items-center mb-6">
-                        <div>
-                            <h2 className="text-2xl font-bold text-gray-800">Created Modules</h2>
-                            <p className="text-gray-500 text-sm mt-1">
-                                All modules currently available in the system.
-                            </p>
-                        </div>
-
-                        <button
-                            onClick={fetchModules}
-                            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold transition"
-                        >
-                            Refresh
-                        </button>
-                    </div>
-
-                    {loading ? (
-                        <p className="text-gray-500">Loading modules...</p>
-                    ) : modules.length === 0 ? (
-                        <div className="text-center py-10 text-gray-500">
-                            No modules found yet.
-                        </div>
-                    ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {modules.map((module) => (
-                                <div
-                                    key={module.id}
-                                    className="border border-gray-200 rounded-xl p-5 bg-gray-50 hover:shadow-md transition"
-                                >
-                                    <div className="flex justify-between items-start gap-3">
-                                        <div>
-                                            <h3 className="text-xl font-bold text-gray-900">
-                                                {module.moduleCode}
-                                            </h3>
-                                            <p className="text-gray-700 mt-1">{module.moduleName}</p>
-                                        </div>
-
-                                        <span className="bg-blue-100 text-blue-700 text-xs font-bold px-2 py-1 rounded-full">
-                                            Year {module.year}
-                                        </span>
-                                    </div>
-
-                                    <div className="mt-4 space-y-2 text-sm text-gray-600">
-                                        <p>
-                                            <span className="font-semibold text-gray-700">Semester:</span> {module.semester}
-                                        </p>
-                                        <p>
-                                            <span className="font-semibold text-gray-700">Enrollment Key:</span> {module.enrollmentKey}
-                                        </p>
-                                        <p>
-                                            <span className="font-semibold text-gray-700">Module ID:</span> {module.id}
-                                        </p>
-                                    </div>
-
-                                    <div className="mt-5 flex flex-wrap gap-3">
-                                        <button
-                                            onClick={() => navigate(`/admin/modules/${module.id}`)}
-                                            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition"
-                                        >
-                                            Manage Groups
-                                        </button>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    )}
-                </div>
             </div>
         </div>
     );

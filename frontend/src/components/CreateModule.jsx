@@ -1,263 +1,255 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 
+const getErrorMessage = (error, fallback) => {
+    const data = error?.response?.data;
+    if (typeof data === 'string') return data;
+    if (data?.message) return data.message;
+    if (data?.error) return data.error;
+    return fallback;
+};
+
+const S = `
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+.pg { font-family:'Plus Jakarta Sans',sans-serif; color:#f4f4f6; }
+.card {
+    background:linear-gradient(135deg,#1e1e22 0%,#18181b 100%);
+    border:1px solid rgba(255,255,255,0.08);
+    border-radius:18px;
+}
+.hero {
+    background:linear-gradient(135deg,#1e1e22 0%,#18181b 60%,#1c1a14 100%);
+    border:1px solid rgba(255,255,255,0.08);
+    border-radius:20px;padding:34px 38px;margin-bottom:22px;
+    position:relative;overflow:hidden;
+}
+.hero::after {
+    content:'';position:absolute;bottom:0;left:0;right:0;height:1px;
+    background:linear-gradient(90deg,rgba(255,106,0,0.4),transparent 55%);
+}
+.hero-tag {
+    display:inline-flex;align-items:center;gap:6px;
+    background:rgba(255,106,0,0.1);border:1px solid rgba(255,106,0,0.2);
+    border-radius:20px;padding:4px 12px;
+    font-size:11px;font-weight:600;color:#ff8533;letter-spacing:.04em;margin-bottom:12px;
+}
+.hero-title { font-size:clamp(22px,3vw,32px);font-weight:800;color:#f4f4f6;letter-spacing:-.03em;margin-bottom:8px; }
+.hero-desc  { font-size:13px;color:rgba(244,244,246,.44);line-height:1.8; }
+.msg { border-radius:12px;padding:12px 16px;font-size:13px;font-weight:500;margin-bottom:18px; }
+.msg.error   { background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.18);color:#fca5a5; }
+.msg.success { background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.18);color:#6ee7b7; }
+.form-card { padding:28px 30px; }
+.form-section-title {
+    font-size:14px;font-weight:800;color:#f4f4f6;letter-spacing:-.01em;
+    margin-bottom:16px;display:flex;align-items:center;gap:10px;
+}
+.form-section-badge {
+    display:inline-flex;align-items:center;justify-content:center;
+    width:22px;height:22px;border-radius:6px;
+    background:rgba(255,106,0,0.15);border:1px solid rgba(255,106,0,.25);
+    font-size:11px;font-weight:800;color:#ff7a1a;flex-shrink:0;
+}
+.form-divider { border:none;border-top:1px solid rgba(255,255,255,.07);margin:24px 0; }
+.grid-2 { display:grid;grid-template-columns:1fr;gap:14px; }
+@media(min-width:640px){ .grid-2 { grid-template-columns:1fr 1fr; } }
+.grid-3 { display:grid;grid-template-columns:1fr;gap:14px; }
+@media(min-width:640px){ .grid-3 { grid-template-columns:1fr 1fr 1fr; } }
+.form-field { display:flex;flex-direction:column; }
+.form-label {
+    font-size:12px;font-weight:600;color:rgba(244,244,246,.6);
+    margin-bottom:7px;letter-spacing:.01em;
+}
+.form-input {
+    background:rgba(255,255,255,.04);
+    border:1px solid rgba(255,255,255,.1);
+    border-radius:10px;padding:11px 14px;
+    color:#f4f4f6;font-family:inherit;font-size:13.5px;
+    outline:none;transition:border-color .18s,box-shadow .18s;
+    width:100%;
+}
+.form-input::placeholder { color:rgba(244,244,246,.22); }
+.form-input:focus {
+    border-color:rgba(255,106,0,.5);
+    box-shadow:0 0 0 3px rgba(255,106,0,.1);
+}
+.btn-row { display:flex;flex-direction:column;gap:10px;margin-top:8px; }
+@media(min-width:480px){ .btn-row { flex-direction:row; } }
+.btn-submit {
+    padding:12px 24px;
+    background:linear-gradient(135deg,#ff6a00,#ff8533);
+    border:none;border-radius:10px;color:#fff;
+    font-family:inherit;font-size:13.5px;font-weight:700;cursor:pointer;
+    box-shadow:0 4px 16px rgba(255,106,0,.28);transition:all .18s;
+}
+.btn-submit:hover { transform:translateY(-1px);box-shadow:0 6px 22px rgba(255,106,0,.38); }
+.btn-submit:disabled { opacity:.5;cursor:not-allowed;transform:none; }
+.btn-reset {
+    padding:12px 22px;
+    background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);
+    border-radius:10px;color:rgba(244,244,246,.6);
+    font-family:inherit;font-size:13.5px;font-weight:500;cursor:pointer;transition:all .18s;
+}
+.btn-reset:hover { background:rgba(255,255,255,.09);color:#f4f4f6; }
+.btn-reset:disabled { opacity:.4;cursor:not-allowed; }
+`;
+
 const CreateModule = () => {
-    const [moduleData, setModuleData] = useState({
-        moduleCode: '',
-        moduleName: '',
-        year: 1,
-        semester: 1,
-        enrollmentKey: ''
-    });
-
-    const [groupData, setGroupData] = useState({
-        numberOfGroups: 1,
-        maxCapacity: 5
-    });
-
+    const [moduleData, setModuleData] = useState({ moduleCode: '', moduleName: '', year: 1, semester: 1, enrollmentKey: '' });
+    const [groupData, setGroupData] = useState({ numberOfGroups: 1, maxCapacity: 5 });
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState({ type: '', text: '' });
 
     const handleModuleChange = (e) => {
         const { name, value } = e.target;
-        setModuleData((prev) => ({
-            ...prev,
-            [name]: name === 'year' || name === 'semester' ? Number(value) : value
-        }));
+        setModuleData(prev => ({ ...prev, [name]: (name === 'year' || name === 'semester') ? Number(value) : value }));
     };
 
     const handleGroupChange = (e) => {
         const { name, value } = e.target;
-        setGroupData((prev) => ({
-            ...prev,
-            [name]: Number(value)
-        }));
+        setGroupData(prev => ({ ...prev, [name]: Number(value) }));
     };
 
     const validateForm = () => {
-        if (!moduleData.moduleCode.trim()) {
-            return 'Module code is required.';
-        }
-        if (!moduleData.moduleName.trim()) {
-            return 'Module name is required.';
-        }
-        if (!moduleData.enrollmentKey.trim()) {
-            return 'Enrollment key is required.';
-        }
-        if (groupData.numberOfGroups <= 0) {
-            return 'Number of groups must be greater than 0.';
-        }
-        if (groupData.maxCapacity <= 0) {
-            return 'Max capacity must be greater than 0.';
-        }
+        if (!moduleData.moduleCode.trim())   return 'Module code is required.';
+        if (!moduleData.moduleName.trim())   return 'Module name is required.';
+        if (!moduleData.enrollmentKey.trim()) return 'Enrollment key is required.';
+        if (![1, 2, 3, 4].includes(moduleData.year)) return 'Year must be 1, 2, 3, or 4.';
+        if (![1, 2].includes(moduleData.semester))   return 'Semester must be 1 or 2.';
+        if (groupData.numberOfGroups <= 0)   return 'Number of groups must be greater than 0.';
+        if (groupData.maxCapacity <= 0)      return 'Max capacity must be greater than 0.';
         return null;
     };
 
     const resetForm = () => {
-        setModuleData({
-            moduleCode: '',
-            moduleName: '',
-            year: 1,
-            semester: 1,
-            enrollmentKey: ''
-        });
-
-        setGroupData({
-            numberOfGroups: 1,
-            maxCapacity: 5
-        });
+        setModuleData({ moduleCode: '', moduleName: '', year: 1, semester: 1, enrollmentKey: '' });
+        setGroupData({ numberOfGroups: 1, maxCapacity: 5 });
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setMessage({ type: '', text: '' });
-
-        const validationError = validateForm();
-        if (validationError) {
-            setMessage({ type: 'error', text: validationError });
-            return;
-        }
-
+        const err = validateForm();
+        if (err) { setMessage({ type: 'error', text: err }); return; }
         try {
             setLoading(true);
-
-            // Create module
-            const moduleResponse = await axios.post('http://localhost:8090/api/admin/modules', moduleData);
+            const moduleResponse = await axios.post('/api/admin/modules', moduleData);
             const createdModule = moduleResponse.data;
-
-            // Create groups for modules
-            const groupsResponse = await axios.post(
-                `http://localhost:8090/api/admin/modules/${createdModule.id}/groups`,
-                groupData
-            );
-
-            setMessage({
-                type: 'success',
-                text: `${createdModule.moduleCode} created successfully. ${groupsResponse.data}`
-            });
-
+            const groupsResponse = await axios.post(`/api/admin/modules/${createdModule.id}/groups`, groupData);
+            setMessage({ type: 'success', text: `${createdModule.moduleCode} created successfully. ${groupsResponse.data}` });
             resetForm();
         } catch (error) {
             console.error('Create module/groups failed:', error);
-
-            const errorMessage =
-                error.response?.data ||
-                'Something went wrong while creating module and groups.';
-
-            setMessage({ type: 'error', text: errorMessage });
+            setMessage({ type: 'error', text: getErrorMessage(error, 'Something went wrong while creating module and groups.') });
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 p-6">
-            <div className="max-w-3xl mx-auto bg-white rounded-2xl shadow-lg border border-gray-100 p-8">
-                <h1 className="text-3xl font-bold text-gray-900 mb-2">Create Module</h1>
-                <p className="text-gray-500 mb-8">
-                    Create a module first, then generate empty groups for students to join.
-                </p>
+        <div className="pg">
+            <style>{S}</style>
 
-                <form onSubmit={handleSubmit} className="space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-1">
-                                Module Code
-                            </label>
-                            <input
-                                type="text"
-                                name="moduleCode"
-                                value={moduleData.moduleCode}
-                                onChange={handleModuleChange}
-                                placeholder="e.g. IT3040"
-                                className="w-full border border-gray-300 rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-500"
-                                required
-                            />
+            {/* Hero */}
+            <div className="hero">
+                <div className="hero-tag">Admin Management</div>
+                <h2 className="hero-title">Create Module</h2>
+                <p className="hero-desc">Create a module first, then generate empty groups for students to join.</p>
+            </div>
+
+            {message.text && <div className={`msg ${message.type}`}>{message.text}</div>}
+
+            {/* Form */}
+            <div className="card form-card">
+                <form onSubmit={handleSubmit}>
+                    {/* Module Details */}
+                    <div className="form-section-title">
+                        <span className="form-section-badge">1</span>
+                        Module Details
+                    </div>
+
+                    <div className="grid-2" style={{ marginBottom: '14px' }}>
+                        <div className="form-field">
+                            <label className="form-label">Module Code</label>
+                            <input type="text" name="moduleCode" value={moduleData.moduleCode}
+                                onChange={handleModuleChange} placeholder="e.g. IT3040"
+                                className="form-input" required />
                         </div>
-
-                        <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-1">
-                                Module Name
-                            </label>
-                            <input
-                                type="text"
-                                name="moduleName"
-                                value={moduleData.moduleName}
-                                onChange={handleModuleChange}
-                                placeholder="e.g. Software Engineering"
-                                className="w-full border border-gray-300 rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-500"
-                                required
-                            />
+                        <div className="form-field">
+                            <label className="form-label">Module Name</label>
+                            <input type="text" name="moduleName" value={moduleData.moduleName}
+                                onChange={handleModuleChange} placeholder="e.g. Software Engineering"
+                                className="form-input" required />
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-1">
-                                Year
-                            </label>
+                    <div className="grid-3">
+                        <div className="form-field">
+                            <label className="form-label">Year</label>
                             <input
                                 type="number"
                                 name="year"
                                 min="1"
+                                max="4"
                                 value={moduleData.year}
                                 onChange={handleModuleChange}
-                                className="w-full border border-gray-300 rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-500"
+                                className="form-input"
                                 required
                             />
                         </div>
-
-                        <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-1">
-                                Semester
-                            </label>
+                        <div className="form-field">
+                            <label className="form-label">Semester</label>
                             <input
                                 type="number"
                                 name="semester"
                                 min="1"
+                                max="2"
                                 value={moduleData.semester}
                                 onChange={handleModuleChange}
-                                className="w-full border border-gray-300 rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-500"
+                                className="form-input"
                                 required
                             />
                         </div>
-
-                        <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-1">
-                                Enrollment Key
-                            </label>
-                            <input
-                                type="text"
-                                name="enrollmentKey"
-                                value={moduleData.enrollmentKey}
-                                onChange={handleModuleChange}
-                                placeholder="e.g. MATH2026"
-                                className="w-full border border-gray-300 rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-500"
-                                required
-                            />
+                        <div className="form-field">
+                            <label className="form-label">Enrollment Key</label>
+                            <input type="text" name="enrollmentKey" value={moduleData.enrollmentKey}
+                                onChange={handleModuleChange} placeholder="e.g. MATH2026"
+                                className="form-input" required />
                         </div>
                     </div>
 
-                    <div className="border-t pt-6">
-                        <h2 className="text-xl font-semibold text-gray-800 mb-4">Group Settings</h2>
+                    <hr className="form-divider" />
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-1">
-                                    Number of Groups
-                                </label>
-                                <input
-                                    type="number"
-                                    name="numberOfGroups"
-                                    min="1"
-                                    value={groupData.numberOfGroups}
-                                    onChange={handleGroupChange}
-                                    className="w-full border border-gray-300 rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-500"
-                                    required
-                                />
-                            </div>
+                    {/* Group Settings */}
+                    <div className="form-section-title">
+                        <span className="form-section-badge">2</span>
+                        Group Settings
+                    </div>
 
-                            <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-1">
-                                    Max Capacity Per Group
-                                </label>
-                                <input
-                                    type="number"
-                                    name="maxCapacity"
-                                    min="1"
-                                    value={groupData.maxCapacity}
-                                    onChange={handleGroupChange}
-                                    className="w-full border border-gray-300 rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-500"
-                                    required
-                                />
-                            </div>
+                    <div className="grid-2">
+                        <div className="form-field">
+                            <label className="form-label">Number of Groups</label>
+                            <input type="number" name="numberOfGroups" min="1" value={groupData.numberOfGroups}
+                                onChange={handleGroupChange} className="form-input" required />
+                        </div>
+                        <div className="form-field">
+                            <label className="form-label">Max Capacity Per Group</label>
+                            <input type="number" name="maxCapacity" min="1" value={groupData.maxCapacity}
+                                onChange={handleGroupChange} className="form-input" required />
                         </div>
                     </div>
 
-                    <button
-                        type="submit"
-                        disabled={loading}
-                        className={`w-full py-3 rounded-lg font-bold text-white transition ${
-                            loading
-                                ? 'bg-blue-400 cursor-not-allowed'
-                                : 'bg-blue-600 hover:bg-blue-700'
-                        }`}
-                    >
-                        {loading ? 'Creating...' : 'Create Module & Groups'}
-                    </button>
+                    <hr className="form-divider" />
+
+                    {/* Actions */}
+                    <div className="btn-row">
+                        <button type="submit" disabled={loading} className="btn-submit">
+                            {loading ? 'Creating…' : 'Create Module & Groups'}
+                        </button>
+                        <button type="button" onClick={resetForm} disabled={loading} className="btn-reset">
+                            Reset
+                        </button>
+                    </div>
                 </form>
-
-                {message.text && (
-                    <div
-                        className={`mt-6 p-4 rounded-lg text-sm font-medium ${
-                            message.type === 'success'
-                                ? 'bg-green-50 text-green-700 border border-green-200'
-                                : 'bg-red-50 text-red-700 border border-red-200'
-                        }`}
-                    >
-                        {message.text}
-                    </div>
-                )}
             </div>
         </div>
     );
