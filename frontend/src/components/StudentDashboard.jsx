@@ -162,7 +162,7 @@ const StudentDashboard = () => {
                             <h1 className="text-3xl font-black tracking-tight text-white md:text-4xl">
                                 Welcome back, <span className="font-semibold text-white">{storedUser?.fullName}</span>
                             </h1>
-                           
+
                             <p className="mt-1 text-sm text-gray-400">
                                 University ID: {storedUser?.universityId}
                             </p>
@@ -262,6 +262,28 @@ const StudentDashboard = () => {
 
                     {/* Right panel */}
                     <div className="xl:col-span-2 space-y-6">
+                        {/* My Resources */}
+                        <div className={`${glassPanelClass} p-6`}>
+                            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                                <div>
+                                    <p className="text-sm font-bold uppercase tracking-[0.2em] text-[#FF6A00]">
+                                        Resources
+                                    </p>
+                                    <h2 className="mt-2 text-2xl font-black text-white">My Resources</h2>
+                                    <p className="mt-2 text-sm leading-6 text-gray-400">
+                                        Access your study materials, uploaded files, and shared resources.
+                                    </p>
+                                </div>
+
+                                <button
+                                    onClick={() => navigate('/student/resources')}
+                                    className="rounded-2xl bg-[#FF6A00] px-5 py-3 text-sm font-semibold text-white shadow-[0_16px_35px_rgba(255,106,0,0.28)] transition hover:scale-[1.01] hover:bg-[#ff7b22]"
+                                >
+                                    Open Resources
+                                </button>
+                            </div>
+                        </div>
+
                         {/* Group status */}
                         <div className={`${glassPanelClass} p-6`}>
                             <div className="mb-6">

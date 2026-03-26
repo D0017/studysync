@@ -91,7 +91,7 @@ const ModuleGroups = () => {
 
         try {
             const response = await axios.post(
-                `http://localhost:8090/api/groups/${groupId}/request-leadership`,
+                `http://localhost:8090/api/groups/${groupId}/request-leader`,
                 null,
                 {
                     params: { studentId: storedUser.id }

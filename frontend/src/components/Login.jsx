@@ -82,7 +82,16 @@ const Login = () => {
                     </div>
                 </div>
 
-                <div className="bg-[#F4F4F6] p-8 sm:p-10 lg:p-12">
+                <div className="relative bg-[#F4F4F6] p-8 sm:p-10 lg:p-12">
+                    <button
+                        type="button"
+                        onClick={() => navigate('/')}
+                        className="absolute top-5 right-5 flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 bg-white text-xl font-bold text-gray-500 transition hover:border-[#FF6A00] hover:text-[#FF6A00]"
+                        aria-label="Close and go to landing page"
+                    >
+                        ×
+                    </button>
+
                     <div className="mx-auto w-full max-w-md">
                         <div className="mb-8 lg:hidden">
                             <div className="inline-flex items-center gap-3">
