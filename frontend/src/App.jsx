@@ -15,6 +15,11 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Navbar from './components/Navbar';
 import LandingPage from './pages/LandingPage';
 
+import UploadResource from './components/resources/UploadResource';
+import ResourceDashboard from './components/resources/ResourceDashboard';
+import FacultyModules from './components/resources/FacultyModules';
+import ModuleResources from './components/resources/ModuleResources';
+
 function AppContent() {
   const location = useLocation();
 
@@ -22,6 +27,8 @@ function AppContent() {
     location.pathname.startsWith('/admin') ||
     location.pathname.startsWith('/student') ||
     location.pathname.startsWith('/lecturer') ||
+    location.pathname.startsWith('/resources') ||
+    location.pathname.startsWith('/upload-resource') ||
     location.pathname === '/login' ||
     location.pathname === '/register';
 
@@ -34,6 +41,16 @@ function AppContent() {
         <Route path="/" element={<LandingPage />} />
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
+
+        {/* Shared resource routes for all logged users */}
+        <Route element={<ProtectedRoute allowedRoles={['ADMIN', 'LECTURER', 'STUDENT']} />}>
+          <Route path="/resources" element={<ResourceDashboard />} />
+          <Route path="/resources/:facultyName" element={<FacultyModules />} />
+          <Route path="/resources/:facultyName/:moduleName" element={<ModuleResources />} />
+
+          {/* Optional alias for your student dashboard button */}
+          <Route path="/student/resources" element={<ResourceDashboard />} />
+        </Route>
 
         {/* Admin routes */}
         <Route element={<ProtectedRoute allowedRoles={['ADMIN']} />}>
@@ -56,6 +73,7 @@ function AppContent() {
         {/* Lecturer routes */}
         <Route element={<ProtectedRoute allowedRoles={['LECTURER']} />}>
           <Route path="/lecturer-dashboard" element={<LecturerDashboard />} />
+          <Route path="/upload-resource" element={<UploadResource />} />
         </Route>
       </Routes>
     </div>
