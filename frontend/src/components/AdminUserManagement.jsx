@@ -257,11 +257,11 @@ const AdminUserManagement = () => {
                                                     <span className={`badge ${active ? 'badge-active' : 'badge-inactive'}`}>{active ? 'ACTIVE' : 'INACTIVE'}</span>
                                                 </td>
                                                 <td style={{ padding: '13px 16px' }}>
-                                                    <select className="sel" value={user.role} onChange={e => handleRoleChange(user.id, e.target.value)}>
+                                                   {/* <select className="sel" value={user.role} onChange={e => handleRoleChange(user.id, e.target.value)}>
                                                         <option value="STUDENT">Student</option>
                                                         <option value="LECTURER">Lecturer</option>
                                                         <option value="ADMIN">Admin</option>
-                                                    </select>
+                                                    </select> */}
                                                 </td>
                                                 <td style={{ padding: '13px 16px' }}>
                                                     <button

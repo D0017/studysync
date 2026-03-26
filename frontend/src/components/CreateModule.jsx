@@ -113,8 +113,8 @@ const CreateModule = () => {
         if (!moduleData.moduleCode.trim())   return 'Module code is required.';
         if (!moduleData.moduleName.trim())   return 'Module name is required.';
         if (!moduleData.enrollmentKey.trim()) return 'Enrollment key is required.';
-        if (moduleData.year <= 0)            return 'Year must be greater than 0.';
-        if (moduleData.semester <= 0)        return 'Semester must be greater than 0.';
+        if (![1, 2, 3, 4].includes(moduleData.year)) return 'Year must be 1, 2, 3, or 4.';
+        if (![1, 2].includes(moduleData.semester))   return 'Semester must be 1 or 2.';
         if (groupData.numberOfGroups <= 0)   return 'Number of groups must be greater than 0.';
         if (groupData.maxCapacity <= 0)      return 'Max capacity must be greater than 0.';
         return null;
@@ -185,13 +185,29 @@ const CreateModule = () => {
                     <div className="grid-3">
                         <div className="form-field">
                             <label className="form-label">Year</label>
-                            <input type="number" name="year" min="1" value={moduleData.year}
-                                onChange={handleModuleChange} className="form-input" required />
+                            <input
+                                type="number"
+                                name="year"
+                                min="1"
+                                max="4"
+                                value={moduleData.year}
+                                onChange={handleModuleChange}
+                                className="form-input"
+                                required
+                            />
                         </div>
                         <div className="form-field">
                             <label className="form-label">Semester</label>
-                            <input type="number" name="semester" min="1" value={moduleData.semester}
-                                onChange={handleModuleChange} className="form-input" required />
+                            <input
+                                type="number"
+                                name="semester"
+                                min="1"
+                                max="2"
+                                value={moduleData.semester}
+                                onChange={handleModuleChange}
+                                className="form-input"
+                                required
+                            />
                         </div>
                         <div className="form-field">
                             <label className="form-label">Enrollment Key</label>
