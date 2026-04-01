@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import { loginUser } from '../services/userService';
 
 const getDashboardRoute = (role) => {
@@ -26,9 +27,12 @@ const Login = () => {
 
         try {
             const user = await loginUser(credentials);
+            toast.success('Login successful!');
             navigate(getDashboardRoute(user.role));
         } catch (err) {
-            setError(err);
+            const message = typeof err === 'string' ? err : 'Login failed';
+            setError(message);
+            toast.error(message);
         }
     };
 

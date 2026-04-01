@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { registerUser } from '../services/userService';
 import { Link } from 'react-router-dom';
+import { toast } from 'react-toastify';
 
 const Register = () => {
     const [formData, setFormData] = useState({
@@ -47,6 +48,8 @@ const Register = () => {
             try {
                 await registerUser(dataToSend);
                 setServerMessage({ type: 'success', text: 'Registration successful!' });
+                toast.success('Account created successfully!');
+
                 setFormData({
                     universityId: '',
                     fullName: '',
@@ -57,11 +60,16 @@ const Register = () => {
                 });
                 setErrors({});
             } catch (err) {
+                const message = typeof err === 'string' ? err : 'Server connection failed';
+
                 setServerMessage({
                     type: 'error',
-                    text: typeof err === 'string' ? err : 'Server connection failed'
+                    text: message
                 });
+                toast.error(message);
             }
+        } else {
+            toast.error('Please fix the form errors before submitting.');
         }
     };
 

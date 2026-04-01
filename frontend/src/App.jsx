@@ -1,4 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
 import Register from './components/Register';
 import Login from './components/Login';
 import CreateModule from './components/CreateModule';
@@ -37,22 +40,17 @@ function AppContent() {
       {!hideTopNavbar && <Navbar />}
 
       <Routes>
-        {/* Public routes */}
         <Route path="/" element={<LandingPage />} />
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
 
-        {/* Shared resource routes for all logged users */}
         <Route element={<ProtectedRoute allowedRoles={['ADMIN', 'LECTURER', 'STUDENT']} />}>
           <Route path="/resources" element={<ResourceDashboard />} />
           <Route path="/resources/:facultyName" element={<FacultyModules />} />
           <Route path="/resources/:facultyName/:moduleName" element={<ModuleResources />} />
-
-          {/* Optional alias for your student dashboard button */}
           <Route path="/student/resources" element={<ResourceDashboard />} />
         </Route>
 
-        {/* Admin routes */}
         <Route element={<ProtectedRoute allowedRoles={['ADMIN']} />}>
           <Route element={<AdminLayout />}>
             <Route path="/admin-dashboard" element={<AdminDashboard />} />
@@ -64,18 +62,27 @@ function AppContent() {
           </Route>
         </Route>
 
-        {/* Student routes */}
         <Route element={<ProtectedRoute allowedRoles={['STUDENT']} />}>
           <Route path="/student-dashboard" element={<StudentDashboard />} />
           <Route path="/student/modules/:moduleId" element={<ModuleGroups />} />
         </Route>
 
-        {/* Lecturer routes */}
         <Route element={<ProtectedRoute allowedRoles={['LECTURER']} />}>
           <Route path="/lecturer-dashboard" element={<LecturerDashboard />} />
           <Route path="/upload-resource" element={<UploadResource />} />
         </Route>
       </Routes>
+
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        pauseOnHover
+        draggable
+        theme="colored"
+      />
     </div>
   );
 }

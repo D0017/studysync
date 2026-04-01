@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
 import { useNavigate, useParams } from 'react-router-dom';
+import { toast } from 'react-toastify';
 
 const getErrorMessage = (error, fallback) => {
     const data = error?.response?.data;
@@ -30,11 +31,13 @@ const ModuleGroups = () => {
             setGroups(Array.isArray(response.data) ? response.data : []);
         } catch (error) {
             console.error('Failed to fetch module groups:', error);
+            const errorText = getErrorMessage(error, 'Failed to load module groups.');
             setGroups([]);
             setMessage({
                 type: 'error',
-                text: getErrorMessage(error, 'Failed to load module groups.')
+                text: errorText
             });
+            toast.error(errorText);
         } finally {
             setLoading(false);
         }
@@ -54,12 +57,16 @@ const ModuleGroups = () => {
 
     const handleJoinGroup = async (groupId) => {
         if (!storedUser?.id) {
-            setMessage({ type: 'error', text: 'User session is missing. Please login again.' });
+            const errorText = 'User session is missing. Please login again.';
+            setMessage({ type: 'error', text: errorText });
+            toast.error(errorText);
             return;
         }
 
         if (hasJoinedAnyGroup) {
-            setMessage({ type: 'error', text: 'You already joined a group in this module.' });
+            const errorText = 'You already joined a group in this module.';
+            setMessage({ type: 'error', text: errorText });
+            toast.error(errorText);
             return;
         }
 
@@ -73,19 +80,24 @@ const ModuleGroups = () => {
             );
 
             setMessage({ type: 'success', text: response.data });
+            toast.success(typeof response.data === 'string' ? response.data : 'Joined group successfully.');
             await fetchGroups();
         } catch (error) {
             console.error('Failed to join group:', error);
+            const errorText = getErrorMessage(error, 'Failed to join the group.');
             setMessage({
                 type: 'error',
-                text: getErrorMessage(error, 'Failed to join the group.')
+                text: errorText
             });
+            toast.error(errorText);
         }
     };
 
     const handleRequestLeadership = async (groupId) => {
         if (!storedUser?.id) {
-            setMessage({ type: 'error', text: 'User session is missing. Please login again.' });
+            const errorText = 'User session is missing. Please login again.';
+            setMessage({ type: 'error', text: errorText });
+            toast.error(errorText);
             return;
         }
 
@@ -99,13 +111,16 @@ const ModuleGroups = () => {
             );
 
             setMessage({ type: 'success', text: response.data });
+            toast.success(typeof response.data === 'string' ? response.data : 'Leadership request sent successfully.');
             await fetchGroups();
         } catch (error) {
             console.error('Failed to request leadership:', error);
+            const errorText = getErrorMessage(error, 'Failed to request leadership.');
             setMessage({
                 type: 'error',
-                text: getErrorMessage(error, 'Failed to request leadership.')
+                text: errorText
             });
+            toast.error(errorText);
         }
     };
 
