@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
+import { toast } from 'react-toastify';
 
 const getErrorMessage = (error, fallback) => {
     const data = error?.response?.data;
@@ -53,7 +54,6 @@ const S = `
 .stat-lbl { font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:rgba(244,244,246,.35);margin-bottom:10px; }
 .stat-val { font-size:36px;font-weight:800;letter-spacing:-.03em;line-height:1; }
 .stat-sub { font-size:11px;color:rgba(244,244,246,.3);margin-top:6px; }
-/* TABLE */
 .tbl-wrap {
     overflow-x:auto;
     border-radius:18px;
@@ -94,7 +94,6 @@ tbody td { padding:13px 16px;font-size:13px;color:rgba(244,244,246,.75);vertical
 .btn-deactivate:hover { background:rgba(239,68,68,.2); }
 .btn-do-activate { background:rgba(52,211,153,.1);color:#6ee7b7;border:1px solid rgba(52,211,153,.2); }
 .btn-do-activate:hover { background:rgba(52,211,153,.18); }
-/* MOBILE CARDS */
 .mob-cards { display:flex;flex-direction:column;gap:12px; }
 .mob-card { padding:18px 20px; }
 .mob-top  { display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px; }
@@ -140,7 +139,9 @@ const AdminUserManagement = () => {
             setUsers(Array.isArray(response.data) ? response.data : []);
         } catch (error) {
             console.error('Error fetching users:', error);
-            setMessage({ type: 'error', text: getErrorMessage(error, 'Could not load users.') });
+            const errorText = getErrorMessage(error, 'Could not load users.');
+            setMessage({ type: 'error', text: errorText });
+            toast.error(errorText);
         } finally {
             setLoading(false);
         }
@@ -158,19 +159,26 @@ const AdminUserManagement = () => {
         try {
             await axios.put(`/api/users/${userId}/role`, newRole, { headers: { 'Content-Type': 'application/json' } });
             setMessage({ type: 'success', text: 'Role updated successfully.' });
+            toast.success('Role updated successfully.');
             await fetchUsers();
         } catch (error) {
-            setMessage({ type: 'error', text: getErrorMessage(error, 'Failed to update role.') });
+            const errorText = getErrorMessage(error, 'Failed to update role.');
+            setMessage({ type: 'error', text: errorText });
+            toast.error(errorText);
         }
     };
 
     const handleStatusToggle = async (userId, currentStatus) => {
         try {
             await axios.put(`/api/users/${userId}/status`, { active: !currentStatus });
-            setMessage({ type: 'success', text: `User ${currentStatus ? 'deactivated' : 'activated'} successfully.` });
+            const successText = `User ${currentStatus ? 'deactivated' : 'activated'} successfully.`;
+            setMessage({ type: 'success', text: successText });
+            toast.success(successText);
             await fetchUsers();
         } catch (error) {
-            setMessage({ type: 'error', text: getErrorMessage(error, 'Failed to update user status.') });
+            const errorText = getErrorMessage(error, 'Failed to update user status.');
+            setMessage({ type: 'error', text: errorText });
+            toast.error(errorText);
         }
     };
 
@@ -229,7 +237,6 @@ const AdminUserManagement = () => {
                         </div>
                     </div>
 
-                    {/* Desktop Table (xl) */}
                     <div className="card" style={{ overflow: 'hidden', marginBottom: '18px' }}>
                         <div style={{ overflowX: 'auto' }}>
                             <table style={{ display: 'table', width: '100%', borderCollapse: 'collapse', minWidth: '780px' }}>

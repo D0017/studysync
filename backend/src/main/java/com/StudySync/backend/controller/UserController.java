@@ -1,8 +1,11 @@
 package com.StudySync.backend.controller;
 
+import com.StudySync.backend.dto.ForgotPasswordRequest;
 import com.StudySync.backend.dto.LoginRequest;
+import com.StudySync.backend.dto.ResetPasswordRequest;
 import com.StudySync.backend.dto.UserStatusUpdateRequest;
 import com.StudySync.backend.model.User;
+import com.StudySync.backend.service.PasswordResetService;
 import com.StudySync.backend.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +19,9 @@ public class UserController {
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private PasswordResetService passwordResetService;
 
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@Valid @RequestBody User user) {
@@ -32,6 +38,20 @@ public class UserController {
             return ResponseEntity.ok(userService.loginUser(loginRequest));
         } catch (RuntimeException e) {
             return ResponseEntity.status(401).body(e.getMessage());
+        }
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+        return ResponseEntity.ok(passwordResetService.requestPasswordReset(request.getEmail()));
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+        try {
+            return ResponseEntity.ok(passwordResetService.resetPassword(request));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 

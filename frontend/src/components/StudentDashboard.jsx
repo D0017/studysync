@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 
 const getErrorMessage = (error, fallback) => {
     const data = error?.response?.data;
@@ -117,6 +118,7 @@ const StudentDashboard = () => {
             });
 
             setMessage({ type: 'success', text: response.data });
+            toast.success(typeof response.data === 'string' ? response.data : 'Enrolled successfully!');
             setEnrollmentKey('');
             await fetchStudentModules();
         } catch (error) {
