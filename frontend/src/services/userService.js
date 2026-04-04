@@ -22,3 +22,13 @@ export const loginUser = async (credentials) => {
         throw error.response ? error.response.data : "Login failed";
     }
 };
+
+export const requestPasswordReset = async (email) => {
+  const response = await axios.post('/api/users/forgot-password', { email });
+  return response.data;
+};
+
+export const resetPassword = async (payload) => {
+  const response = await axios.post('/api/users/reset-password', payload);
+  return response.data;
+};

@@ -4,6 +4,8 @@ import 'react-toastify/dist/ReactToastify.css';
 
 import Register from './components/Register';
 import Login from './components/Login';
+import ForgotPassword from './components/ForgotPassword';
+import ResetPassword from './components/ResetPassword';
 import CreateModule from './components/CreateModule';
 import AdminUserManagement from './components/AdminUserManagement';
 import AdminLayout from './components/AdminLayout';
@@ -33,7 +35,9 @@ function AppContent() {
     location.pathname.startsWith('/resources') ||
     location.pathname.startsWith('/upload-resource') ||
     location.pathname === '/login' ||
-    location.pathname === '/register';
+    location.pathname === '/register' ||
+    location.pathname === '/forgot-password' ||
+    location.pathname === '/reset-password';
 
   return (
     <div className="min-h-screen bg-[#F4F4F6]">
@@ -43,6 +47,8 @@ function AppContent() {
         <Route path="/" element={<LandingPage />} />
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
 
         <Route element={<ProtectedRoute allowedRoles={['ADMIN', 'LECTURER', 'STUDENT']} />}>
           <Route path="/resources" element={<ResourceDashboard />} />
