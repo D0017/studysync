@@ -4,7 +4,6 @@ export default function FacultyModules() {
 
   const { facultyName } = useParams();
 
-  // temporary modules
   const modules = {
     Computing: ["ITPM","OOP","DSA"],
     Business: ["Marketing","Finance"],
@@ -16,20 +15,30 @@ export default function FacultyModules() {
 
   return (
 
-    <div className="min-h-screen bg-[#F4F4F6]">
+    <div className="min-h-screen bg-gradient-to-br from-black via-[#0A0A0C] to-[#1a0d05] text-white">
 
-      <div className="bg-[#1F1F23] text-white py-14 text-center">
+      <div className="max-w-6xl mx-auto pt-16 px-6">
 
-        <h1 className="text-3xl font-bold">
+        <div className="bg-gradient-to-r from-[#1F1F23] to-[#2a1408] border border-orange-500/20 rounded-2xl p-10 shadow-lg shadow-orange-500/10">
 
-          {facultyName} Modules
+          <h1 className="text-3xl font-bold text-orange-400">
 
-        </h1>
+            {facultyName} Modules
+
+          </h1>
+
+          <p className="text-gray-400 mt-2">
+
+            Choose a module
+
+          </p>
+
+        </div>
 
       </div>
 
 
-      <div className="max-w-5xl mx-auto py-10 grid grid-cols-2 md:grid-cols-3 gap-6">
+      <div className="max-w-6xl mx-auto py-14 px-6 grid grid-cols-2 md:grid-cols-3 gap-8">
 
         {modules[facultyName]?.map(module => (
 
@@ -39,12 +48,17 @@ export default function FacultyModules() {
 
             to={`/resources/${facultyName}/${module}`}
 
-            className="bg-white/60 backdrop-blur-lg shadow-md rounded-2xl p-6 text-center hover:scale-105 transition"
+            className="bg-gradient-to-br from-[#1F1F23] to-[#140a05] border border-orange-500/10 backdrop-blur-lg p-8 rounded-2xl hover:border-orange-500 hover:shadow-lg hover:shadow-orange-500/30 transition"
+
           >
 
-            📁
+            <div className="text-4xl mb-2 text-orange-400">
 
-            <p className="mt-2 font-medium">
+              📂
+
+            </div>
+
+            <p className="font-semibold">
 
               {module}
 

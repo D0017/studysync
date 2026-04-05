@@ -2,109 +2,87 @@ import { useParams, Link } from "react-router-dom";
 
 export default function ModuleResources() {
 
-  const { facultyName, moduleName } = useParams();
+  const { moduleName } = useParams();
 
   const storedUser =
     JSON.parse(localStorage.getItem("user"));
 
-  const role =
-    storedUser?.role;
-
-
+  const role = storedUser?.role;
 
   const allResources =
-    JSON.parse(
-      localStorage.getItem("resources")
-    ) || [];
-
+    JSON.parse(localStorage.getItem("resources")) || [];
 
   const moduleResources =
     allResources.filter(r =>
-
       r.module.toLowerCase() ===
       moduleName.toLowerCase()
-
     );
-
-
 
   const deleteResource = id => {
 
-    const confirmDelete =
-      window.confirm(
-        "Are you sure you want to delete?"
-      );
-
-    if (!confirmDelete) return;
-
+    if (!window.confirm("Delete resource?"))
+      return;
 
     const updated =
-      allResources.filter(
-        r => r.id !== id
-      );
-
+      allResources.filter(r => r.id !== id);
 
     localStorage.setItem(
-
       "resources",
-
       JSON.stringify(updated)
-
     );
-
 
     window.location.reload();
 
   };
 
-
-
   const editResource = resource => {
 
     localStorage.setItem(
-
       "editResource",
-
       JSON.stringify(resource)
-
     );
-
 
     window.location.href =
       "/upload-resource";
 
   };
 
-
-
   return (
 
-    <div className="min-h-screen bg-[#F4F4F6]">
+    <div className="min-h-screen bg-gradient-to-br from-black via-[#0A0A0C] to-[#1a0d05] text-white">
 
-      <div className="bg-[#1F1F23] text-white py-14 text-center">
+      <div className="max-w-4xl mx-auto pt-16 px-6">
 
-        <h1 className="text-3xl font-bold">
+        <div className="bg-gradient-to-r from-[#1F1F23] to-[#2a1408] border border-orange-500/20 rounded-2xl p-10 shadow-lg shadow-orange-500/10">
 
-          {moduleName}
+          <h1 className="text-3xl font-bold text-orange-400">
 
-        </h1>
+            {moduleName}
+
+          </h1>
+
+          <p className="text-gray-400 mt-2">
+
+            Module resources
+
+          </p>
+
+        </div>
 
       </div>
 
 
-
-      <div className="max-w-4xl mx-auto py-10 space-y-4">
+      <div className="max-w-4xl mx-auto py-10 px-6 space-y-4">
 
         {moduleResources.length === 0 && (
 
-          <p className="text-center text-gray-500">
+          <div className="bg-[#1F1F23] border border-orange-500/10 rounded-xl p-6 text-center text-gray-400">
 
             No resources uploaded yet
 
-          </p>
+          </div>
 
         )}
-
 
 
         {moduleResources.map(file => (
@@ -113,19 +91,28 @@ export default function ModuleResources() {
 
             key={file.id}
 
-            className="bg-white rounded-xl shadow p-4 flex justify-between"
+            className="bg-gradient-to-r from-[#1F1F23] to-[#140a05] border border-orange-500/10 backdrop-blur-lg rounded-xl p-5 flex justify-between items-center hover:border-orange-500 hover:shadow-orange-500/20 hover:shadow-lg transition"
 
           >
 
-            <span>
+            <div>
 
-              📄 {file.title}.pdf
+              <p className="font-medium text-orange-300">
 
-            </span>
+                📄 {file.title}
+
+              </p>
+
+              <p className="text-xs text-gray-400 mt-1">
+
+                Year {file.year} • Semester {file.semester}
+
+              </p>
+
+            </div>
 
 
-
-            <div className="space-x-3">
+            <div className="flex gap-4 text-sm">
 
               <a
 
@@ -133,14 +120,13 @@ export default function ModuleResources() {
 
                 download={file.fileName}
 
-                className="text-blue-600"
+                className="text-blue-400 hover:text-blue-300"
 
               >
 
                 Download
 
               </a>
-
 
 
               {role === "LECTURER" && (
@@ -150,12 +136,10 @@ export default function ModuleResources() {
                   <button
 
                     onClick={() =>
-
                       editResource(file)
-
                     }
 
-                    className="text-green-600"
+                    className="text-green-400 hover:text-green-300"
 
                   >
 
@@ -164,16 +148,13 @@ export default function ModuleResources() {
                   </button>
 
 
-
                   <button
 
                     onClick={() =>
-
                       deleteResource(file.id)
-
                     }
 
-                    className="text-red-600"
+                    className="text-red-400 hover:text-red-300"
 
                   >
 
@@ -192,7 +173,6 @@ export default function ModuleResources() {
         ))}
 
 
-
         {role === "LECTURER" && (
 
           <Link
@@ -201,7 +181,7 @@ export default function ModuleResources() {
 
             state={{ moduleName }}
 
-            className="block mt-6 text-center bg-[#FF6A00] text-white py-3 rounded-xl shadow"
+            className="block text-center bg-gradient-to-r from-[#FF6A00] to-[#ff8c42] py-3 rounded-xl mt-8 shadow-lg shadow-orange-500/40 hover:scale-105 transition"
 
           >
 

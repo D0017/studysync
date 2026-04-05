@@ -14,7 +14,8 @@ export default function ResourceLibrary() {
 
     const fetchResources = async () => {
 
-        const data = await resourceService.getAllResources();
+        const data =
+            await resourceService.getAllResources();
 
         setResources(data);
 
@@ -22,19 +23,35 @@ export default function ResourceLibrary() {
 
     return (
 
-        <div className="p-6">
+        <div className="min-h-screen bg-[#F4F4F6]">
 
-            <h2 className="text-2xl font-bold mb-4">
-                Resource Library
-            </h2>
+            <div className="bg-[#1F1F23] text-white py-16 text-center">
 
-            <div className="grid gap-4">
+                <h2 className="text-3xl font-bold">
+
+                    Resource Library
+
+                </h2>
+
+                <p className="text-gray-400 mt-2">
+
+                    All uploaded materials
+
+                </p>
+
+            </div>
+
+
+            <div className="max-w-4xl mx-auto py-12 px-6 grid gap-5">
 
                 {resources.map(resource => (
 
                     <ResourceCard
+
                         key={resource.id}
+
                         resource={resource}
+
                     />
 
                 ))}

@@ -2,136 +2,103 @@ import { Link } from "react-router-dom";
 
 export default function ResourceDashboard() {
 
-  const storedUser = JSON.parse(localStorage.getItem("user"));
+  const storedUser =
+    JSON.parse(localStorage.getItem("user"));
 
   const role = storedUser?.role;
 
-
-
   const modules = [
-
     "Computing",
-
     "Business",
-
     "Engineering",
-
     "Quantity Surveying",
-
     "MBA",
-
     "MSC"
-
   ];
-
-
 
   return (
 
-    <div className="min-h-screen bg-[#F4F4F6]">
+    <div className="min-h-screen bg-gradient-to-br from-black via-[#0A0A0C] to-[#1a0d05] text-white">
 
+      {/* header */}
+      <div className="max-w-6xl mx-auto pt-16 px-6">
 
+        <div className="bg-gradient-to-r from-[#1F1F23] to-[#2a1408] border border-orange-500/20 rounded-2xl p-10 shadow-lg shadow-orange-500/10">
 
-      {/* top banner */}
+          <h1 className="text-4xl font-bold text-orange-400">
 
-      <div className="bg-[#1F1F23] text-white py-16 text-center">
+            Resource Library
 
-        <h1 className="text-4xl font-bold">
+          </h1>
 
-          Resource Library
+          <p className="text-gray-400 mt-2">
 
-        </h1>
+            Access shared learning materials
 
+          </p>
 
-
-        <p className="text-gray-300 mt-2">
-
-          Access shared learning materials
-
-        </p>
+        </div>
 
       </div>
 
 
-
       {/* folders */}
-
-      <div className="max-w-6xl mx-auto py-12 px-6">
-
-
+      <div className="max-w-6xl mx-auto py-14 px-6">
 
         <div className="grid grid-cols-2 md:grid-cols-3 gap-8">
 
+          {modules.map(module => (
 
+            <Link
 
-          {modules.map((module) => (
+              key={module}
 
+              to={`/resources/${module}`}
 
+              className="bg-gradient-to-br from-[#1F1F23] to-[#140a05] border border-orange-500/10 backdrop-blur-lg p-8 rounded-2xl hover:border-orange-500 hover:shadow-lg hover:shadow-orange-500/30 transition duration-300"
 
-        <Link
-            key={module}
-            to={`/resources/${module}`}
-            className="bg-white/60 backdrop-blur-lg shadow-md rounded-2xl p-8 text-center hover:scale-105 transition"
-        >
+            >
 
-        <div className="text-5xl mb-4">
-            📁
-        </div>
+              <div className="text-5xl mb-3 text-orange-400">
 
-        <h3 className="font-semibold text-[#0A0A0C]">
-            {module}
-        </h3>
+                📁
 
-        </Link>
+              </div>
 
+              <h3 className="font-semibold">
+
+                {module}
+
+              </h3>
+
+            </Link>
 
           ))}
 
-
-
         </div>
 
 
-
-        {/* lecturer button */}
-
         {role === "LECTURER" && (
 
-
-
-          <div className="text-center mt-12">
-
-
+          <div className="mt-14 text-center">
 
             <Link
 
               to="/upload-resource"
 
-              className="bg-[#FF6A00] text-white px-8 py-3 rounded-xl shadow-lg hover:opacity-90"
+              className="bg-gradient-to-r from-[#FF6A00] to-[#ff8c42] px-10 py-3 rounded-xl shadow-lg shadow-orange-500/40 hover:scale-105 transition"
 
             >
 
-
-
-              + Add Resource
-
-
+              + Add Faculties
 
             </Link>
 
-
-
           </div>
-
-
 
         )}
 
-
-
       </div>
-
-
 
     </div>
 
