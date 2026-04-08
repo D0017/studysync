@@ -28,6 +28,13 @@ import ModuleResources from './components/resources/ModuleResources';
 import GroupProjectBoard from './components/projectmanagement/GroupProjectBoard';
 import JiraBoard from './components/projectmanagement/JiraBoard';
 
+import LecturerLayout from './components/lecturer/LecturerLayout';
+import LecturerNotices from './components/lecturer/LecturerNotices';
+import LecturerVivaSchedule from './components/lecturer/LecturerVivaSchedule';
+import LecturerEvaluations from './components/lecturer/LecturerEvaluations';
+import LecturerAssignments from './components/lecturer/LecturerAssignments';
+import LecturerModules from './components/lecturer/LecturerModules';
+
 function AppContent() {
   const location = useLocation();
 
@@ -80,8 +87,15 @@ function AppContent() {
         </Route>
 
         <Route element={<ProtectedRoute allowedRoles={['LECTURER']} />}>
-          <Route path="/lecturer-dashboard" element={<LecturerDashboard />} />
-          <Route path="/upload-resource" element={<UploadResource />} />
+          <Route element={<LecturerLayout />}>
+            <Route path="/lecturer-dashboard" element={<LecturerDashboard />} />
+            <Route path="/lecturer/notices" element={<LecturerNotices />} />
+            <Route path="/lecturer/viva-schedule" element={<LecturerVivaSchedule />} />
+            <Route path="/lecturer/evaluations" element={<LecturerEvaluations />} />
+            <Route path="/lecturer/assignments" element={<LecturerAssignments />} />
+            <Route path="/lecturer/modules" element={<LecturerModules />} />
+            <Route path="/upload-resource" element={<UploadResource />} />
+          </Route>
         </Route>
       </Routes>
 
