@@ -1,5 +1,6 @@
 package com.StudySync.backend.service;
 
+import com.StudySync.backend.dto.LeadershipRequestResponse;
 import com.StudySync.backend.model.ProjectGroup;
 import com.StudySync.backend.model.StudyModule;
 import com.StudySync.backend.model.User;
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class GroupService {
@@ -24,9 +26,7 @@ public class GroupService {
     @Autowired
     private ProjectGroupRepository projectGroupRepository;
 
-
     // CREATE MODULE
-
     @Transactional
     public StudyModule createModule(StudyModule moduleRequest) {
         if (moduleRequest.getModuleCode() == null || moduleRequest.getModuleCode().trim().isEmpty()) {
@@ -41,29 +41,33 @@ public class GroupService {
             throw new RuntimeException("Enrollment key is required.");
         }
 
-        boolean moduleCodeExists = studyModuleRepository.findAll().stream()
-                .anyMatch(module -> module.getModuleCode().equalsIgnoreCase(moduleRequest.getModuleCode().trim()));
+        String moduleCode = moduleRequest.getModuleCode().trim();
+        String moduleName = moduleRequest.getModuleName().trim();
+        String enrollmentKey = moduleRequest.getEnrollmentKey().trim();
 
-        if (moduleCodeExists) {
+        if (studyModuleRepository.existsByModuleCodeIgnoreCase(moduleCode)) {
             throw new RuntimeException("Module code already exists.");
         }
 
-        boolean enrollmentKeyExists = studyModuleRepository.findByEnrollmentKey(moduleRequest.getEnrollmentKey().trim()).isPresent();
-
-        if (enrollmentKeyExists) {
+        if (studyModuleRepository.existsByEnrollmentKeyIgnoreCase(enrollmentKey)) {
             throw new RuntimeException("Enrollment key already exists.");
         }
 
-        moduleRequest.setModuleCode(moduleRequest.getModuleCode().trim());
-        moduleRequest.setModuleName(moduleRequest.getModuleName().trim());
-        moduleRequest.setEnrollmentKey(moduleRequest.getEnrollmentKey().trim());
+        moduleRequest.setModuleCode(moduleCode);
+        moduleRequest.setModuleName(moduleName);
+        moduleRequest.setEnrollmentKey(enrollmentKey);
 
         return studyModuleRepository.save(moduleRequest);
     }
 
+    // GET SINGLE MODULE
+    @Transactional(readOnly = true)
+    public StudyModule getModuleById(Long moduleId) {
+        return studyModuleRepository.findById(moduleId)
+                .orElseThrow(() -> new RuntimeException("Module not found."));
+    }
 
     // CREATE EMPTY GROUPS FOR A MODULE
-
     @Transactional
     public String createGroupsForModule(Long moduleId, int numberOfGroups, int maxCapacity) {
         if (numberOfGroups <= 0) {
@@ -95,9 +99,59 @@ public class GroupService {
         return "Successfully created " + numberOfGroups + " groups for module " + module.getModuleCode() + ".";
     }
 
+    // ADMIN: GET ALL MODULES
+    @Transactional(readOnly = true)
+    public List<StudyModule> getAllModules() {
+        return studyModuleRepository.findAll();
+    }
+
+    // ADMIN: GET ACTIVE LECTURERS
+    @Transactional(readOnly = true)
+    public List<User> getActiveLecturers() {
+        return userRepository.findByRoleAndIsActiveTrue(User.Role.LECTURER);
+    }
+
+    // ADMIN: ASSIGN / CHANGE / REMOVE LECTURER
+    @Transactional
+    public StudyModule assignLecturerToModule(Long moduleId, Long lecturerId) {
+        StudyModule module = studyModuleRepository.findById(moduleId)
+                .orElseThrow(() -> new RuntimeException("Module not found."));
+
+        // allow unassign
+        if (lecturerId == null) {
+            module.setLecturer(null);
+            return studyModuleRepository.save(module);
+        }
+
+        User lecturer = userRepository.findById(lecturerId)
+                .orElseThrow(() -> new RuntimeException("Lecturer not found."));
+
+        if (!lecturer.isActive()) {
+            throw new RuntimeException("Selected lecturer is inactive.");
+        }
+
+        if (lecturer.getRole() != User.Role.LECTURER) {
+            throw new RuntimeException("Selected user is not a lecturer.");
+        }
+
+        module.setLecturer(lecturer);
+        return studyModuleRepository.save(module);
+    }
+
+    // LECTURER: GET ASSIGNED MODULES
+    @Transactional(readOnly = true)
+    public List<StudyModule> getModulesByLecturer(Long lecturerId) {
+        User lecturer = userRepository.findById(lecturerId)
+                .orElseThrow(() -> new RuntimeException("Lecturer not found."));
+
+        if (lecturer.getRole() != User.Role.LECTURER) {
+            throw new RuntimeException("This user is not a lecturer.");
+        }
+
+        return studyModuleRepository.findByLecturer_Id(lecturerId);
+    }
 
     // STUDENT: ENROLL IN MODULE
-
     @Transactional
     public String enrollInModule(Long studentId, String enrollmentKey) {
         User student = userRepository.findById(studentId)
@@ -128,9 +182,7 @@ public class GroupService {
         return "Successfully enrolled in " + module.getModuleName() + ".";
     }
 
-
     // GET ENROLLED MODULES
-
     @Transactional(readOnly = true)
     public List<StudyModule> getStudentModules(Long studentId) {
         User student = userRepository.findById(studentId)
@@ -143,9 +195,7 @@ public class GroupService {
         return student.getEnrolledModules().stream().toList();
     }
 
-
-    //  GET GROUPS OF A MODULE
-
+    // GET GROUPS OF A MODULE
     @Transactional(readOnly = true)
     public List<ProjectGroup> getGroupsByModule(Long moduleId) {
         StudyModule module = studyModuleRepository.findById(moduleId)
@@ -154,9 +204,7 @@ public class GroupService {
         return module.getProjectGroups();
     }
 
-
     // STUDENT: JOIN GROUP
-
     @Transactional
     public String joinGroup(Long studentId, Long groupId) {
         User student = userRepository.findById(studentId)
@@ -197,9 +245,7 @@ public class GroupService {
         return "Successfully joined " + group.getGroupName() + ".";
     }
 
-
     // REQUEST LEADERSHIP
-
     @Transactional
     public String requestLeadership(Long studentId, Long groupId) {
         User student = userRepository.findById(studentId)
@@ -237,11 +283,49 @@ public class GroupService {
         return "Leadership request sent successfully.";
     }
 
-
-    // ADMIN: GET ALL MODULES
-
     @Transactional(readOnly = true)
-    public List<StudyModule> getAllModules() {
-        return studyModuleRepository.findAll();
+    public List<LeadershipRequestResponse> getPendingLeadershipRequests() {
+        List<ProjectGroup> pendingGroups = projectGroupRepository.findByRequestedLeaderIsNotNullAndLeaderIsNull();
+
+        return pendingGroups.stream()
+                .map(group -> new LeadershipRequestResponse(
+                        group.getId(),
+                        group.getGroupName(),
+                        group.getModule().getId(),
+                        group.getModule().getModuleCode(),
+                        group.getModule().getModuleName(),
+                        group.getRequestedLeader().getId(),
+                        group.getRequestedLeader().getFullName(),
+                        group.getRequestedLeader().getUniversityId(),
+                        group.getCurrentMembers().size(),
+                        group.getMaxCapacity()
+                ))
+                .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public String approveLeadershipRequest(Long groupId) {
+        ProjectGroup group = projectGroupRepository.findById(groupId)
+                .orElseThrow(() -> new RuntimeException("Group not found."));
+
+        if (group.getLeader() != null) {
+            throw new RuntimeException("This group already has an approved leader.");
+        }
+
+        if (group.getRequestedLeader() == null) {
+            throw new RuntimeException("No pending leadership request found for this group.");
+        }
+
+        User requestedStudent = group.getRequestedLeader();
+
+        if (!group.getCurrentMembers().contains(requestedStudent)) {
+            throw new RuntimeException("Requested student is not a member of this group.");
+        }
+
+        group.setLeader(requestedStudent);
+        group.setRequestedLeader(null);
+        projectGroupRepository.save(group);
+
+        return requestedStudent.getFullName() + " has been approved as leader of " + group.getGroupName() + ".";
     }
 }

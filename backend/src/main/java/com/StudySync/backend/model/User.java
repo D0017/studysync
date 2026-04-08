@@ -6,6 +6,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.Getter;
 import lombok.Setter;
+
 import java.util.HashSet;
 import java.util.Set;
 
@@ -56,4 +57,8 @@ public class User {
     )
     @JsonIgnore
     private Set<StudyModule> enrolledModules = new HashSet<>();
+
+    @OneToMany(mappedBy = "lecturer", fetch = FetchType.LAZY)
+    @JsonIgnore
+    private Set<StudyModule> assignedModules = new HashSet<>();
 }

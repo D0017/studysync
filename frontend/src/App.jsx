@@ -1,68 +1,108 @@
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
 import Register from './components/Register';
 import Login from './components/Login';
+import ForgotPassword from './components/ForgotPassword';
+import ResetPassword from './components/ResetPassword';
 import CreateModule from './components/CreateModule';
 import AdminUserManagement from './components/AdminUserManagement';
+import AdminLayout from './components/AdminLayout';
+import AdminDashboard from './components/AdminDashboard';
+import AdminModules from './components/AdminModules';
+import AdminModuleDetails from './components/AdminModuleDetails';
+import LeadershipRequests from './components/LeadershipRequests';
 import StudentDashboard from './components/StudentDashboard';
 import ModuleGroups from './components/ModuleGroups';
+import LecturerDashboard from './components/LecturerDashboard';
+import ProtectedRoute from './components/ProtectedRoute';
+import Navbar from './components/Navbar';
+import LandingPage from './pages/LandingPage';
+
+import UploadResource from './components/resources/UploadResource';
+import ResourceDashboard from './components/resources/ResourceDashboard';
+import FacultyModules from './components/resources/FacultyModules';
+import ModuleResources from './components/resources/ModuleResources';
+
 import GroupProjectBoard from './components/projectmanagement/GroupProjectBoard';
 import JiraBoard from './components/projectmanagement/JiraBoard';
 
-function App() {
+function AppContent() {
+  const location = useLocation();
+
+  const hideTopNavbar =
+    location.pathname.startsWith('/admin') ||
+    location.pathname.startsWith('/student') ||
+    location.pathname.startsWith('/lecturer') ||
+    location.pathname.startsWith('/resources') ||
+    location.pathname.startsWith('/upload-resource') ||
+    location.pathname.startsWith('/groups') ||
+    location.pathname === '/login' ||
+    location.pathname === '/register' ||
+    location.pathname === '/forgot-password' ||
+    location.pathname === '/reset-password';
+
   return (
-    <Router>
-      {/* Changed bg-gray-50 to your Light Background #F4F4F6 */}
-      <div className="min-h-screen" style={{ backgroundColor: '#F4F4F6' }}>
-        
-        {/* Navbar: Changed to Secondary Dark #1F1F23 with Orange accents */}
-        <nav className="shadow-md p-4 flex justify-between items-center" style={{ backgroundColor: '#1F1F23' }}>
-          <h1 className="text-xl font-bold" style={{ color: '#FF6A00' }}>StudySync</h1>
-          
-          <div className="space-x-4">
-            <Link 
-              title="Home" 
-              to="/" 
-              className="hover:opacity-80 transition-colors" 
-              style={{ color: '#F4F4F6' }}
-            >
-              Home
-            </Link>
-            
-            {/* Button: Primary Orange #FF6A00 with Deep Black #0A0A0C text */}
-            <Link 
-              title="Register" 
-              to="/register" 
-              className="px-4 py-2 rounded-lg font-semibold transition-transform hover:scale-105"
-              style={{ backgroundColor: '#FF6A00', color: '#0A0A0C' }}
-            >
-              Get Started
-            </Link>
-          </div>
-        </nav>
+    <div className="min-h-screen bg-[#F4F4F6]">
+      {!hideTopNavbar && <Navbar />}
 
-        <Routes>
-          <Route path="/" element={
-            <div className="text-center mt-20">
-              {/* Heading: Primary Black #0A0A0C */}
-              <h2 className="text-4xl font-bold" style={{ color: '#0A0A0C' }}>
-                Welcome to <span style={{ color: '#FF6A00' }}>StudySync</span>
-              </h2>
-              <p className="mt-4 text-lg" style={{ color: '#1F1F23' }}>
-                Academic Group & Learning Management System
-              </p>
-            </div>
-          } />
+      <Routes>
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
 
-          <Route path="/register" element={<Register />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/admin/create-module" element={<CreateModule />} />
-          <Route path="/admin-dashboard" element={<AdminUserManagement />} />
+        <Route element={<ProtectedRoute allowedRoles={['ADMIN', 'LECTURER', 'STUDENT']} />}>
+          <Route path="/resources" element={<ResourceDashboard />} />
+          <Route path="/resources/:facultyName" element={<FacultyModules />} />
+          <Route path="/resources/:facultyName/:moduleName" element={<ModuleResources />} />
+          <Route path="/student/resources" element={<ResourceDashboard />} />
+        </Route>
+
+        <Route element={<ProtectedRoute allowedRoles={['ADMIN']} />}>
+          <Route element={<AdminLayout />}>
+            <Route path="/admin-dashboard" element={<AdminDashboard />} />
+            <Route path="/admin/users" element={<AdminUserManagement />} />
+            <Route path="/admin/create-module" element={<CreateModule />} />
+            <Route path="/admin/modules" element={<AdminModules />} />
+            <Route path="/admin/modules/:moduleId" element={<AdminModuleDetails />} />
+            <Route path="/admin/leadership-requests" element={<LeadershipRequests />} />
+          </Route>
+        </Route>
+
+        <Route element={<ProtectedRoute allowedRoles={['STUDENT']} />}>
           <Route path="/student-dashboard" element={<StudentDashboard />} />
           <Route path="/student/modules/:moduleId" element={<ModuleGroups />} />
           <Route path="/groups/:groupId/project" element={<GroupProjectBoard />} />
           <Route path="/groups/:groupId/jira-board" element={<JiraBoard />} />
-        </Routes>
-      </div>
+        </Route>
+
+        <Route element={<ProtectedRoute allowedRoles={['LECTURER']} />}>
+          <Route path="/lecturer-dashboard" element={<LecturerDashboard />} />
+          <Route path="/upload-resource" element={<UploadResource />} />
+        </Route>
+      </Routes>
+
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        pauseOnHover
+        draggable
+        theme="colored"
+      />
+    </div>
+  );
+}
+
+function App() {
+  return (
+    <Router>
+      <AppContent />
     </Router>
   );
 }

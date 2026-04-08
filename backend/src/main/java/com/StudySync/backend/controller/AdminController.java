@@ -1,7 +1,10 @@
 package com.StudySync.backend.controller;
 
 import com.StudySync.backend.dto.GroupCreationRequest;
+import com.StudySync.backend.dto.LeadershipRequestResponse;
+import com.StudySync.backend.dto.ModuleLecturerAssignRequest;
 import com.StudySync.backend.model.StudyModule;
+import com.StudySync.backend.model.User;
 import com.StudySync.backend.service.GroupService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -27,6 +30,25 @@ public class AdminController {
         }
     }
 
+    @GetMapping("/modules")
+    public ResponseEntity<?> getAllModules() {
+        try {
+            List<StudyModule> modules = groupService.getAllModules();
+            return ResponseEntity.ok(modules);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @GetMapping("/modules/{moduleId}")
+    public ResponseEntity<?> getModuleById(@PathVariable Long moduleId) {
+        try {
+            return ResponseEntity.ok(groupService.getModuleById(moduleId));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
     @PostMapping("/modules/{moduleId}/groups")
     public ResponseEntity<?> createGroupsForModule(
             @PathVariable Long moduleId,
@@ -44,11 +66,44 @@ public class AdminController {
         }
     }
 
-    @GetMapping("/modules")
-    public ResponseEntity<?> getAllModules() {
+    @GetMapping("/lecturers")
+    public ResponseEntity<?> getActiveLecturers() {
         try {
-            List<StudyModule> modules = groupService.getAllModules();
-            return ResponseEntity.ok(modules);
+            List<User> lecturers = groupService.getActiveLecturers();
+            return ResponseEntity.ok(lecturers);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PutMapping("/modules/{moduleId}/lecturer")
+    public ResponseEntity<?> assignLecturerToModule(
+            @PathVariable Long moduleId,
+            @RequestBody ModuleLecturerAssignRequest request
+    ) {
+        try {
+            StudyModule updatedModule = groupService.assignLecturerToModule(moduleId, request.getLecturerId());
+            return ResponseEntity.ok(updatedModule);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @GetMapping("/leadership-requests")
+    public ResponseEntity<?> getPendingLeadershipRequests() {
+        try {
+            List<LeadershipRequestResponse> requests = groupService.getPendingLeadershipRequests();
+            return ResponseEntity.ok(requests);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PostMapping("/leadership-requests/{groupId}/approve")
+    public ResponseEntity<?> approveLeadershipRequest(@PathVariable Long groupId) {
+        try {
+            String result = groupService.approveLeadershipRequest(groupId);
+            return ResponseEntity.ok(result);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
