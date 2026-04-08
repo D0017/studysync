@@ -1,140 +1,149 @@
 import { Link } from "react-router-dom";
+import GlassBackButton from "../GlassBackButton";
+import libraryBg from "../../assets/meas-natural-resources-library-3.jpg";
 
 export default function ResourceDashboard() {
-
   const storedUser = JSON.parse(localStorage.getItem("user"));
-
   const role = storedUser?.role;
 
-
-
   const modules = [
-
     "Computing",
-
     "Business",
-
     "Engineering",
-
     "Quantity Surveying",
-
     "MBA",
-
     "MSC"
-
   ];
 
+  const getDashboardRoute = () => {
+    if (role === "LECTURER") return "/lecturer-dashboard";
+    if (role === "STUDENT") return "/student-dashboard";
+    if (role === "ADMIN") return "/admin-dashboard";
 
+    return "/login";
+  };
 
   return (
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top_right,_rgba(255,106,0,0.18),_transparent_22%),linear-gradient(135deg,#050506_0%,#0A0A0C_40%,#120b07_100%)] text-white">
+      <div className="max-w-7xl mx-auto px-6 py-10">
+        <GlassBackButton to={getDashboardRoute()} label="Back to Dashboard" />
 
-    <div className="min-h-screen bg-[#F4F4F6]">
+        {/* Hero Section */}
+        <div className="relative overflow-hidden rounded-[32px] border border-white/10 shadow-[0_20px_80px_rgba(0,0,0,0.45)] min-h-[360px] md:min-h-[420px]">
+          {/* Background Image */}
+          <img
+            src={libraryBg}
+            alt="Academic library workspace"
+            className="absolute inset-0 h-full w-full object-cover"
+          />
 
+          {/* Overlays */}
+          <div className="absolute inset-0 bg-gradient-to-r from-[#0A0A0C]/90 via-[#0A0A0C]/65 to-[#1F1F23]/40"></div>
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(255,106,0,0.22),_transparent_28%)] pointer-events-none"></div>
 
+          <div className="relative z-10 flex h-full min-h-[360px] md:min-h-[420px] items-end">
+            <div className="w-full px-8 py-10 md:px-12 md:py-12">
+              <div className="inline-flex items-center rounded-full border border-[#FF6A00]/40 bg-[#0A0A0C]/45 px-4 py-2 text-sm font-semibold text-[#FF6A00] backdrop-blur-md shadow-[0_0_30px_rgba(255,106,0,0.12)]">
+                Shared Academic Library
+              </div>
 
-      {/* top banner */}
+              <div className="mt-6 flex flex-col gap-8 md:flex-row md:items-end md:justify-between">
+                <div>
+                  <h1 className="text-4xl md:text-5xl font-black tracking-tight text-white leading-tight drop-shadow-[0_4px_18px_rgba(0,0,0,0.45)]">
+                    Resource Library
+                  </h1>
 
-      <div className="bg-[#1F1F23] text-white py-16 text-center">
+                  <p className="mt-3 max-w-2xl text-base md:text-lg text-gray-200 leading-relaxed drop-shadow-[0_2px_10px_rgba(0,0,0,0.35)]">
+                    Access shared learning materials, module resources, uploaded documents,
+                    videos, archives, and study content in one modern workspace.
+                  </p>
+                </div>
 
-        <h1 className="text-4xl font-bold">
+                <div className="grid grid-cols-2 gap-4 md:min-w-[320px]">
+                  <div className="rounded-2xl border border-white/15 bg-[#0A0A0C]/45 px-5 py-4 backdrop-blur-xl">
+                    <p className="text-xs uppercase tracking-[0.25em] text-gray-300">
+                      Access
+                    </p>
+                    <p className="mt-2 text-2xl font-bold text-[#FF6A00]">
+                      24/7
+                    </p>
+                  </div>
 
-          Resource Library
-
-        </h1>
-
-
-
-        <p className="text-gray-300 mt-2">
-
-          Access shared learning materials
-
-        </p>
-
-      </div>
-
-
-
-      {/* folders */}
-
-      <div className="max-w-6xl mx-auto py-12 px-6">
-
-
-
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-8">
-
-
-
-          {modules.map((module) => (
-
-
-
-        <Link
-            key={module}
-            to={`/resources/${module}`}
-            className="bg-white/60 backdrop-blur-lg shadow-md rounded-2xl p-8 text-center hover:scale-105 transition"
-        >
-
-        <div className="text-5xl mb-4">
-            📁
-        </div>
-
-        <h3 className="font-semibold text-[#0A0A0C]">
-            {module}
-        </h3>
-
-        </Link>
-
-
-          ))}
-
-
-
-        </div>
-
-
-
-        {/* lecturer button */}
-
-        {role === "LECTURER" && (
-
-
-
-          <div className="text-center mt-12">
-
-
-
-            <Link
-
-              to="/upload-resource"
-
-              className="bg-[#FF6A00] text-white px-8 py-3 rounded-xl shadow-lg hover:opacity-90"
-
-            >
-
-
-
-              + Add Resource
-
-
-
-            </Link>
-
-
-
+                  <div className="rounded-2xl border border-white/15 bg-[#0A0A0C]/45 px-5 py-4 backdrop-blur-xl">
+                    <p className="text-xs uppercase tracking-[0.25em] text-gray-300">
+                      Workspace
+                    </p>
+                    <p className="mt-2 text-2xl font-bold text-white">
+                      Smart
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
+        </div>
 
+        {/* Section Header */}
+        <div className="mt-10 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-[0.3em] text-[#FF6A00]">
+              Faculties
+            </p>
+            <h2 className="mt-2 text-2xl md:text-3xl font-bold text-white">
+              Browse by Faculty
+            </h2>
+            <p className="mt-2 text-gray-400">
+              Select a faculty to explore its modules and available resources.
+            </p>
+          </div>
+        </div>
 
+        {/* Faculty Grid */}
+        <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-7">
+          {modules.map((module, index) => (
+            <Link
+              key={module}
+              to={`/resources/${module}`}
+              className="group relative overflow-hidden rounded-[28px] border border-white/10 bg-white/5 p-7 backdrop-blur-2xl shadow-[0_14px_40px_rgba(0,0,0,0.3)] transition duration-300 hover:-translate-y-1 hover:border-[#FF6A00]/40 hover:bg-white/[0.08] hover:shadow-[0_20px_50px_rgba(255,106,0,0.12)]"
+            >
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(255,106,0,0.14),_transparent_30%)] opacity-0 transition duration-300 group-hover:opacity-100"></div>
 
-        )}
+              <div className="relative">
+                <div className="flex items-start justify-between">
+                  <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-[#FF6A00]/20 bg-[#FF6A00]/10 text-4xl shadow-[0_0_25px_rgba(255,106,0,0.10)]">
+                    📁
+                  </div>
 
+                  <div className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-semibold text-gray-300">
+                    0{index + 1}
+                  </div>
+                </div>
 
+                <div className="mt-6">
+                  <h3 className="text-2xl font-bold text-white leading-snug">
+                    {module}
+                  </h3>
 
+                  <p className="mt-2 text-sm text-gray-400 leading-relaxed">
+                    Open this faculty workspace to view module folders, uploaded files,
+                    and academic materials.
+                  </p>
+                </div>
+
+                <div className="mt-6 flex items-center justify-between">
+                  <span className="text-sm font-semibold text-[#FF6A00]">
+                    Explore Faculty
+                  </span>
+
+                  <span className="text-lg text-white transition duration-300 group-hover:translate-x-1">
+                    →
+                  </span>
+                </div>
+              </div>
+            </Link>
+          ))}
+        </div>
       </div>
-
-
-
     </div>
-
   );
-
 }
