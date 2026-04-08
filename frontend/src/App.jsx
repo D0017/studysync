@@ -107,7 +107,7 @@ function AppContent() {
         closeOnClick
         pauseOnHover
         draggable
-        theme="colored"
+        theme="dark"
       />
     </div>
   );
