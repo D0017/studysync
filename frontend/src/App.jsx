@@ -25,6 +25,9 @@ import ResourceDashboard from './components/resources/ResourceDashboard';
 import FacultyModules from './components/resources/FacultyModules';
 import ModuleResources from './components/resources/ModuleResources';
 
+import GroupProjectBoard from './components/projectmanagement/GroupProjectBoard';
+import JiraBoard from './components/projectmanagement/JiraBoard';
+
 function AppContent() {
   const location = useLocation();
 
@@ -34,6 +37,7 @@ function AppContent() {
     location.pathname.startsWith('/lecturer') ||
     location.pathname.startsWith('/resources') ||
     location.pathname.startsWith('/upload-resource') ||
+    location.pathname.startsWith('/groups') ||
     location.pathname === '/login' ||
     location.pathname === '/register' ||
     location.pathname === '/forgot-password' ||
@@ -71,6 +75,8 @@ function AppContent() {
         <Route element={<ProtectedRoute allowedRoles={['STUDENT']} />}>
           <Route path="/student-dashboard" element={<StudentDashboard />} />
           <Route path="/student/modules/:moduleId" element={<ModuleGroups />} />
+          <Route path="/groups/:groupId/project" element={<GroupProjectBoard />} />
+          <Route path="/groups/:groupId/jira-board" element={<JiraBoard />} />
         </Route>
 
         <Route element={<ProtectedRoute allowedRoles={['LECTURER']} />}>

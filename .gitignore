@@ -17,6 +17,7 @@ backend/HELP.md
 *.class
 *.log
 hs_err_pid*
+backend/src/main/resources/application.properties
 
 # --- Frontend (React / Vite) ---
 frontend/node_modules/

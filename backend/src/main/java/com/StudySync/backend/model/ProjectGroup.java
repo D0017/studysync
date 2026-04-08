@@ -43,4 +43,8 @@ public class ProjectGroup {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "requested_leader_id")
     private User requestedLeader;
+
+    @OneToOne(mappedBy = "projectGroup", fetch = FetchType.LAZY)
+    @JsonIgnore
+    private Project project;
 }

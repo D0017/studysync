@@ -16,7 +16,7 @@ const getErrorMessage = (error, fallback) => {
 const ModuleGroups = () => {
     const { moduleId } = useParams();
     const navigate = useNavigate();
-    const storedUser = JSON.parse(localStorage.getItem('user'));
+    const storedUser = JSON.parse(localStorage.getItem('user') || 'null');
 
     const [groups, setGroups] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -27,7 +27,7 @@ const ModuleGroups = () => {
             setLoading(true);
             setMessage({ type: '', text: '' });
 
-            const response = await axios.get(`http://localhost:8090/api/groups/modules/${moduleId}/all`);
+            const response = await axios.get(`/api/groups/modules/${moduleId}/all`);
             setGroups(Array.isArray(response.data) ? response.data : []);
         } catch (error) {
             console.error('Failed to fetch module groups:', error);
@@ -72,7 +72,7 @@ const ModuleGroups = () => {
 
         try {
             const response = await axios.post(
-                `http://localhost:8090/api/groups/${groupId}/join`,
+                `/api/groups/${groupId}/join`,
                 null,
                 {
                     params: { studentId: storedUser.id }
@@ -103,7 +103,7 @@ const ModuleGroups = () => {
 
         try {
             const response = await axios.post(
-                `http://localhost:8090/api/groups/${groupId}/request-leader`,
+                `/api/groups/${groupId}/request-leader`,
                 null,
                 {
                     params: { studentId: storedUser.id }
@@ -111,7 +111,11 @@ const ModuleGroups = () => {
             );
 
             setMessage({ type: 'success', text: response.data });
-            toast.success(typeof response.data === 'string' ? response.data : 'Leadership request sent successfully.');
+            toast.success(
+                typeof response.data === 'string'
+                    ? response.data
+                    : 'Leadership request sent successfully.'
+            );
             await fetchGroups();
         } catch (error) {
             console.error('Failed to request leadership:', error);
@@ -398,6 +402,24 @@ const ModuleGroups = () => {
                                                     className="cursor-not-allowed rounded-2xl bg-gray-500 px-4 py-2.5 text-sm font-semibold text-white"
                                                 >
                                                     Leader Already Assigned
+                                                </button>
+                                            )}
+
+                                            {myGroupFlag && (
+                                                <button
+                                                    onClick={() => navigate(`/groups/${group.id}/project`)}
+                                                    className="rounded-2xl bg-[#10B981] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#059669]"
+                                                >
+                                                    Open Project Board
+                                                </button>
+                                            )}
+
+                                            {myGroupFlag && (
+                                                <button
+                                                    onClick={() => navigate(`/groups/${group.id}/jira-board`)}
+                                                    className="rounded-2xl bg-[#3B82F6] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#2563EB]"
+                                                >
+                                                    Open Jira Board
                                                 </button>
                                             )}
                                         </div>
