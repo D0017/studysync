@@ -47,7 +47,7 @@ const Navbar = () => {
   };
 
   return (
-    <header className="sticky top-0 z-50 border-b border-[#1F1F23]/8 bg-[#FAFAFC]/88 backdrop-blur-xl">
+    <header className="sticky top-0 z-50 border-b border-white/10 bg-[#0F1218]/88 backdrop-blur-xl">
       <div className="mx-auto max-w-7xl px-3 sm:px-4 lg:px-6">
         <div className="flex h-20 items-center justify-between gap-4">
           <Link
@@ -63,22 +63,22 @@ const Navbar = () => {
             />
 
             <div className="min-w-0">
-              <p className="truncate text-[1.75rem] font-semibold leading-none tracking-tight text-[#1F1F23] sm:text-xl">
+              <p className="truncate text-[1.75rem] font-semibold leading-none tracking-tight text-white sm:text-xl">
                 StudySync
               </p>
-              <p className="hidden truncate text-sm text-[#1F1F23]/55 sm:block">
+              <p className="hidden truncate text-sm text-slate-400 sm:block">
                 Academic Group & Learning Management System
               </p>
             </div>
           </Link>
 
           {isHomePage && (
-            <nav className="hidden items-center gap-1 rounded-full border border-[#1F1F23]/8 bg-white/80 p-1.5 shadow-sm md:flex">
+            <nav className="hidden items-center gap-1 rounded-full border border-white/10 bg-white/5 p-1.5 md:flex">
               {navLinks.map((item) => (
                 <a
                   key={item.label}
                   href={item.href}
-                  className="rounded-full px-5 py-2 text-sm font-medium text-[#1F1F23]/72 transition-all duration-200 hover:bg-[#F4F4F6] hover:text-[#1F1F23]"
+                  className="rounded-full px-5 py-2 text-sm font-medium text-slate-300 transition-all duration-200 hover:bg-white/10 hover:text-white"
                 >
                   {item.label}
                 </a>
@@ -90,7 +90,7 @@ const Navbar = () => {
             {storedUser ? (
               <button
                 onClick={handleLogout}
-                className="inline-flex h-11 items-center justify-center rounded-xl bg-[#1F1F23] px-5 text-sm font-semibold text-white transition-all duration-200 hover:bg-[#2A2A31]"
+                className="inline-flex h-11 items-center justify-center rounded-xl border border-white/10 bg-white/5 px-5 text-sm font-semibold text-white transition-all duration-200 hover:bg-white/10"
               >
                 Logout
               </button>
@@ -98,14 +98,14 @@ const Navbar = () => {
               <>
                 <Link
                   to="/login"
-                  className="inline-flex h-11 items-center justify-center rounded-xl border border-[#1F1F23]/10 bg-white px-4 text-sm font-semibold text-[#1F1F23] transition-all duration-200 hover:bg-[#F7F7F9] hover:shadow-sm"
+                  className="inline-flex h-11 items-center justify-center rounded-xl border border-white/10 bg-white/5 px-4 text-sm font-semibold text-white transition-all duration-200 hover:bg-white/10"
                 >
                   Sign In
                 </Link>
 
                 <Link
                   to="/register"
-                  className="inline-flex h-11 items-center justify-center rounded-xl bg-[#FF6A00] px-5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(255,106,0,0.20)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#FF7B22] hover:shadow-[0_14px_28px_rgba(255,106,0,0.28)]"
+                  className="inline-flex h-11 items-center justify-center rounded-xl bg-[#FF6A00] px-5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(255,106,0,0.18)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#FF7B22]"
                 >
                   Get Started
                 </Link>
@@ -116,7 +116,7 @@ const Navbar = () => {
           <button
             type="button"
             onClick={() => setMobileOpen((prev) => !prev)}
-            className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-[#1F1F23]/10 bg-white text-[#1F1F23] transition hover:bg-[#FAFAFB] md:hidden"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-white transition hover:bg-white/10 md:hidden"
             aria-label="Toggle navigation menu"
           >
             {mobileOpen ? <X size={20} /> : <Menu size={20} />}
@@ -124,7 +124,7 @@ const Navbar = () => {
         </div>
 
         {mobileOpen && (
-          <div className="border-t border-[#1F1F23]/8 pb-4 pt-4 md:hidden">
+          <div className="border-t border-white/10 pb-4 pt-4 md:hidden">
             {isHomePage && (
               <nav className="mb-4 flex flex-col gap-2">
                 {navLinks.map((item) => (
@@ -132,7 +132,7 @@ const Navbar = () => {
                     key={item.label}
                     href={item.href}
                     onClick={closeMobileMenu}
-                    className="rounded-xl px-4 py-3 text-sm font-medium text-[#1F1F23]/80 transition hover:bg-white"
+                    className="rounded-xl px-4 py-3 text-sm font-medium text-slate-300 transition hover:bg-white/5 hover:text-white"
                   >
                     {item.label}
                   </a>
@@ -144,7 +144,7 @@ const Navbar = () => {
               {storedUser ? (
                 <button
                   onClick={handleLogout}
-                  className="rounded-xl bg-[#1F1F23] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#2A2A31]"
+                  className="rounded-xl border border-white/10 bg-white/5 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
                 >
                   Logout
                 </button>
@@ -153,7 +153,7 @@ const Navbar = () => {
                   <Link
                     to="/login"
                     onClick={closeMobileMenu}
-                    className="rounded-xl border border-[#1F1F23]/10 bg-white px-5 py-3 text-center text-sm font-semibold text-[#1F1F23] transition hover:bg-[#FAFAFB]"
+                    className="rounded-xl border border-white/10 bg-white/5 px-5 py-3 text-center text-sm font-semibold text-white transition hover:bg-white/10"
                   >
                     Sign In
                   </Link>
@@ -161,7 +161,7 @@ const Navbar = () => {
                   <Link
                     to="/register"
                     onClick={closeMobileMenu}
-                    className="rounded-xl bg-[#FF6A00] px-5 py-3 text-center text-sm font-semibold text-white shadow-[0_12px_30px_rgba(255,106,0,0.22)] transition hover:bg-[#FF7B22]"
+                    className="rounded-xl bg-[#FF6A00] px-5 py-3 text-center text-sm font-semibold text-white shadow-[0_12px_30px_rgba(255,106,0,0.18)] transition hover:bg-[#FF7B22]"
                   >
                     Get Started
                   </Link>
