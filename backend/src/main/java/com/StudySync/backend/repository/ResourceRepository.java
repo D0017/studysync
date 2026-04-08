@@ -7,8 +7,9 @@ import java.util.List;
 
 public interface ResourceRepository extends JpaRepository<Resource, Long> {
 
-    List<Resource> findByModule(String module);
+    List<Resource> findByModuleIgnoreCase(String module);
 
     List<Resource> findByYear(String year);
 
+    List<Resource> findByFacultyIgnoreCaseAndModuleIgnoreCase(String faculty, String module);
 }

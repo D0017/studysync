@@ -6,6 +6,7 @@ import lombok.*;
 import java.time.LocalDateTime;
 
 @Entity
+@Table(name = "resource")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -18,8 +19,10 @@ public class Resource {
 
     private String title;
 
+    @Column(columnDefinition = "TEXT")
     private String description;
 
+    @Column(name = "file_url")
     private String fileUrl;
 
     private String module;
@@ -28,9 +31,20 @@ public class Resource {
 
     private String year;
 
+    private String semester;
+
+    @Column(name = "uploaded_by")
     private String uploadedBy;
 
+    @Column(name = "upload_date")
     private LocalDateTime uploadDate;
 
+    @Column(name = "updated_date")
     private LocalDateTime updatedDate;
+
+    @Column(name = "original_file_name")
+    private String originalFileName;
+
+    @Column(name = "file_type")
+    private String fileType;
 }
