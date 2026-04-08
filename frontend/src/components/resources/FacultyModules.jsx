@@ -14,13 +14,44 @@ export default function FacultyModules() {
     MSC: ["Research Methods"]
   };
 
+  const storedUser =
+    JSON.parse(localStorage.getItem("user"));
+
+  const getDashboardRoute = () => {
+
+    if (storedUser?.role === "LECTURER")
+      return "/lecturer-dashboard";
+
+    if (storedUser?.role === "STUDENT")
+      return "/student-dashboard";
+
+    if (storedUser?.role === "ADMIN")
+      return "/admin-dashboard";
+
+    return "/login";
+  };
+
   return (
 
     <div className="min-h-screen bg-[radial-gradient(circle_at_top_right,_rgba(255,106,0,0.18),_transparent_22%),linear-gradient(135deg,#050506_0%,#0A0A0C_40%,#120b07_100%)] text-white">
 
       <div className="max-w-7xl mx-auto px-6 py-10">
 
-        <GlassBackButton to="/resources" label="Back to Resources" />
+        <div className="flex justify-between items-center mb-6">
+
+          <GlassBackButton
+            to="/resources"
+            label="Back to Resources"
+          />
+
+          <Link
+            to={getDashboardRoute()}
+            className="rounded-2xl bg-gradient-to-r from-[#FF6A00] to-[#ff8c42] px-6 py-3 text-sm font-bold text-white shadow-[0_10px_30px_rgba(255,106,0,0.35)] transition duration-300 hover:scale-[1.03] hover:shadow-[0_12px_35px_rgba(255,106,0,0.45)]"
+          >
+            Dashboard
+          </Link>
+
+        </div>
 
         {/* Hero */}
         <div className="relative overflow-hidden rounded-[32px] border border-white/10 bg-white/5 backdrop-blur-2xl shadow-[0_20px_80px_rgba(0,0,0,0.45)]">
@@ -61,7 +92,6 @@ export default function FacultyModules() {
 
         </div>
 
-
         {/* Section */}
         <div className="mt-10">
           <p className="text-sm font-semibold uppercase tracking-[0.3em] text-[#FF6A00]">
@@ -74,7 +104,6 @@ export default function FacultyModules() {
             Open a module folder to view uploaded resources and manage academic files.
           </p>
         </div>
-
 
         {/* Module Cards */}
         <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-7">

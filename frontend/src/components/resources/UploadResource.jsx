@@ -77,8 +77,8 @@ export default function UploadResource() {
       newErrors.lecturerName = "Lecturer name is required";
     }
 
-    if (!editingResource && !file) {
-      newErrors.file = "A file is required";
+    if (!file) {
+      newErrors.file = "Attachment is required";
     }
 
     if (file) {
@@ -219,13 +219,8 @@ export default function UploadResource() {
           <label className="text-sm text-gray-400">Faculty *</label>
           <input
             value={form.faculty}
-            onChange={(e) =>
-              setForm({
-                ...form,
-                faculty: e.target.value,
-              })
-            }
-            className="mt-1 bg-[#0A0A0C] border border-gray-700 p-3 w-full rounded-lg"
+            readOnly
+            className="mt-1 bg-gray-900 border border-gray-700 p-3 w-full rounded-lg text-gray-400"
           />
           <p className="text-red-400 text-sm mt-1">{errors.faculty}</p>
         </div>
@@ -234,13 +229,8 @@ export default function UploadResource() {
           <label className="text-sm text-gray-400">Module *</label>
           <input
             value={form.module}
-            onChange={(e) =>
-              setForm({
-                ...form,
-                module: e.target.value,
-              })
-            }
-            className="mt-1 bg-[#0A0A0C] border border-gray-700 p-3 w-full rounded-lg"
+            readOnly
+            className="mt-1 bg-gray-900 border border-gray-700 p-3 w-full rounded-lg text-gray-400"
           />
           <p className="text-red-400 text-sm mt-1">{errors.module}</p>
         </div>
@@ -248,34 +238,44 @@ export default function UploadResource() {
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="text-sm text-gray-400">Year *</label>
-            <input
-              value={form.year}
-              onChange={(e) =>
-                setForm({
-                  ...form,
-                  year: e.target.value,
-                })
-              }
-              className="mt-1 bg-[#0A0A0C] border border-gray-700 p-3 w-full rounded-lg"
-            />
-            <p className="text-red-400 text-sm mt-1">{errors.year}</p>
-          </div>
+              <select
+                value={form.year}
+                onChange={(e) =>
+                  setForm({
+                    ...form,
+                    year: e.target.value,
+                  })
+                }
+                className="mt-1 bg-[#0A0A0C] border border-gray-700 p-3 w-full rounded-lg text-white"
+              >
+                <option value="">Select Year</option>
+                <option value="1">Year 1</option>
+                <option value="2">Year 2</option>
+                <option value="3">Year 3</option>
+                <option value="4">Year 4</option>
+              </select>
+              <p className="text-red-400 text-sm mt-1">{errors.year}</p>
+            </div>
 
-          <div>
-            <label className="text-sm text-gray-400">Semester *</label>
-            <input
-              value={form.semester}
-              onChange={(e) =>
-                setForm({
-                  ...form,
-                  semester: e.target.value,
-                })
-              }
-              className="mt-1 bg-[#0A0A0C] border border-gray-700 p-3 w-full rounded-lg"
-            />
-            <p className="text-red-400 text-sm mt-1">{errors.semester}</p>
-          </div>
-        </div>
+            <div>
+              <label className="text-sm text-gray-400">Semester *</label>
+                <select
+                  value={form.semester}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      semester: e.target.value,
+                    })
+                  }
+                  className="mt-1 bg-[#0A0A0C] border border-gray-700 p-3 w-full rounded-lg text-white"
+                >
+                  <option value="">Select Semester</option>
+                  <option value="1">Semester 1</option>
+                  <option value="2">Semester 2</option>
+                </select>
+                <p className="text-red-400 text-sm mt-1">{errors.semester}</p>
+              </div>
+            </div>
 
         <div>
           <label className="text-sm text-gray-400">Description</label>
