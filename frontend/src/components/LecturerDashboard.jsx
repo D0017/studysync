@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 
 const getErrorMessage = (error, fallback) => {
     const data = error?.response?.data;
@@ -88,6 +88,11 @@ const LecturerDashboard = () => {
         fetchDashboardData();
     }, [fetchDashboardData]);
 
+    const handleLogout = () => {
+        localStorage.removeItem('user');
+        window.location.href = '/login';
+    };
+
     const statCards = [
         {
             title: 'Assigned Modules',
@@ -171,7 +176,6 @@ const LecturerDashboard = () => {
     return (
         <div className="min-h-screen bg-[#F4F4F6] p-6 md:p-8">
             <div className="max-w-7xl mx-auto">
-                {/* Header Section */}
                 <div className="relative overflow-hidden rounded-3xl bg-[#0A0A0C] p-7 md:p-8 shadow-2xl mb-8 border-b-4 border-[#FF6A00]">
                     <div className="relative z-10 flex flex-col xl:flex-row xl:items-center xl:justify-between gap-6">
                         <div className="max-w-3xl">
@@ -179,7 +183,7 @@ const LecturerDashboard = () => {
                                 Lecturer Workspace
                             </p>
                             <h1 className="mt-3 text-3xl md:text-4xl font-black leading-tight text-white">
-                                Welcome back, <br/>
+                                Welcome back, <br />
                                 <span className="text-[#FF6A00]">
                                     {storedUser?.fullName || 'Lecturer'}
                                 </span>
@@ -202,19 +206,34 @@ const LecturerDashboard = () => {
                             >
                                 Refresh
                             </button>
+                            <Link
+                                to="/resources"
+                                className="rounded-2xl border border-white/10 bg-[#1F1F23] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#2a2a2e]"
+                            >
+                                View Resources
+                            </Link>
+                            <button
+                                onClick={handleLogout}
+                                className="rounded-2xl bg-red-500 px-6 py-3 text-sm font-semibold text-white transition hover:bg-red-600"
+                            >
+                                Logout
+                            </button>
                         </div>
                     </div>
                 </div>
 
                 {message.text && (
-                    <div className={`mb-6 rounded-2xl border p-4 text-sm font-medium ${
-                        message.type === 'success' ? 'border-green-200 bg-green-50 text-green-700' : 'border-red-200 bg-red-50 text-red-700'
-                    }`}>
+                    <div
+                        className={`mb-6 rounded-2xl border p-4 text-sm font-medium ${
+                            message.type === 'success'
+                                ? 'border-green-200 bg-green-50 text-green-700'
+                                : 'border-red-200 bg-red-50 text-red-700'
+                        }`}
+                    >
                         {message.text}
                     </div>
                 )}
 
-                {/* Statistics Grid */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-8">
                     {statCards.map((card) => (
                         <div key={card.title} className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
@@ -227,7 +246,6 @@ const LecturerDashboard = () => {
                     ))}
                 </div>
 
-                {/* Quick Actions */}
                 <div className="mb-8">
                     <div className="mb-5">
                         <h2 className="text-xl font-black text-[#0A0A0C]">Quick Actions</h2>
@@ -253,7 +271,6 @@ const LecturerDashboard = () => {
                     </div>
                 </div>
 
-                {/* Recently Assigned Table/List */}
                 <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
                     <div className="xl:col-span-2 rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
                         <div className="flex items-center justify-between mb-6">
@@ -284,7 +301,6 @@ const LecturerDashboard = () => {
                         )}
                     </div>
 
-                    {/* Pending Approvals Info Box */}
                     <div className="rounded-3xl bg-[#1F1F23] p-6 text-white shadow-lg flex flex-col justify-between">
                         <div>
                             <h3 className="text-lg font-bold">Action Required</h3>
@@ -292,7 +308,7 @@ const LecturerDashboard = () => {
                                 There are <span className="text-[#FF6A00] font-bold">{stats.leadershipPending}</span> leadership requests waiting for your review.
                             </p>
                         </div>
-                        <button 
+                        <button
                             onClick={() => navigate('/lecturer/modules')}
                             className="mt-6 w-full rounded-xl bg-white/10 py-3 text-xs font-bold uppercase tracking-widest hover:bg-[#FF6A00] transition-all"
                         >

@@ -1,9 +1,11 @@
 package com.StudySync.backend.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,6 +30,11 @@ public class StudyModule {
 
     @Column(nullable = false, unique = true)
     private String enrollmentKey;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "lecturer_id")
+    @JsonIgnoreProperties({"enrolledModules", "assignedModules"})
+    private User lecturer;
 
     @OneToMany(mappedBy = "module", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
