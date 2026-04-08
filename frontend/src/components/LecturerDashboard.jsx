@@ -4,11 +4,9 @@ import { useNavigate } from 'react-router-dom';
 
 const getErrorMessage = (error, fallback) => {
     const data = error?.response?.data;
-
     if (typeof data === 'string') return data;
     if (data?.message) return data.message;
     if (data?.error) return data.error;
-
     return fallback;
 };
 
@@ -52,27 +50,18 @@ const LecturerDashboard = () => {
                 })
             );
 
-            const totalGroups = modulesWithGroups.reduce(
-                (sum, module) => sum + module.groups.length,
-                0
-            );
-
+            const totalGroups = modulesWithGroups.reduce((sum, module) => sum + module.groups.length, 0);
             const totalStudents = modulesWithGroups.reduce(
                 (sum, module) =>
-                    sum +
-                    module.groups.reduce(
-                        (groupSum, group) =>
-                            groupSum +
-                            (Array.isArray(group.currentMembers) ? group.currentMembers.length : 0),
+                    sum + module.groups.reduce(
+                        (groupSum, group) => groupSum + (Array.isArray(group.currentMembers) ? group.currentMembers.length : 0),
                         0
                     ),
                 0
             );
 
             const totalLeadershipPending = modulesWithGroups.reduce(
-                (sum, module) =>
-                    sum +
-                    module.groups.filter((group) => group.requestedLeader && !group.leader).length,
+                (sum, module) => sum + module.groups.filter((group) => group.requestedLeader && !group.leader).length,
                 0
             );
 
@@ -99,221 +88,216 @@ const LecturerDashboard = () => {
         fetchDashboardData();
     }, [fetchDashboardData]);
 
-    const handleLogout = () => {
-        localStorage.removeItem('user');
-        window.location.href = '/login';
-    };
-
     const statCards = [
         {
             title: 'Assigned Modules',
             value: stats.modules,
-            subtitle: 'Modules under your supervision',
-            color: 'text-blue-400'
+            subtitle: 'Supervised modules',
+            color: 'text-[#FF6A00]'
         },
         {
             title: 'Project Groups',
             value: stats.groups,
-            subtitle: 'Groups across your modules',
-            color: 'text-emerald-400'
+            subtitle: 'Active student teams',
+            color: 'text-[#1F1F23]'
         },
         {
             title: 'Grouped Students',
             value: stats.students,
-            subtitle: 'Students already inside groups',
-            color: 'text-cyan-300'
+            subtitle: 'Enrolled in teams',
+            color: 'text-[#1F1F23]'
         },
         {
             title: 'Pending Leaders',
             value: stats.leadershipPending,
-            subtitle: 'Groups waiting for approval',
-            color: 'text-amber-400'
+            subtitle: 'Awaiting your approval',
+            color: 'text-amber-600'
         }
     ];
 
     const quickActions = [
         {
             title: 'My Modules',
-            description: 'See assigned modules and current group counts.',
+            description: 'Manage assigned modules and group enrollments.',
             path: '/lecturer/modules',
-            accent: 'from-blue-600 to-cyan-500',
-            icon: '📚'
+            icon: (
+                <svg className="w-7 h-7 text-[#FF6A00]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5s3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                </svg>
+            )
+        },
+        {
+            title: 'Assignment Management',
+            description: 'Create assignments and define rubric-based criteria.',
+            path: '/lecturer/assignments',
+            icon: (
+                <svg className="w-7 h-7 text-[#FF6A00]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+            )
         },
         {
             title: 'Group Notices',
-            description: 'Prepare targeted notices for groups later.',
+            description: 'Broadcast updates to specific project groups.',
             path: '/lecturer/notices',
-            accent: 'from-violet-600 to-purple-500',
-            icon: '📢'
+            icon: (
+                <svg className="w-7 h-7 text-[#FF6A00]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                </svg>
+            )
         },
         {
             title: 'Viva Schedule',
-            description: 'Plan viva sessions for project groups.',
+            description: 'Organize and view upcoming group presentations.',
             path: '/lecturer/viva-schedule',
-            accent: 'from-emerald-600 to-teal-500',
-            icon: '📅'
+            icon: (
+                <svg className="w-7 h-7 text-[#FF6A00]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+            )
         },
         {
             title: 'Evaluations',
-            description: 'Manage rubric-based group assessments.',
+            description: 'Assess group performance via project rubrics.',
             path: '/lecturer/evaluations',
-            accent: 'from-amber-500 to-orange-500',
-            icon: '📝'
+            icon: (
+                <svg className="w-7 h-7 text-[#FF6A00]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            )
         }
     ];
 
     return (
-        <div className="min-h-screen bg-gray-100 p-6 md:p-8">
+        <div className="min-h-screen bg-[#F4F4F6] p-6 md:p-8">
             <div className="max-w-7xl mx-auto">
-                <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-900 via-blue-900 to-cyan-900 p-7 md:p-8 shadow-2xl mb-8">
-                    <div className="absolute inset-0 bg-white/5" />
+                {/* Header Section */}
+                <div className="relative overflow-hidden rounded-3xl bg-[#0A0A0C] p-7 md:p-8 shadow-2xl mb-8 border-b-4 border-[#FF6A00]">
                     <div className="relative z-10 flex flex-col xl:flex-row xl:items-center xl:justify-between gap-6">
                         <div className="max-w-3xl">
-                            <p className="text-xs uppercase tracking-[0.22em] text-cyan-200 font-semibold">
+                            <p className="text-xs uppercase tracking-[0.22em] text-[#FF6A00] font-bold">
                                 Lecturer Workspace
                             </p>
-
                             <h1 className="mt-3 text-3xl md:text-4xl font-black leading-tight text-white">
-                                Welcome back,
-                                <span className="block text-cyan-300">
+                                Welcome back, <br/>
+                                <span className="text-[#FF6A00]">
                                     {storedUser?.fullName || 'Lecturer'}
                                 </span>
                             </h1>
-
-                            <p className="mt-4 text-sm md:text-base text-slate-200 leading-7">
-                                This dashboard gives you a clear overview of your assigned modules,
-                                project groups, grouped students, and leadership activity.
+                            <p className="mt-4 text-sm md:text-base text-gray-400 leading-7">
+                                Oversee your assigned modules, approve leadership requests, and track group progress from one central hub.
                             </p>
                         </div>
 
                         <div className="flex flex-wrap gap-3">
                             <button
                                 onClick={() => navigate('/lecturer/modules')}
-                                className="rounded-2xl bg-white text-slate-900 px-5 py-3 text-sm font-bold shadow-lg transition hover:bg-slate-100"
+                                className="rounded-2xl bg-[#FF6A00] text-white px-6 py-3 text-sm font-bold shadow-lg transition hover:bg-[#e55f00]"
                             >
-                                Open My Modules
+                                View All Modules
                             </button>
-
                             <button
                                 onClick={fetchDashboardData}
-                                className="rounded-2xl border border-white/20 bg-white/10 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/20"
+                                className="rounded-2xl border border-white/10 bg-[#1F1F23] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#2a2a2e]"
                             >
                                 Refresh
                             </button>
-
                         </div>
                     </div>
                 </div>
 
                 {message.text && (
-                    <div
-                        className={`mb-6 rounded-2xl border p-4 text-sm font-medium ${
-                            message.type === 'success'
-                                ? 'border-green-200 bg-green-50 text-green-700'
-                                : 'border-red-200 bg-red-50 text-red-700'
-                        }`}
-                    >
+                    <div className={`mb-6 rounded-2xl border p-4 text-sm font-medium ${
+                        message.type === 'success' ? 'border-green-200 bg-green-50 text-green-700' : 'border-red-200 bg-red-50 text-red-700'
+                    }`}>
                         {message.text}
                     </div>
                 )}
 
+                {/* Statistics Grid */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-8">
                     {statCards.map((card) => (
-                        <div
-                            key={card.title}
-                            className="rounded-3xl border border-white/60 bg-white/80 backdrop-blur-xl p-6 shadow-lg"
-                        >
-                            <p className="text-sm text-slate-500">{card.title}</p>
+                        <div key={card.title} className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
+                            <p className="text-xs font-bold uppercase tracking-wider text-gray-400">{card.title}</p>
                             <h3 className={`mt-3 text-3xl font-black ${card.color}`}>
                                 {loading ? '...' : card.value}
                             </h3>
-                            <p className="mt-3 text-sm text-slate-400">{card.subtitle}</p>
+                            <p className="mt-2 text-xs text-gray-500 font-medium">{card.subtitle}</p>
                         </div>
                     ))}
                 </div>
 
+                {/* Quick Actions */}
                 <div className="mb-8">
                     <div className="mb-5">
-                        <h2 className="text-2xl font-bold text-slate-900">Quick Actions</h2>
-                        <p className="mt-1 text-sm text-slate-500">
-                            Go directly to your main lecturer tools.
-                        </p>
+                        <h2 className="text-xl font-black text-[#0A0A0C]">Quick Actions</h2>
                     </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-5">
                         {quickActions.map((action) => (
                             <button
                                 key={action.path}
                                 onClick={() => navigate(action.path)}
-                                className="group overflow-hidden rounded-3xl border border-white/60 bg-white/80 backdrop-blur-xl text-left shadow-lg transition hover:shadow-xl hover:-translate-y-0.5"
+                                className="group relative overflow-hidden rounded-3xl border border-gray-200 bg-white p-6 text-left shadow-sm transition hover:shadow-md hover:-translate-y-1"
                             >
-                                <div className={`h-2 bg-gradient-to-r ${action.accent}`} />
-                                <div className="p-6">
-                                    <div className="flex items-start justify-between gap-4">
-                                        <div>
-                                            <div className="text-2xl">{action.icon}</div>
-                                            <h3 className="mt-4 text-lg font-bold text-slate-900 group-hover:text-blue-700">
-                                                {action.title}
-                                            </h3>
-                                            <p className="mt-2 text-sm leading-6 text-slate-500">
-                                                {action.description}
-                                            </p>
-                                        </div>
-
-                                        <div className="text-lg text-slate-400 group-hover:text-slate-800">
-                                            →
-                                        </div>
-                                    </div>
+                                <div className="mb-4 transition-transform group-hover:scale-110 duration-300">
+                                    {action.icon}
                                 </div>
+                                <h3 className="text-base font-bold text-[#0A0A0C] group-hover:text-[#FF6A00] transition-colors">
+                                    {action.title}
+                                </h3>
+                                <p className="mt-2 text-xs leading-relaxed text-gray-500">
+                                    {action.description}
+                                </p>
                             </button>
                         ))}
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                    <div className="rounded-3xl border border-white/60 bg-white/80 backdrop-blur-xl p-6 shadow-lg">
-                        <h3 className="text-lg font-bold text-slate-900 mb-3">Recently Assigned Modules</h3>
+                {/* Recently Assigned Table/List */}
+                <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+                    <div className="xl:col-span-2 rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
+                        <div className="flex items-center justify-between mb-6">
+                            <h3 className="text-lg font-black text-[#0A0A0C]">Recent Modules</h3>
+                            <span className="text-[10px] font-bold uppercase text-gray-400">Current Semester</span>
+                        </div>
 
                         {loading ? (
-                            <p className="text-sm text-slate-500">Loading modules...</p>
+                            <p className="text-sm text-gray-400 italic">Loading...</p>
                         ) : recentModules.length === 0 ? (
-                            <p className="text-sm text-slate-500">
-                                No modules have been assigned to you yet.
-                            </p>
+                            <p className="text-sm text-gray-500">No modules assigned yet.</p>
                         ) : (
-                            <div className="space-y-4">
+                            <div className="space-y-3">
                                 {recentModules.map((module) => (
-                                    <div
-                                        key={module.id}
-                                        className="rounded-2xl border border-slate-200 bg-slate-50 p-4"
-                                    >
-                                        <div className="flex items-start justify-between gap-3">
-                                            <div>
-                                                <h4 className="text-base font-bold text-slate-900">
-                                                    {module.moduleCode}
-                                                </h4>
-                                                <p className="text-sm text-slate-600 mt-1">
-                                                    {module.moduleName}
-                                                </p>
-                                            </div>
-
-                                            <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-bold text-blue-700">
-                                                Semester {module.semester}
-                                            </span>
+                                    <div key={module.id} className="flex items-center justify-between rounded-2xl bg-[#F4F4F6] p-4 border border-gray-100">
+                                        <div>
+                                            <h4 className="text-sm font-bold text-[#0A0A0C]">{module.moduleCode}</h4>
+                                            <p className="text-xs text-gray-500">{module.moduleName}</p>
                                         </div>
-
-                                        <div className="mt-4 flex flex-wrap gap-3 text-xs text-slate-500">
-                                            <span className="rounded-full bg-white px-3 py-1 border border-slate-200">
-                                                {module.groups?.length || 0} Groups
-                                            </span>
-                                            <span className="rounded-full bg-white px-3 py-1 border border-slate-200">
-                                                Year {module.year}
+                                        <div className="text-right">
+                                            <span className="inline-block rounded-lg bg-white px-3 py-1 text-[10px] font-black text-[#FF6A00] border border-gray-200">
+                                                {module.groups?.length || 0} GROUPS
                                             </span>
                                         </div>
                                     </div>
                                 ))}
                             </div>
                         )}
+                    </div>
+
+                    {/* Pending Approvals Info Box */}
+                    <div className="rounded-3xl bg-[#1F1F23] p-6 text-white shadow-lg flex flex-col justify-between">
+                        <div>
+                            <h3 className="text-lg font-bold">Action Required</h3>
+                            <p className="mt-2 text-xs text-gray-400 leading-relaxed">
+                                There are <span className="text-[#FF6A00] font-bold">{stats.leadershipPending}</span> leadership requests waiting for your review.
+                            </p>
+                        </div>
+                        <button 
+                            onClick={() => navigate('/lecturer/modules')}
+                            className="mt-6 w-full rounded-xl bg-white/10 py-3 text-xs font-bold uppercase tracking-widest hover:bg-[#FF6A00] transition-all"
+                        >
+                            Review Now
+                        </button>
                     </div>
                 </div>
             </div>
