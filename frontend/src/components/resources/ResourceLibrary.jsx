@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import resourceService from "./resourceService";
 import ResourceCard from "./ResourceCard";
+import GlassBackButton from "../GlassBackButton";
 
 export default function ResourceLibrary() {
 
@@ -25,6 +26,8 @@ export default function ResourceLibrary() {
         <div className="min-h-screen bg-[radial-gradient(circle_at_top_right,_rgba(255,106,0,0.18),_transparent_22%),linear-gradient(135deg,#050506_0%,#0A0A0C_40%,#120b07_100%)] text-white">
 
             <div className="max-w-7xl mx-auto px-6 py-10">
+
+                <GlassBackButton />
 
                 {/* Hero */}
                 <div className="relative overflow-hidden rounded-[32px] border border-white/10 bg-white/5 backdrop-blur-2xl shadow-[0_20px_80px_rgba(0,0,0,0.45)]">

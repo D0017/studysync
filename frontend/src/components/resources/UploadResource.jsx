@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import resourceService from "./resourceService";
+import GlassBackButton from "../GlassBackButton";
 
 export default function UploadResource() {
   const navigate = useNavigate();
@@ -171,8 +172,20 @@ export default function UploadResource() {
     }
   };
 
+  const backPath =
+  form.faculty && form.module
+    ? `/resources/${form.faculty}/${form.module}`
+    : (storedUser?.role === "LECTURER"
+        ? "/lecturer-dashboard"
+        : storedUser?.role === "STUDENT"
+        ? "/student-dashboard"
+        : "/login");
+
   return (
     <div className="min-h-screen bg-[#0A0A0C] flex justify-center items-center p-8">
+      <div className="w-full max-w-2xl">
+      <GlassBackButton to={backPath} label="Back" />
+
       <form
         onSubmit={handleSubmit}
         className="bg-[#1F1F23] shadow-2xl border border-gray-800 rounded-2xl p-10 w-full max-w-2xl space-y-5 text-white"
@@ -343,6 +356,7 @@ export default function UploadResource() {
           </div>
         )}
       </form>
+    </div>
     </div>
   );
 }

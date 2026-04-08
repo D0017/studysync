@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import GlassBackButton from "../GlassBackButton";
 
 export default function ResourceDashboard() {
 
@@ -22,11 +23,22 @@ export default function ResourceDashboard() {
 
   ];
 
+  const getDashboardRoute = () => {
+
+  if (role === "LECTURER") return "/lecturer-dashboard";
+  if (role === "STUDENT") return "/student-dashboard";
+  if (role === "ADMIN") return "/admin-dashboard";
+
+  return "/login";
+};
+
   return (
 
     <div className="min-h-screen bg-[radial-gradient(circle_at_top_right,_rgba(255,106,0,0.18),_transparent_22%),linear-gradient(135deg,#050506_0%,#0A0A0C_40%,#120b07_100%)] text-white">
 
       <div className="max-w-7xl mx-auto px-6 py-10">
+
+        <GlassBackButton to={getDashboardRoute()} label="Back to Dashboard" />
 
         {/* Hero Section */}
         <div className="relative overflow-hidden rounded-[32px] border border-white/10 bg-white/5 backdrop-blur-2xl shadow-[0_20px_80px_rgba(0,0,0,0.45)]">
@@ -93,19 +105,6 @@ export default function ResourceDashboard() {
               Select a faculty to explore its modules and available resources.
             </p>
           </div>
-
-          {role === "LECTURER" && (
-
-            <div className="flex items-center">
-              <Link
-                to="/upload-resource"
-                className="inline-flex items-center justify-center rounded-2xl bg-gradient-to-r from-[#FF6A00] to-[#ff8c42] px-7 py-3 text-base font-bold text-white shadow-[0_10px_35px_rgba(255,106,0,0.35)] transition duration-300 hover:scale-[1.02] hover:shadow-[0_12px_40px_rgba(255,106,0,0.45)]"
-              >
-                + Upload Resource
-              </Link>
-            </div>
-
-          )}
 
         </div>
 
