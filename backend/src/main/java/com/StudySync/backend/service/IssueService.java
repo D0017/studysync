@@ -107,6 +107,18 @@ public class IssueService {
         return toIssueDto(issueRepository.save(issue));
     }
 
+    @Transactional
+    public void deleteIssue(Long issueId, Long userId) {
+        Issue issue = issueRepository.findById(issueId)
+                .orElseThrow(() -> new RuntimeException("Issue not found with ID: " + issueId));
+
+        User requester = projectService.getUser(userId);
+        ProjectGroup group = issue.getProject().getProjectGroup();
+        projectService.validateGroupMember(group, requester);
+
+        issueRepository.delete(issue);
+    }
+
     private void validateAssignee(ProjectGroup group, User assignee) {
         boolean isMember = group.getCurrentMembers().stream()
                 .anyMatch(member -> member.getId().equals(assignee.getId()));

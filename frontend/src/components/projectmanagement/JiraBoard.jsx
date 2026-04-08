@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { createProjectForGroup, getProjectByGroup } from '../../services/projectService';
-import { assignIssue, createIssue, getIssuesByProject, updateIssueStatus } from '../../services/issueService';
+import { assignIssue, createIssue, deleteIssue, getIssuesByProject, updateIssueStatus } from '../../services/issueService';
 
 const STATUS_COLUMNS = [
     { key: 'TODO', label: 'To Do', color: 'bg-gray-100' },
@@ -132,17 +132,62 @@ const JiraBoard = () => {
         }
     };
 
+    const validateIssueForm = () => {
+        const trimmedTitle = issueForm.title.trim();
+        const trimmedDescription = issueForm.description.trim();
+
+        // Check if title is empty
+        if (!trimmedTitle) {
+            setMessage({ type: 'error', text: 'Title cannot be empty.' });
+            return false;
+        }
+
+        // Check if description is empty
+        if (!trimmedDescription) {
+            setMessage({ type: 'error', text: 'Description cannot be empty.' });
+            return false;
+        }
+
+        // Check if dueDate is provided
+        if (!issueForm.dueDate) {
+            setMessage({ type: 'error', text: 'Due date is required.' });
+            return false;
+        }
+
+        // Check if dueDate is a future date
+        const selectedDate = new Date(issueForm.dueDate);
+        const today = new Date();
+        // Set time to midnight for both dates to compare only the date part
+        today.setHours(0, 0, 0, 0);
+        selectedDate.setHours(0, 0, 0, 0);
+
+        if (selectedDate < today) {
+            setMessage({ type: 'error', text: 'Due date cannot be in the past. Please select a future date.' });
+            return false;
+        }
+
+        return true;
+    };
+
     const handleCreateIssue = async (e) => {
         e.preventDefault();
         if (!project) return;
 
         setMessage({ type: '', text: '' });
 
+        // Validate form before submission
+        if (!validateIssueForm()) {
+            return;
+        }
+
+        const trimmedTitle = issueForm.title.trim();
+        const trimmedDescription = issueForm.description.trim();
+
         try {
             const createdIssue = await createIssue(project.id, {
                 userId: storedUser?.id,
-                title: issueForm.title,
-                description: issueForm.description,
+                title: trimmedTitle,
+                description: trimmedDescription,
                 priority: issueForm.priority,
                 type: issueForm.type,
                 dueDate: issueForm.dueDate || null,
@@ -187,6 +232,20 @@ const JiraBoard = () => {
             setIssues((prev) => prev.map((issue) => (issue.id === issueId ? updated : issue)));
         } catch (error) {
             setMessage({ type: 'error', text: error.response?.data || 'Failed to assign issue.' });
+        }
+    };
+
+    const handleDeleteIssue = async (issueId) => {
+        if (!window.confirm('Are you sure you want to delete this issue? This action cannot be undone.')) {
+            return;
+        }
+
+        try {
+            await deleteIssue(issueId, storedUser?.id);
+            setIssues((prev) => prev.filter((issue) => issue.id !== issueId));
+            setMessage({ type: 'success', text: 'Issue deleted successfully.' });
+        } catch (error) {
+            setMessage({ type: 'error', text: error.response?.data || 'Failed to delete issue.' });
         }
     };
 
@@ -382,67 +441,96 @@ const JiraBoard = () => {
                         {showCreateForm && (
                             <div className="bg-white rounded-2xl shadow border border-gray-100 p-6 mb-6">
                                 <h3 className="text-xl font-bold text-gray-900 mb-4">Create New Issue</h3>
+                                <p className="text-sm text-gray-500 mb-4">Fields marked with <span className="text-red-600">*</span> are required</p>
                                 <form onSubmit={handleCreateIssue} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <input
-                                        type="text"
-                                        value={issueForm.title}
-                                        onChange={(e) => setIssueForm((prev) => ({ ...prev, title: e.target.value }))}
-                                        placeholder="Issue title *"
-                                        className="border border-gray-300 rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-500 md:col-span-2"
-                                        required
-                                    />
-                                    <textarea
-                                        value={issueForm.description}
-                                        onChange={(e) => setIssueForm((prev) => ({ ...prev, description: e.target.value }))}
-                                        placeholder="Issue description"
-                                        className="border border-gray-300 rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-500 md:col-span-2"
-                                        rows={3}
-                                    />
-                                    <select
-                                        value={issueForm.type}
-                                        onChange={(e) => setIssueForm((prev) => ({ ...prev, type: e.target.value }))}
-                                        className="border border-gray-300 rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-500"
-                                    >
-                                        {TYPES.map((type) => (
-                                            <option key={type} value={type}>{type}</option>
-                                        ))}
-                                    </select>
-                                    <select
-                                        value={issueForm.priority}
-                                        onChange={(e) => setIssueForm((prev) => ({ ...prev, priority: e.target.value }))}
-                                        className="border border-gray-300 rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-500"
-                                    >
-                                        {PRIORITIES.map((priority) => (
-                                            <option key={priority} value={priority}>{priority}</option>
-                                        ))}
-                                    </select>
-                                    <input
-                                        type="date"
-                                        value={issueForm.dueDate}
-                                        onChange={(e) => setIssueForm((prev) => ({ ...prev, dueDate: e.target.value }))}
-                                        className="border border-gray-300 rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-500"
-                                    />
-                                    <input
-                                        type="number"
-                                        placeholder="Story points (optional)"
-                                        value={issueForm.storyPoints}
-                                        onChange={(e) => setIssueForm((prev) => ({ ...prev, storyPoints: e.target.value }))}
-                                        className="border border-gray-300 rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-500"
-                                    />
-                                    <select
-                                        value={issueForm.assigneeId}
-                                        onChange={(e) => setIssueForm((prev) => ({ ...prev, assigneeId: e.target.value }))}
-                                        className="border border-gray-300 rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-500 md:col-span-2"
-                                    >
-                                        <option value="">Assign to... (Optional)</option>
-                                        {members.map((member) => (
-                                            <option key={member.id} value={member.id}>{member.fullName}</option>
-                                        ))}
-                                    </select>
+                                    <div className="md:col-span-2">
+                                        <label className="block text-sm font-semibold text-gray-700 mb-1">Title <span className="text-red-600">*</span></label>
+                                        <input
+                                            type="text"
+                                            value={issueForm.title}
+                                            onChange={(e) => setIssueForm((prev) => ({ ...prev, title: e.target.value }))}
+                                            placeholder="Enter issue title"
+                                            className="w-full border border-gray-300 rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-500"
+                                        />
+                                    </div>
+                                    <div className="md:col-span-2">
+                                        <label className="block text-sm font-semibold text-gray-700 mb-1">Description <span className="text-red-600">*</span></label>
+                                        <textarea
+                                            value={issueForm.description}
+                                            onChange={(e) => setIssueForm((prev) => ({ ...prev, description: e.target.value }))}
+                                            placeholder="Enter issue description"
+                                            className="w-full border border-gray-300 rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-500"
+                                            rows={3}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-semibold text-gray-700 mb-1">Type</label>
+                                        <select
+                                            value={issueForm.type}
+                                            onChange={(e) => setIssueForm((prev) => ({ ...prev, type: e.target.value }))}
+                                            className="w-full border border-gray-300 rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-500"
+                                        >
+                                            {TYPES.map((type) => (
+                                                <option key={type} value={type}>{type}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-semibold text-gray-700 mb-1">Priority</label>
+                                        <select
+                                            value={issueForm.priority}
+                                            onChange={(e) => setIssueForm((prev) => ({ ...prev, priority: e.target.value }))}
+                                            className="w-full border border-gray-300 rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-500"
+                                        >
+                                            {PRIORITIES.map((priority) => (
+                                                <option key={priority} value={priority}>{priority}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-semibold text-gray-700 mb-1">Due Date</label>
+                                        <input
+                                            type="date"
+                                            value={issueForm.dueDate}
+                                            onChange={(e) => setIssueForm((prev) => ({ ...prev, dueDate: e.target.value }))}
+                                            className="w-full border border-gray-300 rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-500"
+                                        />
+                                        {issueForm.dueDate && (
+                                            <p className="text-xs text-gray-500 mt-1">Must be a future date</p>
+                                        )}
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-semibold text-gray-700 mb-1">Story Points</label>
+                                        <input
+                                            type="number"
+                                            placeholder="Optional"
+                                            value={issueForm.storyPoints}
+                                            onChange={(e) => setIssueForm((prev) => ({ ...prev, storyPoints: e.target.value }))}
+                                            className="w-full border border-gray-300 rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-500"
+                                        />
+                                    </div>
+                                    <div className="md:col-span-2">
+                                        <label className="block text-sm font-semibold text-gray-700 mb-1">Assign to</label>
+                                        <select
+                                            value={issueForm.assigneeId}
+                                            onChange={(e) => setIssueForm((prev) => ({ ...prev, assigneeId: e.target.value }))}
+                                            className="w-full border border-gray-300 rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-500"
+                                        >
+                                            <option value="">Select a team member (Optional)</option>
+                                            {members.map((member) => (
+                                                <option key={member.id} value={member.id}>{member.fullName}</option>
+                                            ))}
+                                        </select>
+                                    </div>
                                     <div className="md:col-span-2 flex gap-3">
                                         <button
                                             type="submit"
-                                            className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-lg transition"
+                                            disabled={!issueForm.title.trim() || !issueForm.description.trim() || !issueForm.dueDate || (issueForm.dueDate && new Date(issueForm.dueDate) < new Date().setHours(0,0,0,0) && new Date(issueForm.dueDate).setHours(0,0,0,0) < new Date().setHours(0,0,0,0))}
+                                            className={`font-semibold px-6 py-3 rounded-lg transition ${
+                                                !issueForm.title.trim() || !issueForm.description.trim() || !issueForm.dueDate
+                                                    ? 'bg-gray-400 text-gray-600 cursor-not-allowed'
+                                                    : 'bg-blue-600 hover:bg-blue-700 text-white'
+                                            }`}
                                         >
                                             Create Issue
                                         </button>
@@ -480,7 +568,16 @@ const JiraBoard = () => {
                                                             {issue.priority}
                                                         </span>
                                                     </div>
-                                                    <h5 className="font-semibold text-gray-900 mt-2">{issue.title}</h5>
+                                                    <div className="flex items-center justify-between gap-2 mt-2">
+                                                        <h5 className="font-semibold text-gray-900">{issue.title}</h5>
+                                                        <button
+                                                            onClick={() => handleDeleteIssue(issue.id)}
+                                                            className="text-lg hover:opacity-70 transition flex-shrink-0"
+                                                            title="Delete issue"
+                                                        >
+                                                            🗑️
+                                                        </button>
+                                                    </div>
                                                     {issue.description && (
                                                         <p className="text-xs text-gray-600 mt-1 line-clamp-2">{issue.description}</p>
                                                     )}

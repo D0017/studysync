@@ -70,4 +70,23 @@ public class IssueController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+
+    @DeleteMapping("/{issueId}")
+    public ResponseEntity<?> deleteIssue(
+            @PathVariable Long issueId,
+            @RequestParam Long userId
+    ) {
+        try {
+            System.out.println("Attempting to delete issue " + issueId + " by user " + userId);
+            issueService.deleteIssue(issueId, userId);
+            return ResponseEntity.ok("Issue deleted successfully.");
+        } catch (RuntimeException e) {
+            System.err.println("Error deleting issue: " + e.getMessage());
+            // Return 404 if issue not found, 400 for other errors
+            if (e.getMessage() != null && e.getMessage().contains("Issue not found")) {
+                return ResponseEntity.status(404).body(e.getMessage());
+            }
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
 }

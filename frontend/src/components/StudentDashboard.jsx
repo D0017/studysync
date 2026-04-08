@@ -1,3 +1,4 @@
+// Color Palette: Primary Dark #0A0A0C, Dark Secondary #1F1F23, Primary Orange #FF6A00, Light Gray #F4F4F6
 import React, { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
 
@@ -96,8 +97,8 @@ const StudentDashboard = () => {
                 </div>
 
                 <div className="bg-white rounded-2xl shadow border border-gray-100 p-6 mb-6">
-                    <h2 className="text-2xl font-bold text-gray-800 mb-2">Join a Module</h2>
-                    <p className="text-gray-500 mb-4">
+                    <h2 className="text-2xl font-bold mb-2" style={{color: '#0A0A0C'}}>Join a Module</h2>
+                    <p className="mb-4" style={{color: '#1F1F23'}}>
                         Enter the enrollment key shared for your module.
                     </p>
 
@@ -107,12 +108,18 @@ const StudentDashboard = () => {
                             value={enrollmentKey}
                             onChange={(e) => setEnrollmentKey(e.target.value)}
                             placeholder="Enter enrollment key"
-                            className="flex-1 border border-gray-300 rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-500"
+                            className="flex-1 rounded-lg p-3 outline-none"
+                            style={{borderColor: '#FF6A00', borderWidth: '1px'}}
+                            onFocus={(e) => e.target.style.boxShadow = '0 0 0 3px rgba(255, 106, 0, 0.1)'}
+                            onBlur={(e) => e.target.style.boxShadow = 'none'}
                         />
 
                         <button
                             type="submit"
-                            className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-3 rounded-lg transition"
+                            className="text-white font-bold px-6 py-3 rounded-lg transition"
+                            style={{backgroundColor: '#FF6A00'}}
+                            onMouseEnter={(e) => e.target.style.backgroundColor = '#E55A00'}
+                            onMouseLeave={(e) => e.target.style.backgroundColor = '#FF6A00'}
                         >
                             Enroll
                         </button>
@@ -131,16 +138,16 @@ const StudentDashboard = () => {
                     )}
                 </div>
 
-                <div className="bg-white rounded-2xl shadow border border-gray-100 p-6">
-                    <h2 className="text-2xl font-bold text-gray-800 mb-2">My Modules</h2>
-                    <p className="text-gray-500 mb-6">
+                <div className="bg-white rounded-2xl shadow p-6" style={{borderColor: '#FF6A00', borderWidth: '1px'}}>
+                    <h2 className="text-2xl font-bold mb-2" style={{color: '#0A0A0C'}}>My Modules</h2>
+                    <p className="mb-6" style={{color: '#1F1F23'}}>
                         These are the modules you have enrolled in.
                     </p>
 
                     {loadingModules ? (
-                        <p className="text-gray-500">Loading modules...</p>
+                        <p style={{color: '#1F1F23'}}>Loading modules...</p>
                     ) : modules.length === 0 ? (
-                        <div className="text-center py-10 text-gray-500">
+                        <div className="text-center py-10" style={{color: '#1F1F23'}}>
                             You have not enrolled in any modules yet.
                         </div>
                     ) : (
@@ -148,13 +155,14 @@ const StudentDashboard = () => {
                             {modules.map((module) => (
                                 <div
                                     key={module.id}
-                                    className="border border-gray-200 rounded-xl p-5 hover:shadow-md transition bg-gray-50"
+                                    className="rounded-xl p-5 hover:shadow-md transition bg-gray-50"
+                                    style={{borderColor: '#FF6A00', borderWidth: '1px'}}
                                 >
-                                    <h3 className="text-xl font-bold text-gray-900">
+                                    <h3 className="text-xl font-bold" style={{color: '#0A0A0C'}}>
                                         {module.moduleCode}
                                     </h3>
-                                    <p className="text-gray-700 mt-1">{module.moduleName}</p>
-                                    <p className="text-sm text-gray-500 mt-2">
+                                    <p className="mt-1" style={{color: '#1F1F23'}}>{module.moduleName}</p>
+                                    <p className="text-sm mt-2" style={{color: '#1F1F23', opacity: '0.8'}}>
                                         Year {module.year} • Semester {module.semester}
                                     </p>
 
@@ -162,7 +170,10 @@ const StudentDashboard = () => {
                                         onClick={() => {
                                             window.location.href = `/student/modules/${module.id}`;
                                         }}
-                                        className="mt-4 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition"
+                                        className="mt-4 text-white px-4 py-2 rounded-lg text-sm font-semibold transition"
+                                        style={{backgroundColor: '#FF6A00'}}
+                                        onMouseEnter={(e) => e.target.style.backgroundColor = '#E55A00'}
+                                        onMouseLeave={(e) => e.target.style.backgroundColor = '#FF6A00'}
                                     >
                                         Open Module
                                     </button>

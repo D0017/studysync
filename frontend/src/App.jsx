@@ -11,12 +11,30 @@ import JiraBoard from './components/projectmanagement/JiraBoard';
 function App() {
   return (
     <Router>
-      <div className="min-h-screen bg-gray-50">
-        <nav className="bg-white shadow-sm p-4 flex justify-between items-center">
-          <h1 className="text-xl font-bold text-blue-600">StudySync</h1>
+      {/* Changed bg-gray-50 to your Light Background #F4F4F6 */}
+      <div className="min-h-screen" style={{ backgroundColor: '#F4F4F6' }}>
+        
+        {/* Navbar: Changed to Secondary Dark #1F1F23 with Orange accents */}
+        <nav className="shadow-md p-4 flex justify-between items-center" style={{ backgroundColor: '#1F1F23' }}>
+          <h1 className="text-xl font-bold" style={{ color: '#FF6A00' }}>StudySync</h1>
+          
           <div className="space-x-4">
-            <Link title="Home" to="/" className="text-gray-600 hover:text-blue-600">Home</Link>
-            <Link title="Register" to="/register" className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+            <Link 
+              title="Home" 
+              to="/" 
+              className="hover:opacity-80 transition-colors" 
+              style={{ color: '#F4F4F6' }}
+            >
+              Home
+            </Link>
+            
+            {/* Button: Primary Orange #FF6A00 with Deep Black #0A0A0C text */}
+            <Link 
+              title="Register" 
+              to="/register" 
+              className="px-4 py-2 rounded-lg font-semibold transition-transform hover:scale-105"
+              style={{ backgroundColor: '#FF6A00', color: '#0A0A0C' }}
+            >
               Get Started
             </Link>
           </div>
@@ -25,8 +43,13 @@ function App() {
         <Routes>
           <Route path="/" element={
             <div className="text-center mt-20">
-              <h2 className="text-4xl font-bold">Welcome to StudySync</h2>
-              <p className="mt-4 text-gray-600">Academic Group & Learning Management System</p>
+              {/* Heading: Primary Black #0A0A0C */}
+              <h2 className="text-4xl font-bold" style={{ color: '#0A0A0C' }}>
+                Welcome to <span style={{ color: '#FF6A00' }}>StudySync</span>
+              </h2>
+              <p className="mt-4 text-lg" style={{ color: '#1F1F23' }}>
+                Academic Group & Learning Management System
+              </p>
             </div>
           } />
 

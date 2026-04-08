@@ -1,3 +1,4 @@
+// Color Palette: Primary Dark #0A0A0C, Dark Secondary #1F1F23, Primary Orange #FF6A00, Light Gray #F4F4F6
 import React, { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -147,10 +148,10 @@ const ModuleGroups = () => {
                                     >
                                         <div className="flex items-start justify-between gap-3">
                                             <div>
-                                                <h2 className="text-xl font-bold text-gray-900">
+                                                <h2 className="text-xl font-bold" style={{color: '#0A0A0C'}}>
                                                     {group.groupName}
                                                 </h2>
-                                                <p className="text-sm text-gray-500 mt-1">
+                                                <p className="text-sm mt-1" style={{color: '#1F1F23', opacity: '0.8'}}>
                                                     Members: {memberCount(group)} / {group.maxCapacity}
                                                 </p>
                                             </div>
@@ -171,7 +172,7 @@ const ModuleGroups = () => {
                                         </div>
 
                                         <div className="mt-4">
-                                            <h3 className="text-sm font-semibold text-gray-700 mb-2">
+                                            <h3 className="text-sm font-semibold mb-2" style={{color: '#1F1F23'}}>
                                                 Current Members
                                             </h3>
 
@@ -180,14 +181,15 @@ const ModuleGroups = () => {
                                                     {group.currentMembers.map((member) => (
                                                         <li
                                                             key={member.id}
-                                                            className="text-sm text-gray-700 bg-white border border-gray-200 rounded-lg px-3 py-2"
+                                                            className="text-sm rounded-lg px-3 py-2 bg-white"
+                                                            style={{borderColor: '#FF6A00', borderWidth: '1px', color: '#1F1F23'}}
                                                         >
                                                             {member.fullName} ({member.universityId})
                                                         </li>
                                                     ))}
                                                 </ul>
                                             ) : (
-                                                <p className="text-sm text-gray-500">No members yet.</p>
+                                                <p className="text-sm" style={{color: '#1F1F23', opacity: '0.7'}}>No members yet.</p>
                                             )}
                                         </div>
 
@@ -195,11 +197,14 @@ const ModuleGroups = () => {
                                             <button
                                                 onClick={() => handleJoinGroup(group.id)}
                                                 disabled={joined || full}
-                                                className={`px-4 py-2 rounded-lg font-semibold text-white transition ${
-                                                    joined || full
-                                                        ? 'bg-gray-400 cursor-not-allowed'
-                                                        : 'bg-blue-600 hover:bg-blue-700'
-                                                }`}
+                                                className="px-4 py-2 rounded-lg font-semibold text-white transition"
+                                                style={{
+                                                    backgroundColor: joined || full ? '#9CA3AF' : '#FF6A00',
+                                                    cursor: joined || full ? 'not-allowed' : 'pointer',
+                                                    opacity: joined || full ? '0.7' : '1'
+                                                }}
+                                                onMouseEnter={(e) => !joined && !full && (e.target.style.backgroundColor = '#E55A00')}
+                                                onMouseLeave={(e) => !joined && !full && (e.target.style.backgroundColor = '#FF6A00')}
                                             >
                                                 {joined ? 'Already Joined' : full ? 'Group Full' : 'Join Group'}
                                             </button>
@@ -207,11 +212,14 @@ const ModuleGroups = () => {
                                             <button
                                                 onClick={() => handleRequestLeadership(group.id)}
                                                 disabled={!joined || !!group.leader}
-                                                className={`px-4 py-2 rounded-lg font-semibold text-white transition ${
-                                                    !joined || !!group.leader
-                                                        ? 'bg-gray-400 cursor-not-allowed'
-                                                        : 'bg-purple-600 hover:bg-purple-700'
-                                                }`}
+                                                className="px-4 py-2 rounded-lg font-semibold text-white transition"
+                                                style={{
+                                                    backgroundColor: !joined || !!group.leader ? '#9CA3AF' : '#A855F7',
+                                                    cursor: !joined || !!group.leader ? 'not-allowed' : 'pointer',
+                                                    opacity: !joined || !!group.leader ? '0.7' : '1'
+                                                }}
+                                                onMouseEnter={(e) => joined && !group.leader && (e.target.style.backgroundColor = '#9333EA')}
+                                                onMouseLeave={(e) => joined && !group.leader && (e.target.style.backgroundColor = '#A855F7')}
                                             >
                                                 Request Leadership
                                             </button>
@@ -219,7 +227,10 @@ const ModuleGroups = () => {
                                             {joined && (
                                                 <button
                                                     onClick={() => navigate(`/groups/${group.id}/project`)}
-                                                    className="px-4 py-2 rounded-lg font-semibold text-white transition bg-emerald-600 hover:bg-emerald-700"
+                                                    className="px-4 py-2 rounded-lg font-semibold text-white transition"
+                                                    style={{backgroundColor: '#10B981'}}
+                                                    onMouseEnter={(e) => e.target.style.backgroundColor = '#059669'}
+                                                    onMouseLeave={(e) => e.target.style.backgroundColor = '#10B981'}
                                                 >
                                                     Open Project Board
                                                 </button>

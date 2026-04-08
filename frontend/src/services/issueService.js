@@ -23,3 +23,10 @@ export const assignIssue = async (issueId, payload) => {
     const response = await axios.put(`${API_BASE}/${issueId}/assign`, payload);
     return response.data;
 };
+
+export const deleteIssue = async (issueId, userId) => {
+    const response = await axios.delete(`${API_BASE}/${issueId}`, {
+        params: { userId }
+    });
+    return response.data;
+};
