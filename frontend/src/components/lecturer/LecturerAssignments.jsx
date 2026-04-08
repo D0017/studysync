@@ -51,6 +51,7 @@ const LecturerAssignments = () => {
                 // await axios.post('/api/assignments/create', { ...assignment, lecturerId: storedUser.id });
                 alert(`Assignment "${assignment.title}" published successfully!`);
                 setAssignment({ title: '', deadline: '', moduleId: '', weightage: 20, description: '' });
+            // eslint-disable-next-line no-unused-vars
             } catch (error) {
                 alert("Failed to publish assignment. Please try again.");
             } finally {

@@ -1,9 +1,76 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import axios from 'axios';
+
+const getErrorMessage = (error, fallback) => {
+  const data = error?.response?.data;
+  if (typeof data === 'string') return data;
+  if (data?.message) return data.message;
+  if (data?.error) return data.error;
+  return fallback;
+};
 
 const LecturerVivaSchedule = () => {
-  const [viva, setViva] = useState({ group: '', date: '', time: '', location: 'Online - Zoom' });
+  const storedUser = JSON.parse(localStorage.getItem('user'));
+
+  const [modules, setModules] = useState([]);
+  const [groups, setGroups] = useState([]);
+  const [loadingModules, setLoadingModules] = useState(true);
+  const [loadingGroups, setLoadingGroups] = useState(false);
+
+  const [viva, setViva] = useState({
+    moduleId: '',
+    groupId: '',
+    date: '',
+    time: '',
+    location: 'Online - Zoom'
+  });
+
   const [errors, setErrors] = useState({});
   const [schedules, setSchedules] = useState([]);
+
+  useEffect(() => {
+    const fetchModules = async () => {
+      try {
+        setLoadingModules(true);
+        const res = await axios.get(`/api/lecturer/modules/${storedUser?.id}`);
+        setModules(Array.isArray(res.data) ? res.data : []);
+      } catch (error) {
+        console.error('Failed to fetch lecturer modules:', error);
+        alert(getErrorMessage(error, 'Failed to load modules.'));
+      } finally {
+        setLoadingModules(false);
+      }
+    };
+
+    if (storedUser?.id) {
+      fetchModules();
+    }
+  }, [storedUser?.id]);
+
+  useEffect(() => {
+    const fetchGroups = async () => {
+      if (!viva.moduleId) {
+        setGroups([]);
+        setViva((prev) => ({ ...prev, groupId: '' }));
+        return;
+      }
+
+      try {
+        setLoadingGroups(true);
+        const res = await axios.get(`/api/groups/modules/${viva.moduleId}/all`);
+        setGroups(Array.isArray(res.data) ? res.data : []);
+        setViva((prev) => ({ ...prev, groupId: '' }));
+      } catch (error) {
+        console.error('Failed to fetch groups:', error);
+        alert(getErrorMessage(error, 'Failed to load groups.'));
+        setGroups([]);
+      } finally {
+        setLoadingGroups(false);
+      }
+    };
+
+    fetchGroups();
+  }, [viva.moduleId]);
 
   const validate = () => {
     let tempErrors = {};
@@ -11,12 +78,13 @@ const LecturerVivaSchedule = () => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    if (!viva.group) tempErrors.group = "Please select a project group";
-    if (!viva.date) tempErrors.date = "Date is required";
-    else if (selectedDate < today) tempErrors.date = "Cannot schedule a viva in the past";
-    
-    if (!viva.time) tempErrors.time = "Time is required";
-    if (!viva.location.trim()) tempErrors.location = "Location or Meeting Link is required";
+    if (!viva.moduleId) tempErrors.moduleId = 'Please select a module';
+    if (!viva.groupId) tempErrors.groupId = 'Please select a project group';
+    if (!viva.date) tempErrors.date = 'Date is required';
+    else if (selectedDate < today) tempErrors.date = 'Cannot schedule a viva in the past';
+
+    if (!viva.time) tempErrors.time = 'Time is required';
+    if (!viva.location.trim()) tempErrors.location = 'Location or Meeting Link is required';
 
     setErrors(tempErrors);
     return Object.keys(tempErrors).length === 0;
@@ -24,93 +92,157 @@ const LecturerVivaSchedule = () => {
 
   const handleSchedule = (e) => {
     e.preventDefault();
-    if (validate()) {
-      const newSchedule = { ...viva, id: Date.now() };
-      setSchedules([...schedules, newSchedule]);
-      setViva({ group: '', date: '', time: '', location: 'Online - Zoom' });
-      alert("Viva session scheduled successfully!");
-    }
+    if (!validate()) return;
+
+    const selectedModule = modules.find((m) => String(m.id) === String(viva.moduleId));
+    const selectedGroup = groups.find((g) => String(g.id) === String(viva.groupId));
+
+    const newSchedule = {
+      ...viva,
+      id: Date.now(),
+      moduleCode: selectedModule?.moduleCode,
+      moduleName: selectedModule?.moduleName,
+      groupName: selectedGroup?.groupName
+    };
+
+    setSchedules([...schedules, newSchedule]);
+    setViva({ moduleId: '', groupId: '', date: '', time: '', location: 'Online - Zoom' });
+    setGroups([]);
+    setErrors({});
+    alert('Viva session scheduled successfully!');
   };
 
-  // Logic to cancel a session
   const handleCancel = (id) => {
-    if (window.confirm("Are you sure you want to cancel this viva session?")) {
-      setSchedules(schedules.filter(s => s.id !== id));
+    if (window.confirm('Are you sure you want to cancel this viva session?')) {
+      setSchedules(schedules.filter((s) => s.id !== id));
     }
   };
 
   return (
     <div className="max-w-6xl mx-auto p-4">
-      {/* Updated Header with 0A0A0C Box */}
       <header className="mb-8 bg-[#0A0A0C] p-8 rounded-2xl shadow-xl border-b-4 border-b-[#FF6A00]">
         <h1 className="text-3xl font-black text-white tracking-tight uppercase">Viva Scheduling</h1>
         <p className="text-gray-400 font-medium mt-1">Organize and manage project evaluation sessions.</p>
       </header>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Scheduling Form - UPDATED TO #F4F4F6 */}
-        <div className="lg:col-span-1 bg-[#F4F4F6] p-6 rounded-2xl shadow-sm border border-gray-200 border-b-4 border-[#FF6A00] h-fit">
+        <div className="lg:col-span-1 bg-[#F4F4F6] p-6 rounded-2xl shadow-sm border border-gray-200 border-b-4 border-b-[#FF6A00] h-fit">
           <h2 className="text-lg font-bold mb-6 text-[#0A0A0C] uppercase tracking-widest flex items-center gap-2">
             <span className="text-[#FF6A00]">●</span> New Session
           </h2>
+
           <form onSubmit={handleSchedule} className="space-y-5">
+            <div>
+              <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-2">Module</label>
+              <div className="relative">
+                <select
+                  className={`w-full p-3 bg-white text-[#0A0A0C] border rounded-xl outline-none transition-all appearance-none cursor-pointer ${
+                    errors.moduleId ? 'border-red-500' : 'border-gray-200 focus:border-[#FF6A00]'
+                  }`}
+                  value={viva.moduleId}
+                  onChange={(e) => setViva({ ...viva, moduleId: e.target.value })}
+                >
+                  <option value="">{loadingModules ? 'Loading modules...' : 'Choose a module...'}</option>
+                  {modules.map((module) => (
+                    <option key={module.id} value={module.id}>
+                      {module.moduleCode} - {module.moduleName}
+                    </option>
+                  ))}
+                </select>
+                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-[#FF6A00]">
+                  <svg className="w-4 h-4 fill-current" viewBox="0 0 20 20">
+                    <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
+                  </svg>
+                </div>
+              </div>
+              {errors.moduleId && <p className="text-red-500 text-[10px] mt-1 font-bold italic">{errors.moduleId}</p>}
+            </div>
+
             <div>
               <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-2">Select Group</label>
               <div className="relative">
-                <select 
-                  className={`w-full p-3 bg-white text-[#0A0A0C] border rounded-xl outline-none transition-all appearance-none cursor-pointer ${errors.group ? 'border-red-500' : 'border-gray-200 focus:border-[#FF6A00]'}`}
-                  value={viva.group}
-                  onChange={(e) => setViva({...viva, group: e.target.value})}
+                <select
+                  className={`w-full p-3 bg-white text-[#0A0A0C] border rounded-xl outline-none transition-all appearance-none cursor-pointer ${
+                    errors.groupId ? 'border-red-500' : 'border-gray-200 focus:border-[#FF6A00]'
+                  }`}
+                  value={viva.groupId}
+                  onChange={(e) => setViva({ ...viva, groupId: e.target.value })}
+                  disabled={!viva.moduleId || loadingGroups}
                 >
-                  <option value="">Choose a group...</option>
-                  <option value="Group 01 - AgroLeave">Group 01 - AgroLeave</option>
-                  <option value="Group 02 - HealthTrack">Group 02 - HealthTrack</option>
+                  <option value="">
+                    {!viva.moduleId
+                      ? 'Choose a module first...'
+                      : loadingGroups
+                      ? 'Loading groups...'
+                      : groups.length === 0
+                      ? 'No groups available'
+                      : 'Choose a group...'}
+                  </option>
+                  {groups.map((group) => (
+                    <option key={group.id} value={group.id}>
+                      {group.groupName}
+                    </option>
+                  ))}
                 </select>
                 <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-[#FF6A00]">
-                  <svg className="w-4 h-4 fill-current" viewBox="0 0 20 20"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" /></svg>
+                  <svg className="w-4 h-4 fill-current" viewBox="0 0 20 20">
+                    <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
+                  </svg>
                 </div>
               </div>
-              {errors.group && <p className="text-red-500 text-[10px] mt-1 font-bold italic">{errors.group}</p>}
+              {errors.groupId && <p className="text-red-500 text-[10px] mt-1 font-bold italic">{errors.groupId}</p>}
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-2">Date</label>
-                <input 
-                  type="date" 
-                  className={`w-full p-3 bg-white text-[#0A0A0C] border rounded-xl outline-none transition-all cursor-pointer ${errors.date ? 'border-red-500' : 'border-gray-200 focus:border-[#FF6A00]'}`}
+                <input
+                  type="date"
+                  className={`w-full p-3 bg-white text-[#0A0A0C] border rounded-xl outline-none transition-all cursor-pointer ${
+                    errors.date ? 'border-red-500' : 'border-gray-200 focus:border-[#FF6A00]'
+                  }`}
                   value={viva.date}
-                  onChange={(e) => setViva({...viva, date: e.target.value})}
+                  onChange={(e) => setViva({ ...viva, date: e.target.value })}
                 />
+                {errors.date && <p className="text-red-500 text-[10px] mt-1 font-bold italic">{errors.date}</p>}
               </div>
+
               <div>
                 <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-2">Time</label>
-                <input 
-                  type="time" 
-                  className={`w-full p-3 bg-white text-[#0A0A0C] border rounded-xl outline-none transition-all cursor-pointer ${errors.time ? 'border-red-500' : 'border-gray-200 focus:border-[#FF6A00]'}`}
+                <input
+                  type="time"
+                  className={`w-full p-3 bg-white text-[#0A0A0C] border rounded-xl outline-none transition-all cursor-pointer ${
+                    errors.time ? 'border-red-500' : 'border-gray-200 focus:border-[#FF6A00]'
+                  }`}
                   value={viva.time}
-                  onChange={(e) => setViva({...viva, time: e.target.value})}
+                  onChange={(e) => setViva({ ...viva, time: e.target.value })}
                 />
+                {errors.time && <p className="text-red-500 text-[10px] mt-1 font-bold italic">{errors.time}</p>}
               </div>
             </div>
 
             <div>
               <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-2">Location / Link</label>
-              <input 
-                type="text" 
-                className="w-full p-3 bg-white text-[#0A0A0C] border border-gray-200 rounded-xl outline-none focus:border-[#FF6A00] transition-all"
+              <input
+                type="text"
+                className={`w-full p-3 bg-white text-[#0A0A0C] border rounded-xl outline-none transition-all ${
+                  errors.location ? 'border-red-500' : 'border-gray-200 focus:border-[#FF6A00]'
+                }`}
                 value={viva.location}
-                onChange={(e) => setViva({...viva, location: e.target.value})}
+                onChange={(e) => setViva({ ...viva, location: e.target.value })}
               />
+              {errors.location && <p className="text-red-500 text-[10px] mt-1 font-bold italic">{errors.location}</p>}
             </div>
 
-            <button type="submit" className="w-full bg-[#FF6A00] text-white py-4 rounded-xl hover:bg-[#E55F00] font-black uppercase text-xs tracking-[0.2em] transition-all shadow-lg shadow-orange-950/10 active:scale-95 mt-2">
+            <button
+              type="submit"
+              className="w-full bg-[#FF6A00] text-white py-4 rounded-xl hover:bg-[#E55F00] font-black uppercase text-xs tracking-[0.2em] transition-all shadow-lg shadow-orange-950/10 active:scale-95 mt-2"
+            >
               Schedule Session
             </button>
           </form>
         </div>
 
-        {/* Upcoming Vivas List - UPDATED TO #1F1F23 */}
         <div className="lg:col-span-2">
           <h2 className="text-xl font-black mb-4 text-[#0A0A0C] uppercase tracking-tighter">Upcoming Sessions</h2>
           {schedules.length === 0 ? (
@@ -122,6 +254,7 @@ const LecturerVivaSchedule = () => {
               <table className="w-full text-left">
                 <thead className="bg-white/5 border-b border-white/5">
                   <tr>
+                    <th className="p-5 text-[10px] font-black text-gray-400 uppercase tracking-widest">Module</th>
                     <th className="p-5 text-[10px] font-black text-gray-400 uppercase tracking-widest">Group</th>
                     <th className="p-5 text-[10px] font-black text-gray-400 uppercase tracking-widest">Schedule</th>
                     <th className="p-5 text-[10px] font-black text-gray-400 uppercase tracking-widest">Location</th>
@@ -132,7 +265,14 @@ const LecturerVivaSchedule = () => {
                   {schedules.map((s) => (
                     <tr key={s.id} className="hover:bg-white/5 transition-colors group">
                       <td className="p-5">
-                        <span className="font-black text-white text-sm group-hover:text-[#FF6A00] transition-colors">{s.group}</span>
+                        <span className="text-sm font-black text-white">
+                          {s.moduleCode}
+                        </span>
+                      </td>
+                      <td className="p-5">
+                        <span className="font-black text-white text-sm group-hover:text-[#FF6A00] transition-colors">
+                          {s.groupName}
+                        </span>
                       </td>
                       <td className="p-5">
                         <div className="flex flex-col">
@@ -142,11 +282,11 @@ const LecturerVivaSchedule = () => {
                       </td>
                       <td className="p-5 text-sm">
                         <span className="bg-white/5 text-gray-300 px-3 py-1 rounded-full text-[11px] font-bold border border-white/10">
-                           {s.location}
+                          {s.location}
                         </span>
                       </td>
                       <td className="p-5 text-right">
-                        <button 
+                        <button
                           onClick={() => handleCancel(s.id)}
                           className="text-[10px] font-black text-gray-500 hover:text-red-500 uppercase tracking-widest transition-colors"
                         >
