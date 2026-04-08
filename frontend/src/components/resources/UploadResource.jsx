@@ -29,6 +29,9 @@ export default function UploadResource() {
   const [success, setSuccess] = useState("");
   const [dragActive, setDragActive] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [showRenameModal, setShowRenameModal] = useState(false);
+  const [pendingFile, setPendingFile] = useState(null);
+  const [customFileName, setCustomFileName] = useState("");
 
   const allowedExtensions = [
     "pdf",
@@ -78,7 +81,7 @@ export default function UploadResource() {
       newErrors.lecturerName = "Lecturer name is required";
     }
 
-    if (!file) {
+    if (!file && !editingResource?.originalFileName) {
       newErrors.file = "Attachment is required";
     }
 
@@ -94,6 +97,63 @@ export default function UploadResource() {
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
+  };
+
+  const removeExtension = (fileName = "") => {
+    const lastDot = fileName.lastIndexOf(".");
+    return lastDot > 0 ? fileName.substring(0, lastDot) : fileName;
+  };
+
+  const getFileExtension = (fileName = "") => {
+    const lastDot = fileName.lastIndexOf(".");
+    return lastDot > 0 ? fileName.substring(lastDot + 1).toLowerCase() : "";
+  };
+
+  const openRenameModal = (selectedFile) => {
+    if (!selectedFile) return;
+
+    setPendingFile(selectedFile);
+    setCustomFileName(removeExtension(selectedFile.name));
+    setShowRenameModal(true);
+  };
+
+  const confirmRenameAndAttach = () => {
+    if (!pendingFile) return;
+
+    const trimmedName = customFileName.trim();
+
+    if (!trimmedName) {
+      setErrors((prev) => ({
+        ...prev,
+        file: "Attachment name is required",
+      }));
+      return;
+    }
+
+    const extension = getFileExtension(pendingFile.name);
+
+    const renamedFile = new File(
+      [pendingFile],
+      `${trimmedName}.${extension}`,
+      {
+        type: pendingFile.type,
+        lastModified: pendingFile.lastModified,
+      }
+    );
+
+    setFile(renamedFile);
+    setErrors((prev) => ({
+      ...prev,
+      file: "",
+    }));
+    setShowRenameModal(false);
+    setPendingFile(null);
+  };
+
+  const cancelRenameModal = () => {
+    setShowRenameModal(false);
+    setPendingFile(null);
+    setCustomFileName("");
   };
 
   const handleSubmit = async (e) => {
@@ -149,7 +209,7 @@ export default function UploadResource() {
 
   const handleFileChange = (selectedFile) => {
     if (!selectedFile) return;
-    setFile(selectedFile);
+    openRenameModal(selectedFile);
   };
 
   const handleDrag = (e) => {
@@ -189,7 +249,7 @@ export default function UploadResource() {
     "mt-2 w-full rounded-2xl border border-white/20 bg-white/[0.10] px-4 py-3 text-gray-100 backdrop-blur-xl shadow-inner shadow-black/10 outline-none";
 
   const selectClass =
-    "mt-2 w-full rounded-2xl border border-white/20 bg-white/[0.10] px-4 py-3 text-white backdrop-blur-xl shadow-inner shadow-black/10 outline-none transition duration-300 focus:border-[#FF6A00]/70 focus:bg-white/[0.14] focus:ring-2 focus:ring-[#FF6A00]/25";
+    "mt-2 w-full rounded-2xl border border-white/20 bg-[#2A2A2F] px-4 py-3 text-white shadow-inner shadow-black/10 outline-none transition duration-300 focus:border-[#FF6A00]/70 focus:bg-[#323238] focus:ring-2 focus:ring-[#FF6A00]/25";
 
   return (
     <div
@@ -317,12 +377,23 @@ export default function UploadResource() {
                               })
                             }
                             className={selectClass}
+                            style={{ colorScheme: "dark" }}
                           >
-                            <option value="">Select Year</option>
-                            <option value="1">Year 1</option>
-                            <option value="2">Year 2</option>
-                            <option value="3">Year 3</option>
-                            <option value="4">Year 4</option>
+                            <option value="" className="bg-[#2A2A2F] text-white">
+                              Select Year
+                            </option>
+                            <option value="1" className="bg-[#2A2A2F] text-white">
+                              Year 1
+                            </option>
+                            <option value="2" className="bg-[#2A2A2F] text-white">
+                              Year 2
+                            </option>
+                            <option value="3" className="bg-[#2A2A2F] text-white">
+                              Year 3
+                            </option>
+                            <option value="4" className="bg-[#2A2A2F] text-white">
+                              Year 4
+                            </option>
                           </select>
                           <p className="mt-2 text-sm text-red-300">{errors.year}</p>
                         </div>
@@ -338,10 +409,17 @@ export default function UploadResource() {
                               })
                             }
                             className={selectClass}
+                            style={{ colorScheme: "dark" }}
                           >
-                            <option value="">Select Semester</option>
-                            <option value="1">Semester 1</option>
-                            <option value="2">Semester 2</option>
+                            <option value="" className="bg-[#2A2A2F] text-white">
+                              Select Semester
+                            </option>
+                            <option value="1" className="bg-[#2A2A2F] text-white">
+                              Semester 1
+                            </option>
+                            <option value="2" className="bg-[#2A2A2F] text-white">
+                              Semester 2
+                            </option>
                           </select>
                           <p className="mt-2 text-sm text-red-300">{errors.semester}</p>
                         </div>
@@ -453,6 +531,78 @@ export default function UploadResource() {
                   )}
                 </div>
               </form>
+
+              {showRenameModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
+                  <div className="w-full max-w-lg rounded-[28px] border border-white/15 bg-[#1F1F23]/95 p-6 shadow-[0_20px_70px_rgba(0,0,0,0.55)] backdrop-blur-2xl">
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <p className="text-sm font-semibold uppercase tracking-[0.25em] text-[#FF6A00]">
+                          Rename Attachment
+                        </p>
+                        <h3 className="mt-2 text-2xl font-bold text-white">
+                          Edit file name before upload
+                        </h3>
+                        <p className="mt-2 text-sm text-gray-300">
+                          This renamed file name will be stored in the system and database.
+                        </p>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={cancelRenameModal}
+                        className="text-2xl text-gray-400 transition hover:text-white"
+                      >
+                        ×
+                      </button>
+                    </div>
+
+                    <div className="mt-6 space-y-4">
+                      <div>
+                        <label className="text-sm text-gray-300">Selected File</label>
+                        <div className="mt-2 rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-gray-200">
+                          {pendingFile?.name}
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="text-sm text-gray-300">Rename As *</label>
+                        <input
+                          type="text"
+                          value={customFileName}
+                          onChange={(e) => setCustomFileName(e.target.value)}
+                          className="mt-2 w-full rounded-2xl border border-white/10 bg-black/35 px-4 py-3 text-white outline-none transition focus:border-[#FF6A00]/60 focus:ring-2 focus:ring-[#FF6A00]/25"
+                          placeholder="Enter new attachment name"
+                        />
+                        {pendingFile && (
+                          <p className="mt-2 text-xs text-gray-400">
+                            Extension will remain: .{getFileExtension(pendingFile.name)}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-end">
+                      <button
+                        type="button"
+                        onClick={cancelRenameModal}
+                        className="rounded-2xl border border-white/10 bg-white/5 px-5 py-3 font-semibold text-white transition hover:bg-white/10"
+                      >
+                        Cancel
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={confirmRenameAndAttach}
+                        className="rounded-2xl bg-gradient-to-r from-[#FF6A00] to-[#ff9d57] px-5 py-3 font-semibold text-white shadow-[0_10px_28px_rgba(255,106,0,0.28)] transition hover:scale-[1.02]"
+                      >
+                        Confirm Name
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
             </div>
           </div>
         </div>
