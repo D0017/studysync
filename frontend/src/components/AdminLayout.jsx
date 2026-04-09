@@ -1,9 +1,9 @@
 import React from 'react';
-import { NavLink, Outlet, } from 'react-router-dom';
+import { NavLink, Outlet } from 'react-router-dom';
+import logo from '../assets/logo11.png';
 
 const AdminLayout = () => {
-
-    const storedUser = JSON.parse(localStorage.getItem('user'));
+    const storedUser = JSON.parse(localStorage.getItem('user') || 'null');
 
     const handleLogout = () => {
         localStorage.removeItem('user');
@@ -12,229 +12,408 @@ const AdminLayout = () => {
 
     const navItems = [
         {
-            label: 'Dashboard', path: '/admin-dashboard',
-            icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+            label: 'Dashboard',
+            path: '/admin-dashboard',
+            icon: (
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="3" width="7" height="7" rx="1" />
+                    <rect x="14" y="3" width="7" height="7" rx="1" />
+                    <rect x="3" y="14" width="7" height="7" rx="1" />
+                    <rect x="14" y="14" width="7" height="7" rx="1" />
+                </svg>
+            )
         },
         {
-            label: 'User Management', path: '/admin/users',
-            icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            label: 'User Management',
+            path: '/admin/users',
+            icon: (
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                    <circle cx="9" cy="7" r="4" />
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                </svg>
+            )
         },
         {
-            label: 'Create Module', path: '/admin/create-module',
-            icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+            label: 'Create Module',
+            path: '/admin/create-module',
+            icon: (
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="12" y1="8" x2="12" y2="16" />
+                    <line x1="8" y1="12" x2="16" y2="12" />
+                </svg>
+            )
         },
         {
-            label: 'Module Management', path: '/admin/modules',
-            icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
+            label: 'Module Management',
+            path: '/admin/modules',
+            icon: (
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M4 6h16" />
+                    <path d="M4 10h16" />
+                    <path d="M4 14h16" />
+                    <path d="M4 18h16" />
+                </svg>
+            )
         },
         {
-            label: 'Leadership Requests', path: '/admin/leadership-requests',
-            icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-        },
+            label: 'Leadership Requests',
+            path: '/admin/leadership-requests',
+            icon: (
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                </svg>
+            )
+        }
     ];
 
+    const adminName = storedUser?.fullName || 'Admin';
+    const adminEmail = storedUser?.email || 'admin@studysync.com';
+
     return (
-        <div style={{ minHeight: '100vh', backgroundColor: '#0a0a0c', color: '#f4f4f6', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+        <div style={{ minHeight: '100vh', backgroundColor: '#12141A', color: '#f4f4f6', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
             <style>{`
                 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
                 * { box-sizing: border-box; }
-                ::-webkit-scrollbar { width: 4px; }
+                ::-webkit-scrollbar { width: 7px; height: 7px; }
                 ::-webkit-scrollbar-track { background: transparent; }
-                ::-webkit-scrollbar-thumb { background: rgba(255,106,0,0.25); border-radius: 4px; }
+                ::-webkit-scrollbar-thumb { background: rgba(148,163,184,0.22); border-radius: 999px; }
+                ::-webkit-scrollbar-thumb:hover { background: rgba(148,163,184,0.36); }
 
-                .al-wrap { display: flex; min-height: 100vh; }
+                .al-page {
+                    min-height: 100vh;
+                    background:
+                        radial-gradient(circle at top right, rgba(255,106,0,0.08), transparent 28%),
+                        #12141A;
+                }
 
-                /* ── SIDEBAR ── */
+                .al-shell {
+                    display: flex;
+                    min-height: 100vh;
+                }
+
                 .al-sidebar {
                     display: none;
-                    width: 260px; flex-shrink: 0; flex-direction: column;
-                    background: linear-gradient(160deg, #1c1c20 0%, #141416 100%);
-                    border-right: 1px solid rgba(255,255,255,0.055);
-                    position: sticky; top: 0; height: 100vh; overflow-y: auto;
+                    width: 272px;
+                    flex-shrink: 0;
+                    background: linear-gradient(180deg, #171A20 0%, #13161C 100%);
+                    border-right: 1px solid rgba(255,255,255,0.08);
+                    padding: 20px 14px;
+                    position: sticky;
+                    top: 0;
+                    height: 100vh;
                 }
-                @media(min-width:1024px){ .al-sidebar { display: flex; } }
 
-                .al-brand-area {
-                    padding: 26px 18px 18px;
-                    border-bottom: 1px solid rgba(255,255,255,0.05);
+                @media (min-width: 1024px) {
+                    .al-sidebar {
+                        display: flex;
+                        flex-direction: column;
+                    }
                 }
-                .al-brand-row { display: flex; align-items: center; gap: 11px; margin-bottom: 16px; }
-                .al-brand-icon {
-                    width: 38px; height: 38px;
-                    background: linear-gradient(135deg, #ff6a00, #ff8533);
-                    border-radius: 11px;
-                    box-shadow: 0 0 0 1px rgba(255,106,0,0.3), 0 6px 20px rgba(255,106,0,0.3);
-                    display: flex; align-items: center; justify-content: center;
-                    font-size: 17px; font-weight: 800; color: #fff; flex-shrink: 0;
-                    letter-spacing: -0.5px;
-                }
-                .al-brand-name { font-size: 16px; font-weight: 800; color: #f4f4f6; letter-spacing: -0.02em; }
-                .al-brand-sub  { font-size: 11px; color: rgba(244,244,246,0.35); margin-top: 1px; font-weight: 500; }
 
-                .al-user-box {
-                    background: rgba(255,255,255,0.035);
-                    border: 1px solid rgba(255,255,255,0.07);
+                .al-brand {
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                    padding: 10px 10px 18px;
+                    border-bottom: 1px solid rgba(255,255,255,0.06);
+                    margin-bottom: 16px;
+                }
+
+                .al-logo {
+                    width: 42px;
+                    height: 42px;
                     border-radius: 12px;
-                    padding: 10px 12px;
-                    display: flex; align-items: center; gap: 10px;
+                    object-fit: contain;
+                    background: rgba(255,255,255,0.04);
+                    padding: 4px;
                 }
-                .al-avatar {
-                    width: 30px; height: 30px;
-                    background: linear-gradient(135deg, #ff6a00, #ff8533);
-                    border-radius: 8px;
-                    display: flex; align-items: center; justify-content: center;
-                    font-size: 12px; font-weight: 700; color: #fff; flex-shrink: 0;
-                }
-                .al-uname  { font-size: 12.5px; font-weight: 600; color: #f4f4f6; }
-                .al-uemail { font-size: 11px; color: rgba(244,244,246,0.35); margin-top: 1px; }
 
-                .al-nav { flex: 1; padding: 14px 10px; display: flex; flex-direction: column; gap: 2px; }
-                .al-nav-section {
-                    font-size: 10px; font-weight: 700; letter-spacing: 0.1em;
-                    text-transform: uppercase; color: rgba(244,244,246,0.18);
-                    padding: 0 8px; margin: 4px 0 8px;
+                .al-brand-name {
+                    font-size: 18px;
+                    font-weight: 800;
+                    color: #f4f4f6;
+                    letter-spacing: -0.02em;
                 }
+
+                .al-brand-sub {
+                    font-size: 11px;
+                    color: rgba(244,244,246,0.42);
+                    margin-top: 2px;
+                }
+
+                .al-user-card {
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                    padding: 12px;
+                    border: 1px solid rgba(255,255,255,0.08);
+                    border-radius: 14px;
+                    background: rgba(255,255,255,0.03);
+                    margin-bottom: 18px;
+                }
+
+                .al-avatar {
+                    width: 36px;
+                    height: 36px;
+                    border-radius: 10px;
+                    background: linear-gradient(135deg, #FF6A00, #FF8A33);
+                    color: white;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 13px;
+                    font-weight: 800;
+                    flex-shrink: 0;
+                }
+
+                .al-user-name {
+                    font-size: 13.5px;
+                    font-weight: 700;
+                    color: #f4f4f6;
+                }
+
+                .al-user-mail {
+                    font-size: 11.5px;
+                    color: rgba(244,244,246,0.40);
+                    margin-top: 2px;
+                    word-break: break-word;
+                }
+
+                .al-nav-title {
+                    font-size: 10px;
+                    font-weight: 700;
+                    letter-spacing: 0.12em;
+                    text-transform: uppercase;
+                    color: rgba(244,244,246,0.22);
+                    padding: 0 10px;
+                    margin-bottom: 8px;
+                }
+
+                .al-nav {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 4px;
+                    flex: 1;
+                }
+
                 .al-link {
-                    display: flex; align-items: center; gap: 9px;
-                    padding: 9px 10px; border-radius: 10px;
-                    text-decoration: none; font-size: 13px; font-weight: 500;
-                    color: rgba(244,244,246,0.45);
-                    transition: all 0.17s ease;
-                    border: 1px solid transparent;
-                }
-                .al-link:hover {
-                    background: rgba(255,255,255,0.05);
-                    color: rgba(244,244,246,0.8);
-                }
-                .al-link.active {
-                    background: linear-gradient(135deg, rgba(255,106,0,0.15) 0%, rgba(255,106,0,0.07) 100%);
-                    border-color: rgba(255,106,0,0.22);
-                    color: #ff7a1a;
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                    padding: 11px 12px;
+                    border-radius: 12px;
+                    text-decoration: none;
+                    color: rgba(244,244,246,0.55);
+                    font-size: 13px;
                     font-weight: 600;
-                    box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
+                    border: 1px solid transparent;
+                    transition: all 0.18s ease;
                 }
-                .al-link-icon { opacity: 0.65; flex-shrink: 0; transition: opacity 0.17s; }
-                .al-link:hover .al-link-icon { opacity: 0.9; }
-                .al-link.active .al-link-icon { opacity: 1; }
+
+                .al-link:hover {
+                    color: #f4f4f6;
+                    background: rgba(255,255,255,0.05);
+                }
+
+                .al-link.active {
+                    background: linear-gradient(135deg, rgba(255,106,0,0.14), rgba(255,106,0,0.07));
+                    border-color: rgba(255,106,0,0.24);
+                    color: #FF8A33;
+                }
 
                 .al-footer {
-                    padding: 12px 10px;
-                    border-top: 1px solid rgba(255,255,255,0.05);
-                    display: flex; flex-direction: column; gap: 7px;
+                    border-top: 1px solid rgba(255,255,255,0.06);
+                    padding-top: 14px;
+                    margin-top: 14px;
                 }
-                .al-btn-back {
-                    width: 100%; padding: 9px 12px;
-                    background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
-                    border-radius: 9px; color: rgba(244,244,246,0.55);
-                    font-family: inherit; font-size: 12.5px; font-weight: 500;
-                    cursor: pointer; transition: all 0.17s;
-                }
-                .al-btn-back:hover { background: rgba(255,255,255,0.07); color: #f4f4f6; }
-                .al-btn-out {
-                    width: 100%; padding: 9px 12px;
-                    background: rgba(239,68,68,0.09); border: 1px solid rgba(239,68,68,0.2);
-                    border-radius: 9px; color: #f87171;
-                    font-family: inherit; font-size: 12.5px; font-weight: 600;
-                    cursor: pointer; transition: all 0.17s;
-                }
-                .al-btn-out:hover { background: rgba(239,68,68,0.16); border-color: rgba(239,68,68,0.35); }
 
-                /* ── MAIN ── */
-                .al-main { flex: 1; padding: 28px 30px; min-width: 0; }
-                @media(max-width:768px){ .al-main { padding: 14px; } }
+                .al-logout {
+                    width: 100%;
+                    padding: 11px 14px;
+                    border: 1px solid rgba(239,68,68,0.22);
+                    background: rgba(239,68,68,0.10);
+                    color: #f87171;
+                    border-radius: 12px;
+                    font-family: inherit;
+                    font-size: 13px;
+                    font-weight: 700;
+                    cursor: pointer;
+                    transition: all 0.18s ease;
+                }
 
-                /* ── MOBILE ── */
-                .al-mob { display: block; margin-bottom: 20px; }
-                @media(min-width:1024px){ .al-mob { display: none; } }
-                .al-mob-bar {
-                    background: linear-gradient(135deg, #1c1c20, #141416);
-                    border: 1px solid rgba(255,255,255,0.07);
-                    border-radius: 16px; padding: 16px;
+                .al-logout:hover {
+                    background: rgba(239,68,68,0.16);
                 }
-                .al-mob-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
-                .al-mob-title { font-size: 15px; font-weight: 800; color: #f4f4f6; }
-                .al-mob-name  { font-size: 11px; color: rgba(244,244,246,0.38); margin-top: 2px; }
-                .al-mob-logout {
-                    padding: 7px 14px;
-                    background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.2);
-                    border-radius: 8px; color: #f87171;
-                    font-family: inherit; font-size: 12px; font-weight: 600; cursor: pointer;
+
+                .al-main {
+                    flex: 1;
+                    min-width: 0;
+                    padding: 28px;
                 }
-                .al-mob-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-                .al-mob-item {
-                    display: flex; align-items: center; gap: 8px;
-                    padding: 11px 13px;
-                    background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07);
-                    border-radius: 11px; text-decoration: none;
-                    color: rgba(244,244,246,0.45); font-size: 12px; font-weight: 500;
-                    transition: all 0.17s;
+
+                @media (max-width: 1023px) {
+                    .al-main {
+                        padding: 16px;
+                    }
                 }
-                .al-mob-item:hover { background: rgba(255,255,255,0.06); color: #f4f4f6; }
-                .al-mob-item.active {
-                    background: linear-gradient(135deg, rgba(255,106,0,0.13), rgba(255,106,0,0.06));
-                    border-color: rgba(255,106,0,0.22); color: #ff7a1a; font-weight: 600;
+
+                .al-mobile-top {
+                    display: block;
+                    margin-bottom: 18px;
+                }
+
+                @media (min-width: 1024px) {
+                    .al-mobile-top {
+                        display: none;
+                    }
+                }
+
+                .al-mobile-card {
+                    padding: 16px 18px;
+                    border-radius: 18px;
+                    border: 1px solid rgba(255,255,255,0.08);
+                    background: linear-gradient(135deg, #1f1f23 0%, #18181b 100%);
+                    box-shadow: 0 10px 24px rgba(0,0,0,0.12);
+                }
+
+                .al-mobile-row {
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    gap: 14px;
+                    margin-bottom: 14px;
+                }
+
+                .al-mobile-title {
+                    font-size: 16px;
+                    font-weight: 800;
+                    color: #f4f4f6;
+                    letter-spacing: -0.02em;
+                }
+
+                .al-mobile-sub {
+                    font-size: 12px;
+                    color: rgba(244,244,246,0.42);
+                    margin-top: 3px;
+                }
+
+                .al-mobile-logout {
+                    padding: 9px 14px;
+                    border: 1px solid rgba(239,68,68,0.22);
+                    background: rgba(239,68,68,0.10);
+                    color: #f87171;
+                    border-radius: 10px;
+                    font-family: inherit;
+                    font-size: 12px;
+                    font-weight: 700;
+                    cursor: pointer;
+                }
+
+                .al-mobile-nav {
+                    display: grid;
+                    grid-template-columns: repeat(2, minmax(0, 1fr));
+                    gap: 8px;
+                }
+
+                .al-mobile-link {
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    padding: 11px 12px;
+                    border-radius: 12px;
+                    text-decoration: none;
+                    color: rgba(244,244,246,0.55);
+                    background: rgba(255,255,255,0.03);
+                    border: 1px solid rgba(255,255,255,0.08);
+                    font-size: 12px;
+                    font-weight: 600;
+                }
+
+                .al-mobile-link.active {
+                    color: #FF8A33;
+                    background: linear-gradient(135deg, rgba(255,106,0,0.14), rgba(255,106,0,0.07));
+                    border-color: rgba(255,106,0,0.24);
                 }
             `}</style>
 
-            <div className="al-wrap">
-                <aside className="al-sidebar">
-                    <div className="al-brand-area">
-                      {/*  <div className="al-brand-row">
-                            <div className="al-brand-icon">S</div>
+            <div className="al-page">
+                <div className="al-shell">
+                    <aside className="al-sidebar">
+                        <div className="al-brand">
+                            <img src={logo} alt="StudySync logo" className="al-logo" />
                             <div>
                                 <div className="al-brand-name">StudySync</div>
                                 <div className="al-brand-sub">Admin Control Center</div>
                             </div>
-                        </div>  */}
-                        <div className="al-user-box">
-                            <div className="al-avatar">{(storedUser?.fullName || 'A').charAt(0).toUpperCase()}</div>
+                        </div>
+
+                        <div className="al-user-card">
+                            <div className="al-avatar">
+                                {adminName.charAt(0).toUpperCase()}
+                            </div>
                             <div>
-                                <div className="al-uname">{storedUser?.fullName || 'Admin'}</div>
-                                <div className="al-uemail">{storedUser?.email || 'admin@studysync.com'}</div>
+                                <div className="al-user-name">{adminName}</div>
+                                <div className="al-user-mail">{adminEmail}</div>
                             </div>
                         </div>
-                    </div>
 
-                    <nav className="al-nav">
-                        <div className="al-nav-section">Main Menu</div>
-                        {navItems.map((item) => (
-                            <NavLink key={item.path} to={item.path}
-                                className={({ isActive }) => `al-link${isActive ? ' active' : ''}`}>
-                                <span className="al-link-icon">{item.icon}</span>
-                                <span>{item.label}</span>
-                            </NavLink>
-                        ))}
-                    </nav>
+                        <div className="al-nav-title">Main Menu</div>
 
-                    <div className="al-footer">
+                        <nav className="al-nav">
+                            {navItems.map((item) => (
+                                <NavLink
+                                    key={item.path}
+                                    to={item.path}
+                                    className={({ isActive }) => `al-link${isActive ? ' active' : ''}`}
+                                >
+                                    <span>{item.icon}</span>
+                                    <span>{item.label}</span>
+                                </NavLink>
+                            ))}
+                        </nav>
 
-                        <button onClick={handleLogout} className="al-btn-out">Sign Out</button>
-                    </div>
-                </aside>
+                        <div className="al-footer">
+                            <button onClick={handleLogout} className="al-logout">
+                                Sign Out
+                            </button>
+                        </div>
+                    </aside>
 
-                <main className="al-main">
-                    <div className="al-mob">
-                        <div className="al-mob-bar">
-                            <div className="al-mob-top">
-                                <div>
-                                    <div className="al-mob-title">StudySync Admin</div>
-                                    <div className="al-mob-name">{storedUser?.fullName || 'Admin'}</div>
+                    <main className="al-main">
+                        <div className="al-mobile-top">
+                            <div className="al-mobile-card">
+                                <div className="al-mobile-row">
+                                    <div>
+                                        <div className="al-mobile-title">StudySync Admin</div>
+                                        <div className="al-mobile-sub">{adminName}</div>
+                                    </div>
+                                    <button onClick={handleLogout} className="al-mobile-logout">
+                                        Sign Out
+                                    </button>
                                 </div>
-                                <button onClick={handleLogout} className="al-mob-logout">Sign Out</button>
-                            </div>
-                            <div className="al-mob-grid">
-                                {navItems.map((item) => (
-                                    <NavLink key={item.path} to={item.path}
-                                        className={({ isActive }) => `al-mob-item${isActive ? ' active' : ''}`}>
-                                        <span>{item.icon}</span>
-                                        <span>{item.label}</span>
-                                    </NavLink>
-                                ))}
+
+                                <div className="al-mobile-nav">
+                                    {navItems.map((item) => (
+                                        <NavLink
+                                            key={item.path}
+                                            to={item.path}
+                                            className={({ isActive }) => `al-mobile-link${isActive ? ' active' : ''}`}
+                                        >
+                                            <span>{item.icon}</span>
+                                            <span>{item.label}</span>
+                                        </NavLink>
+                                    ))}
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <Outlet />
-                </main>
+
+                        <Outlet />
+                    </main>
+                </div>
             </div>
         </div>
     );
