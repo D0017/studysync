@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import { toast } from 'react-toastify';
 
 const getErrorMessage = (error, fallback) => {
     const data = error?.response?.data;
@@ -129,17 +130,28 @@ const CreateModule = () => {
         e.preventDefault();
         setMessage({ type: '', text: '' });
         const err = validateForm();
-        if (err) { setMessage({ type: 'error', text: err }); return; }
+
+        if (err) {
+            setMessage({ type: 'error', text: err });
+            toast.error(err);
+            return;
+        }
+        
         try {
             setLoading(true);
             const moduleResponse = await axios.post('/api/admin/modules', moduleData);
             const createdModule = moduleResponse.data;
             const groupsResponse = await axios.post(`/api/admin/modules/${createdModule.id}/groups`, groupData);
-            setMessage({ type: 'success', text: `${createdModule.moduleCode} created successfully. ${groupsResponse.data}` });
+            const successText = `${createdModule.moduleCode} created successfully. ${groupsResponse.data}`;
+
+            setMessage({ type: 'success', text: successText });
+            toast.success(successText);
             resetForm();
         } catch (error) {
             console.error('Create module/groups failed:', error);
-            setMessage({ type: 'error', text: getErrorMessage(error, 'Something went wrong while creating module and groups.') });
+            const errorText = getErrorMessage(error, 'Something went wrong while creating module and groups.');
+            setMessage({ type: 'error', text: errorText });
+            toast.error(errorText);
         } finally {
             setLoading(false);
         }
@@ -149,7 +161,6 @@ const CreateModule = () => {
         <div className="pg">
             <style>{S}</style>
 
-            {/* Hero */}
             <div className="hero">
                 <div className="hero-tag">Admin Management</div>
                 <h2 className="hero-title">Create Module</h2>
@@ -161,7 +172,6 @@ const CreateModule = () => {
             {/* Form */}
             <div className="card form-card">
                 <form onSubmit={handleSubmit}>
-                    {/* Module Details */}
                     <div className="form-section-title">
                         <span className="form-section-badge">1</span>
                         Module Details
@@ -240,7 +250,6 @@ const CreateModule = () => {
 
                     <hr className="form-divider" />
 
-                    {/* Actions */}
                     <div className="btn-row">
                         <button type="submit" disabled={loading} className="btn-submit">
                             {loading ? 'Creating…' : 'Create Module & Groups'}
