@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
+import { toast } from 'react-toastify';
 
 const getErrorMessage = (error, fallback) => {
     const data = error?.response?.data;
@@ -97,7 +98,9 @@ const LeadershipRequests = () => {
             setRequests(Array.isArray(response.data) ? response.data : []);
         } catch (error) {
             console.error('Failed to fetch leadership requests:', error);
-            setMessage({ type: 'error', text: getErrorMessage(error, 'Failed to load leadership requests.') });
+            const errorText = getErrorMessage(error, 'Failed to load leadership requests.');
+            setMessage({ type: 'error', text: errorText });
+            toast.error(errorText);
             setRequests([]);
         } finally {
             setLoading(false);
@@ -111,10 +114,13 @@ const LeadershipRequests = () => {
         try {
             const response = await axios.post(`/api/admin/leadership-requests/${groupId}/approve`);
             setMessage({ type: 'success', text: response.data });
+            toast.success(typeof response.data === 'string' ? response.data : 'Leadership request approved.');
             await fetchRequests();
         } catch (error) {
             console.error('Approval failed:', error);
-            setMessage({ type: 'error', text: getErrorMessage(error, 'Failed to approve leadership request.') });
+            const errorText = getErrorMessage(error, 'Failed to approve leadership request.');
+            setMessage({ type: 'error', text: errorText });
+            toast.error(errorText);
         }
     };
 
@@ -122,7 +128,6 @@ const LeadershipRequests = () => {
         <div className="pg">
             <style>{S}</style>
 
-            {/* Hero */}
             <div className="hero">
                 <div className="hero-row">
                     <div>

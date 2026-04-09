@@ -1,6 +1,8 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
+import logo from '../assets/logo11.png'; 
 
 const getErrorMessage = (error, fallback) => {
     const data = error?.response?.data;
@@ -12,9 +14,17 @@ const getErrorMessage = (error, fallback) => {
     return fallback;
 };
 
+const getGreeting = () => {
+    const hour = new Date().getHours();
+
+    if (hour < 12) return 'Good morning';
+    if (hour < 17) return 'Good afternoon';
+    return 'Good evening';
+};
+
 const StudentDashboard = () => {
     const navigate = useNavigate();
-    const storedUser = JSON.parse(localStorage.getItem('user'));
+    const storedUser = JSON.parse(localStorage.getItem('user') || 'null');
 
     const [enrollmentKey, setEnrollmentKey] = useState('');
     const [modules, setModules] = useState([]);
@@ -22,6 +32,15 @@ const StudentDashboard = () => {
     const [loadingModules, setLoadingModules] = useState(true);
     const [joiningModule, setJoiningModule] = useState(false);
     const [message, setMessage] = useState({ type: '', text: '' });
+
+    const [searchTerm, setSearchTerm] = useState('');
+    const [statusFilter, setStatusFilter] = useState('ALL');
+    const [sortBy, setSortBy] = useState('MODULE_CODE_ASC');
+    const [sidebarOpen, setSidebarOpen] = useState(false);
+
+    const displayName = storedUser?.fullName || 'Student';
+    const firstName = displayName.split(' ')[0] || 'Student';
+    const universityId = storedUser?.universityId || 'No University ID';
 
     const fetchStudentModules = useCallback(async () => {
         if (!storedUser?.id) {
@@ -117,6 +136,7 @@ const StudentDashboard = () => {
             });
 
             setMessage({ type: 'success', text: response.data });
+            toast.success(typeof response.data === 'string' ? response.data : 'Enrolled successfully!');
             setEnrollmentKey('');
             await fetchStudentModules();
         } catch (error) {
@@ -139,283 +159,600 @@ const StudentDashboard = () => {
         navigate(`/student/modules/${moduleId}`);
     };
 
-    const statCardClass =
-        'rounded-[28px] border border-white/10 bg-white/5 p-6 shadow-[0_20px_50px_rgba(0,0,0,0.20)] backdrop-blur-xl';
+    const enrichedModules = useMemo(() => {
+        return modules.map((module) => {
+            const relatedGroup = joinedGroups.find((group) => group.moduleId === module.id);
 
-    const glassPanelClass =
-        'rounded-[30px] border border-white/10 bg-white/5 shadow-[0_20px_60px_rgba(0,0,0,0.25)] backdrop-blur-xl';
+            let status = 'NO_GROUP';
+            if (relatedGroup?.isLeader) status = 'LEADER';
+            else if (relatedGroup?.isLeadershipPending) status = 'PENDING';
+            else if (relatedGroup) status = 'IN_GROUP';
+
+            return {
+                ...module,
+                relatedGroup,
+                status,
+                lecturerName: module.lecturer?.fullName || 'Not assigned yet'
+            };
+        });
+    }, [modules, joinedGroups]);
+
+    const visibleModules = useMemo(() => {
+        const q = searchTerm.trim().toLowerCase();
+
+        const filtered = enrichedModules.filter((module) => {
+            const matchesSearch =
+                !q ||
+                module.moduleCode?.toLowerCase().includes(q) ||
+                module.moduleName?.toLowerCase().includes(q) ||
+                module.lecturerName?.toLowerCase().includes(q) ||
+                module.relatedGroup?.groupName?.toLowerCase().includes(q);
+
+            const matchesFilter =
+                statusFilter === 'ALL' ||
+                (statusFilter === 'IN_GROUP' && !!module.relatedGroup) ||
+                (statusFilter === 'NO_GROUP' && !module.relatedGroup) ||
+                (statusFilter === 'LEADER' && module.relatedGroup?.isLeader) ||
+                (statusFilter === 'PENDING' && module.relatedGroup?.isLeadershipPending);
+
+            return matchesSearch && matchesFilter;
+        });
+
+        const statusRank = {
+            LEADER: 0,
+            PENDING: 1,
+            IN_GROUP: 2,
+            NO_GROUP: 3
+        };
+
+        return [...filtered].sort((a, b) => {
+            switch (sortBy) {
+                case 'MODULE_CODE_DESC':
+                    return (b.moduleCode || '').localeCompare(a.moduleCode || '');
+                case 'YEAR_ASC':
+                    if (a.year !== b.year) return a.year - b.year;
+                    if (a.semester !== b.semester) return a.semester - b.semester;
+                    return (a.moduleCode || '').localeCompare(b.moduleCode || '');
+                case 'YEAR_DESC':
+                    if (a.year !== b.year) return b.year - a.year;
+                    if (a.semester !== b.semester) return b.semester - a.semester;
+                    return (a.moduleCode || '').localeCompare(b.moduleCode || '');
+                case 'STATUS':
+                    if (statusRank[a.status] !== statusRank[b.status]) {
+                        return statusRank[a.status] - statusRank[b.status];
+                    }
+                    return (a.moduleCode || '').localeCompare(b.moduleCode || '');
+                case 'MODULE_CODE_ASC':
+                default:
+                    return (a.moduleCode || '').localeCompare(b.moduleCode || '');
+            }
+        });
+    }, [enrichedModules, searchTerm, statusFilter, sortBy]);
+
+    const summary = useMemo(() => {
+        return {
+            totalModules: enrichedModules.length,
+            joinedCount: enrichedModules.filter((m) => !!m.relatedGroup).length,
+            noGroupCount: enrichedModules.filter((m) => !m.relatedGroup).length,
+            pendingCount: enrichedModules.filter((m) => m.relatedGroup?.isLeadershipPending).length
+        };
+    }, [enrichedModules]);
+
+    const quickAccessModules = useMemo(() => visibleModules.slice(0, 5), [visibleModules]);
+
+    const getStatusConfig = (module) => {
+        if (module.relatedGroup?.isLeader) {
+            return {
+                label: 'Leader',
+                badge: 'border border-emerald-500/30 bg-emerald-500/10 text-emerald-300',
+                helper: module.relatedGroup.groupName
+            };
+        }
+
+        if (module.relatedGroup?.isLeadershipPending) {
+            return {
+                label: 'Pending',
+                badge: 'border border-amber-500/30 bg-amber-500/10 text-amber-300',
+                helper: module.relatedGroup.groupName
+            };
+        }
+
+        if (module.relatedGroup) {
+            return {
+                label: 'In Group',
+                badge: 'border border-orange-500/30 bg-orange-500/10 text-orange-300',
+                helper: module.relatedGroup.groupName
+            };
+        }
+
+        return {
+            label: 'No Group',
+            badge: 'border border-white/10 bg-white/5 text-slate-300',
+            helper: 'Join a group from the module page'
+        };
+    };
+
+    const panelClass =
+        'rounded-2xl border border-white/10 bg-[#111827] shadow-[0_10px_30px_rgba(0,0,0,0.22)]';
+
+    const statCardClass =
+        'rounded-2xl border border-white/10 bg-[#111827] p-5 shadow-[0_10px_30px_rgba(0,0,0,0.18)]';
+
+    const filterButtonClass = (active = false) =>
+        `rounded-full px-4 py-2 text-sm font-medium transition ${
+            active
+                ? 'bg-orange-500 text-white'
+                : 'border border-white/10 bg-[#0F172A] text-slate-300 hover:bg-[#162033]'
+        }`;
+
+    const navItemClass = (active = false) =>
+        `flex w-full items-center rounded-xl px-4 py-3 text-sm font-medium transition ${
+            active
+                ? 'bg-orange-500/15 text-orange-300'
+                : 'text-slate-300 hover:bg-white/5 hover:text-white'
+        }`;
+
+    const SidebarContent = () => (
+        <div className="flex min-h-full flex-col bg-[#0B1220]">
+            <div className="border-b border-white/10 px-6 py-6">
+                <div className="flex items-center gap-3">
+                    <img
+                        src={logo}
+                        alt="StudySync logo"
+                        className="h-12 w-12 rounded-xl object-contain"
+                    />
+
+                    <div className="min-w-0">
+                        <h2 className="truncate text-xl font-bold text-white">StudySync</h2>
+                        <p className="text-sm text-slate-400">Student Portal</p>
+                    </div>
+                </div>
+            </div>
+
+            <div className="px-4 py-5">
+                <p className="px-2 pb-2 text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">
+                    Navigation
+                </p>
+
+                <div className="space-y-2">
+                    <button
+                        onClick={() => {
+                            navigate('/student-dashboard');
+                            setSidebarOpen(false);
+                        }}
+                        className={navItemClass(true)}
+                    >
+                        Dashboard
+                    </button>
+
+                    <button
+                        onClick={() => {
+                            navigate('/student/resources');
+                            setSidebarOpen(false);
+                        }}
+                        className={navItemClass(false)}
+                    >
+                        Resources
+                    </button>
+
+                    <button
+                        onClick={() => {
+                            navigate('/discussion');
+                            setSidebarOpen(false);
+                        }}
+                        className={navItemClass(false)}
+                    >
+                        Discussion Board
+                    </button>
+                </div>
+            </div>
+
+            <div className="px-4 py-3">
+                <p className="px-2 pb-2 text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">
+                    Quick Access
+                </p>
+
+                <div className="space-y-2">
+                    {quickAccessModules.length === 0 ? (
+                        <div className="rounded-xl border border-white/10 bg-[#111827] px-4 py-4 text-sm text-slate-400">
+                            No modules available yet.
+                        </div>
+                    ) : (
+                        quickAccessModules.map((module) => (
+                            <button
+                                key={module.id}
+                                onClick={() => {
+                                    openModule(module.id);
+                                    setSidebarOpen(false);
+                                }}
+                                className="w-full rounded-xl border border-white/10 bg-[#111827] px-4 py-3 text-left transition hover:border-orange-500/30 hover:bg-[#172033]"
+                            >
+                                <p className="text-sm font-semibold text-white">{module.moduleCode}</p>
+                                <p className="mt-1 truncate text-xs text-slate-400">{module.moduleName}</p>
+                            </button>
+                        ))
+                    )}
+                </div>
+            </div>
+
+            <div className="mt-auto border-t border-white/10 px-4 py-4">
+                <div className="mb-4 rounded-2xl border border-white/10 bg-[#111827] p-4">
+                    <p className="text-sm font-semibold text-white">{displayName}</p>
+                    <p className="mt-1 text-sm text-slate-400">{universityId}</p>
+                </div>
+
+                <button
+                    onClick={handleLogout}
+                    className="w-full rounded-xl bg-orange-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-orange-600"
+                >
+                    Logout
+                </button>
+            </div>
+        </div>
+    );
 
     return (
-        <div className="relative min-h-screen overflow-hidden bg-[#0A0A0C] px-6 py-8">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,106,0,0.20),transparent_25%),radial-gradient(circle_at_left,rgba(255,255,255,0.05),transparent_22%)]" />
-            <div className="absolute -top-20 right-0 h-72 w-72 rounded-full bg-[#FF6A00]/10 blur-3xl" />
-            <div className="absolute bottom-0 left-0 h-72 w-72 rounded-full bg-white/5 blur-3xl" />
-
-            <div className="relative z-10 mx-auto max-w-7xl">
-                {/* Header */}
-                <div className={`${glassPanelClass} mb-6 p-6 md:p-8`}>
-                    <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-                        <div>
-                            <div className="mb-3 inline-flex items-center rounded-full border border-[#FF6A00]/20 bg-[#FF6A00]/10 px-4 py-2 text-sm font-medium text-[#FF6A00]">
-                                Student Workspace
-                            </div>
-                            <h1 className="text-3xl font-black tracking-tight text-white md:text-4xl">
-                                Welcome back, <span className="font-semibold text-white">{storedUser?.fullName}</span>
-                            </h1>
-
-                            <p className="mt-1 text-sm text-gray-400">
-                                University ID: {storedUser?.universityId}
-                            </p>
-                        </div>
-
-                        <div className="flex flex-wrap gap-3">
-                            <button
-                                onClick={() => navigate('/')}
-                                className="rounded-2xl border border-white/10 bg-white/5 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
-                            >
-                                Home
-                            </button>
-
-                            <button
-                                onClick={handleLogout}
-                                className="rounded-2xl bg-[#FF6A00] px-5 py-3 text-sm font-semibold text-white shadow-[0_16px_35px_rgba(255,106,0,0.28)] transition hover:scale-[1.01] hover:bg-[#ff7b22]"
-                            >
-                                Logout
-                            </button>
+        <div className="min-h-screen w-full bg-[#020817] text-white">
+            {sidebarOpen && (
+                <div className="fixed inset-0 z-50 bg-black/60 lg:hidden">
+                    <div className="h-full w-72.5 border-r border-white/10 bg-[#0B1220] shadow-2xl">
+                        <div className="sidebar-scroll h-full overflow-y-auto">
+                            <SidebarContent />
                         </div>
                     </div>
+
+                    <button
+                        className="absolute inset-0 -z-10 h-full w-full"
+                        onClick={() => setSidebarOpen(false)}
+                    />
                 </div>
+            )}
 
-                {/* Summary */}
-                <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-3">
-                    <div className={statCardClass}>
-                        <p className="text-sm font-medium text-gray-400">Enrolled Modules</p>
-                        <h2 className="mt-3 text-4xl font-black text-[#FF6A00]">{modules.length}</h2>
-                        <p className="mt-2 text-sm text-gray-400">Modules you can access right now</p>
+            <div className="min-h-screen bg-[#020817] lg:pl-72.5">
+                <aside className="fixed inset-y-0 left-0 z-30 hidden w-72.5 border-r border-white/10 bg-[#0B1220] lg:block">
+                    <div className="sidebar-scroll h-full overflow-y-auto">
+                        <SidebarContent />
                     </div>
+                </aside>
 
-                    <div className={statCardClass}>
-                        <p className="text-sm font-medium text-gray-400">Joined Groups</p>
-                        <h2 className="mt-3 text-4xl font-black text-white">{joinedGroups.length}</h2>
-                        <p className="mt-2 text-sm text-gray-400">Groups you currently belong to</p>
-                    </div>
-
-                    <div className={statCardClass}>
-                        <p className="text-sm font-medium text-gray-400">Leadership Requests</p>
-                        <h2 className="mt-3 text-4xl font-black text-[#FF6A00]">
-                            {joinedGroups.filter((group) => group.isLeadershipPending).length}
-                        </h2>
-                        <p className="mt-2 text-sm text-gray-400">Pending leadership approvals</p>
-                    </div>
-                </div>
-
-                {/* Message */}
-                {message.text && (
-                    <div
-                        className={`mb-6 rounded-2xl border px-5 py-4 text-sm font-medium backdrop-blur-xl ${
-                            message.type === 'success'
-                                ? 'border-green-400/20 bg-green-500/10 text-green-300'
-                                : 'border-red-400/20 bg-red-500/10 text-red-300'
-                        }`}
-                    >
-                        {message.text}
-                    </div>
-                )}
-
-                <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
-                    {/* Join Module */}
-                    <div className="xl:col-span-1">
-                        <div className={`${glassPanelClass} p-6`}>
-                            <div className="mb-5">
-                                <p className="text-sm font-bold uppercase tracking-[0.2em] text-[#FF6A00]">
-                                    Enrollment
-                                </p>
-                                <h2 className="mt-2 text-2xl font-black text-white">Join Module</h2>
-                                <p className="mt-2 text-sm leading-6 text-gray-400">
-                                    Enter the enrollment key shared for your module.
-                                </p>
-                            </div>
-
-                            <form onSubmit={handleEnroll} className="space-y-4">
-                                <input
-                                    type="text"
-                                    value={enrollmentKey}
-                                    onChange={(e) => setEnrollmentKey(e.target.value)}
-                                    placeholder="Enter enrollment key"
-                                    className="w-full rounded-2xl border border-white/10 bg-[#F4F4F6] px-4 py-3 text-sm text-[#1F1F23] outline-none transition focus:border-[#FF6A00] focus:ring-2 focus:ring-[#FF6A00]/20"
-                                />
-
+                <main className="min-w-0">
+                    <div className="border-b border-white/10 bg-[#0A1020]/95 px-4 py-4 backdrop-blur sm:px-6 lg:px-8">
+                        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                            <div className="flex items-center gap-3">
                                 <button
-                                    type="submit"
-                                    disabled={joiningModule}
-                                    className={`w-full rounded-2xl px-6 py-3.5 text-sm font-bold text-white transition ${
-                                        joiningModule
-                                            ? 'cursor-not-allowed bg-gray-500'
-                                            : 'bg-[#FF6A00] shadow-[0_16px_35px_rgba(255,106,0,0.28)] hover:scale-[1.01] hover:bg-[#ff7b22]'
-                                    }`}
+                                    onClick={() => setSidebarOpen(true)}
+                                    className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm font-medium text-slate-200 lg:hidden"
                                 >
-                                    {joiningModule ? 'Enrolling...' : 'Enroll'}
+                                    Menu
                                 </button>
-                            </form>
-                        </div>
-                    </div>
 
-                    {/* Right panel */}
-                    <div className="xl:col-span-2 space-y-6">
-                        {/* My Resources */}
-                        <div className={`${glassPanelClass} p-6`}>
-                            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                                 <div>
-                                    <p className="text-sm font-bold uppercase tracking-[0.2em] text-[#FF6A00]">
-                                        Resources
-                                    </p>
-                                    <h2 className="mt-2 text-2xl font-black text-white">My Resources</h2>
-                                    <p className="mt-2 text-sm leading-6 text-gray-400">
-                                        Access your study materials, uploaded files, and shared resources.
+                                    <h1 className="text-2xl font-bold text-white">
+                                        {getGreeting()}, {firstName}
+                                    </h1>
+                                    <p className="mt-1 text-sm text-slate-400">
+                                        {displayName} • {universityId}
                                     </p>
                                 </div>
-
-                                <button
-                                    onClick={() => navigate('/student/resources')}
-                                    className="rounded-2xl bg-[#FF6A00] px-5 py-3 text-sm font-semibold text-white shadow-[0_16px_35px_rgba(255,106,0,0.28)] transition hover:scale-[1.01] hover:bg-[#ff7b22]"
-                                >
-                                    Open Resources
-                                </button>
-                            </div>
-                        </div>
-
-                        {/* Group status */}
-                        <div className={`${glassPanelClass} p-6`}>
-                            <div className="mb-6">
-                                <p className="text-sm font-bold uppercase tracking-[0.2em] text-[#FF6A00]">
-                                    Collaboration
-                                </p>
-                                <h2 className="mt-2 text-2xl font-black text-white">My Group Status</h2>
-                                <p className="mt-2 text-sm leading-6 text-gray-400">
-                                    These are the groups you have already joined in your enrolled modules.
-                                </p>
                             </div>
 
-                            {loadingModules ? (
-                                <p className="text-gray-400">Loading group status...</p>
-                            ) : joinedGroups.length === 0 ? (
-                                <div className="rounded-3xl border border-white/10 bg-black/10 py-12 text-center text-gray-400">
-                                    You have not joined any groups yet.
-                                </div>
-                            ) : (
-                                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                                    {joinedGroups.map((group) => (
-                                        <div
-                                            key={`${group.moduleId}-${group.groupId}`}
-                                            className="rounded-3xl border border-white/10 bg-black/10 p-5 transition hover:border-[#FF6A00]/30 hover:bg-white/5"
-                                        >
-                                            <div className="flex items-start justify-between gap-3">
-                                                <div>
-                                                    <h3 className="text-xl font-bold text-white">
-                                                        {group.moduleCode}
-                                                    </h3>
-                                                    <p className="mt-1 text-gray-300">{group.moduleName}</p>
-                                                </div>
-
-                                                {group.isLeader ? (
-                                                    <span className="rounded-full border border-green-400/20 bg-green-500/10 px-3 py-1 text-xs font-bold text-green-300">
-                                                        Leader
-                                                    </span>
-                                                ) : group.isLeadershipPending ? (
-                                                    <span className="rounded-full border border-yellow-400/20 bg-yellow-500/10 px-3 py-1 text-xs font-bold text-yellow-300">
-                                                        Pending
-                                                    </span>
-                                                ) : (
-                                                    <span className="rounded-full border border-[#FF6A00]/20 bg-[#FF6A00]/10 px-3 py-1 text-xs font-bold text-[#FF6A00]">
-                                                        Member
-                                                    </span>
-                                                )}
-                                            </div>
-
-                                            <p className="mt-4 text-sm text-gray-400">
-                                                <span className="font-semibold text-gray-200">Group:</span> {group.groupName}
-                                            </p>
-                                            <p className="mt-1 text-sm text-gray-400">
-                                                <span className="font-semibold text-gray-200">Members:</span> {group.memberCount} / {group.maxCapacity}
-                                            </p>
-
-                                            <button
-                                                onClick={() => openModule(group.moduleId)}
-                                                className="mt-5 rounded-2xl bg-[#FF6A00] px-4 py-2.5 text-sm font-semibold text-white shadow-[0_16px_35px_rgba(255,106,0,0.22)] transition hover:bg-[#ff7b22]"
-                                            >
-                                                Open Module
-                                            </button>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-
-                        {/* My modules */}
-                        <div className={`${glassPanelClass} p-6`}>
-                            <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                                <div>
-                                    <p className="text-sm font-bold uppercase tracking-[0.2em] text-[#FF6A00]">
-                                        Modules
-                                    </p>
-                                    <h2 className="mt-2 text-2xl font-black text-white">My Modules</h2>
-                                    <p className="mt-2 text-sm leading-6 text-gray-400">
-                                        These are the modules you have enrolled in.
-                                    </p>
+                            <div className="flex flex-wrap items-center gap-3">
+                                <div className="rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-slate-300">
+                                    {summary.totalModules} modules enrolled
                                 </div>
 
                                 <button
                                     onClick={fetchStudentModules}
-                                    className="rounded-2xl border border-white/10 bg-white/5 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
+                                    className="rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-medium text-slate-200 transition hover:bg-white/10"
                                 >
                                     Refresh
                                 </button>
                             </div>
-
-                            {loadingModules ? (
-                                <p className="text-gray-400">Loading modules...</p>
-                            ) : modules.length === 0 ? (
-                                <div className="rounded-3xl border border-white/10 bg-black/10 py-12 text-center text-gray-400">
-                                    You have not enrolled in any modules yet.
-                                </div>
-                            ) : (
-                                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                                    {modules.map((module) => {
-                                        const relatedGroup = joinedGroups.find(
-                                            (group) => group.moduleId === module.id
-                                        );
-
-                                        return (
-                                            <div
-                                                key={module.id}
-                                                className="rounded-3xl border border-white/10 bg-black/10 p-5 transition hover:border-[#FF6A00]/30 hover:bg-white/5"
-                                            >
-                                                <h3 className="text-xl font-bold text-white">
-                                                    {module.moduleCode}
-                                                </h3>
-                                                <p className="mt-1 text-gray-300">{module.moduleName}</p>
-                                                <p className="mt-3 text-sm text-gray-400">
-                                                    Year {module.year} • Semester {module.semester}
-                                                </p>
-                                                <p className="mt-2 text-sm text-gray-400">
-                                                    <span className="font-semibold text-gray-200">Group Status:</span>{' '}
-                                                    {relatedGroup ? relatedGroup.groupName : 'Not joined yet'}
-                                                </p>
-
-                                                <button
-                                                    onClick={() => openModule(module.id)}
-                                                    className="mt-5 rounded-2xl bg-[#FF6A00] px-4 py-2.5 text-sm font-semibold text-white shadow-[0_16px_35px_rgba(255,106,0,0.22)] transition hover:bg-[#ff7b22]"
-                                                >
-                                                    Open Module
-                                                </button>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            )}
                         </div>
                     </div>
-                </div>
+
+                    <div className="px-4 py-6 sm:px-6 lg:px-8">
+                        {message.text && (
+                            <div
+                                className={`mb-6 rounded-2xl border px-5 py-4 text-sm font-medium ${
+                                    message.type === 'success'
+                                        ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300'
+                                        : 'border-red-500/30 bg-red-500/10 text-red-300'
+                                }`}
+                            >
+                                {message.text}
+                            </div>
+                        )}
+
+                        <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                            <div className={statCardClass}>
+                                <p className="text-sm text-slate-400">Modules</p>
+                                <h2 className="mt-3 text-3xl font-bold text-white">{summary.totalModules}</h2>
+                            </div>
+
+                            <div className={statCardClass}>
+                                <p className="text-sm text-slate-400">Joined groups</p>
+                                <h2 className="mt-3 text-3xl font-bold text-white">{summary.joinedCount}</h2>
+                            </div>
+
+                            <div className={statCardClass}>
+                                <p className="text-sm text-slate-400">Need a group</p>
+                                <h2 className="mt-3 text-3xl font-bold text-white">{summary.noGroupCount}</h2>
+                            </div>
+
+                            <div className={statCardClass}>
+                                <p className="text-sm text-slate-400">Pending leadership</p>
+                                <h2 className="mt-3 text-3xl font-bold text-white">{summary.pendingCount}</h2>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
+                            <section className="min-w-0">
+                                <div className={panelClass}>
+                                    <div className="border-b border-white/10 p-5 sm:p-6">
+                                        <div className="flex flex-col gap-4">
+                                            <div>
+                                                <h2 className="text-2xl font-semibold text-white">My Modules</h2>
+                                                <p className="mt-1 text-sm text-slate-400">
+                                                    Search and manage your enrolled modules.
+                                                </p>
+                                            </div>
+
+                                            <div className="grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1fr)_220px]">
+                                                <input
+                                                    type="text"
+                                                    value={searchTerm}
+                                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                                    placeholder="Search by module code, name, lecturer, or group"
+                                                    className="w-full rounded-xl border border-white/10 bg-[#0B1220] px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-orange-500/40"
+                                                />
+
+                                                <select
+                                                    value={sortBy}
+                                                    onChange={(e) => setSortBy(e.target.value)}
+                                                    className="w-full rounded-xl border border-white/10 bg-[#0B1220] px-4 py-3 text-sm text-white outline-none transition focus:border-orange-500/40"
+                                                >
+                                                    <option value="MODULE_CODE_ASC">Module code A-Z</option>
+                                                    <option value="MODULE_CODE_DESC">Module code Z-A</option>
+                                                    <option value="YEAR_ASC">Year / semester ascending</option>
+                                                    <option value="YEAR_DESC">Year / semester descending</option>
+                                                    <option value="STATUS">Status</option>
+                                                </select>
+                                            </div>
+
+                                            <div className="flex flex-wrap gap-2">
+                                                <button
+                                                    onClick={() => setStatusFilter('ALL')}
+                                                    className={filterButtonClass(statusFilter === 'ALL')}
+                                                >
+                                                    All
+                                                </button>
+                                                <button
+                                                    onClick={() => setStatusFilter('IN_GROUP')}
+                                                    className={filterButtonClass(statusFilter === 'IN_GROUP')}
+                                                >
+                                                    In Group
+                                                </button>
+                                                <button
+                                                    onClick={() => setStatusFilter('NO_GROUP')}
+                                                    className={filterButtonClass(statusFilter === 'NO_GROUP')}
+                                                >
+                                                    No Group
+                                                </button>
+                                                <button
+                                                    onClick={() => setStatusFilter('LEADER')}
+                                                    className={filterButtonClass(statusFilter === 'LEADER')}
+                                                >
+                                                    Leader
+                                                </button>
+                                                <button
+                                                    onClick={() => setStatusFilter('PENDING')}
+                                                    className={filterButtonClass(statusFilter === 'PENDING')}
+                                                >
+                                                    Pending
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="p-5 sm:p-6">
+                                        {loadingModules ? (
+                                            <div className="space-y-4">
+                                                {Array.from({ length: 5 }).map((_, index) => (
+                                                    <div
+                                                        key={index}
+                                                        className="animate-pulse rounded-2xl border border-white/10 bg-[#0B1220] p-5"
+                                                    >
+                                                        <div className="h-4 w-24 rounded bg-white/10" />
+                                                        <div className="mt-3 h-6 w-56 rounded bg-white/10" />
+                                                        <div className="mt-4 h-4 w-44 rounded bg-white/10" />
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        ) : visibleModules.length === 0 ? (
+                                            <div className="rounded-2xl border border-dashed border-white/10 bg-[#0B1220] px-6 py-12 text-center">
+                                                <h3 className="text-lg font-semibold text-white">No modules found</h3>
+                                                <p className="mt-2 text-sm text-slate-400">
+                                                    Try another search or filter, or enroll in a new module.
+                                                </p>
+                                            </div>
+                                        ) : (
+                                            <div className="space-y-4">
+                                                {visibleModules.map((module) => {
+                                                    const status = getStatusConfig(module);
+
+                                                    return (
+                                                        <div
+                                                            key={module.id}
+                                                            className="rounded-2xl border border-white/10 bg-[#0B1220] p-5 transition hover:border-orange-500/30"
+                                                        >
+                                                            <div className="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
+                                                                <div className="min-w-0 flex-1">
+                                                                    <div className="flex flex-wrap items-center gap-3">
+                                                                        <span className="text-sm font-semibold text-orange-300">
+                                                                            {module.moduleCode}
+                                                                        </span>
+                                                                        <span
+                                                                            className={`rounded-full px-3 py-1 text-xs font-semibold ${status.badge}`}
+                                                                        >
+                                                                            {status.label}
+                                                                        </span>
+                                                                    </div>
+
+                                                                    <h3 className="mt-3 text-2xl font-semibold text-white">
+                                                                        {module.moduleName}
+                                                                    </h3>
+
+                                                                    <div className="mt-4 grid grid-cols-1 gap-3 text-sm text-slate-400 sm:grid-cols-2 xl:grid-cols-4">
+                                                                        <div>
+                                                                            <p className="text-xs uppercase tracking-wide text-slate-500">
+                                                                                Year
+                                                                            </p>
+                                                                            <p className="mt-1 text-slate-300">
+                                                                                {module.year}
+                                                                            </p>
+                                                                        </div>
+
+                                                                        <div>
+                                                                            <p className="text-xs uppercase tracking-wide text-slate-500">
+                                                                                Semester
+                                                                            </p>
+                                                                            <p className="mt-1 text-slate-300">
+                                                                                {module.semester}
+                                                                            </p>
+                                                                        </div>
+
+                                                                        <div className="min-w-0">
+                                                                            <p className="text-xs uppercase tracking-wide text-slate-500">
+                                                                                Lecturer
+                                                                            </p>
+                                                                            <p className="mt-1 truncate text-slate-300">
+                                                                                {module.lecturerName}
+                                                                            </p>
+                                                                        </div>
+
+                                                                        <div className="min-w-0">
+                                                                            <p className="text-xs uppercase tracking-wide text-slate-500">
+                                                                                Group
+                                                                            </p>
+                                                                            <p className="mt-1 truncate text-slate-300">
+                                                                                {status.helper}
+                                                                            </p>
+                                                                        </div>
+                                                                    </div>
+
+                                                                    {module.relatedGroup && (
+                                                                        <p className="mt-4 text-sm text-slate-400">
+                                                                            Members: {module.relatedGroup.memberCount} /{' '}
+                                                                            {module.relatedGroup.maxCapacity}
+                                                                        </p>
+                                                                    )}
+                                                                </div>
+
+                                                                <div className="flex shrink-0 items-center gap-3">
+                                                                    <button
+                                                                        onClick={() => openModule(module.id)}
+                                                                        className="rounded-xl bg-orange-500 px-5 py-3 text-sm font-semibold text-white transition hover:bg-orange-600"
+                                                                    >
+                                                                        Open Module
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </section>
+
+                            <aside className="space-y-6">
+                                <div className={panelClass}>
+                                    <div className="p-5 sm:p-6">
+                                        <h2 className="text-xl font-semibold text-white">Join a Module</h2>
+                                        <p className="mt-1 text-sm text-slate-400">
+                                            Enter the enrollment key shared by your lecturer.
+                                        </p>
+
+                                        <form onSubmit={handleEnroll} className="mt-5 space-y-4">
+                                            <input
+                                                type="text"
+                                                value={enrollmentKey}
+                                                onChange={(e) => setEnrollmentKey(e.target.value)}
+                                                placeholder="Enter enrollment key"
+                                                className="w-full rounded-xl border border-white/10 bg-[#0B1220] px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-orange-500/40"
+                                            />
+
+                                            <button
+                                                type="submit"
+                                                disabled={joiningModule}
+                                                className={`w-full rounded-xl px-4 py-3 text-sm font-semibold text-white transition ${
+                                                    joiningModule
+                                                        ? 'cursor-not-allowed bg-slate-600'
+                                                        : 'bg-orange-500 hover:bg-orange-600'
+                                                }`}
+                                            >
+                                                {joiningModule ? 'Enrolling...' : 'Join Module'}
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+
+                                <div className={panelClass}>
+                                    <div className="p-5 sm:p-6">
+                                        <h2 className="text-xl font-semibold text-white">Resources</h2>
+                                        <p className="mt-1 text-sm text-slate-400">
+                                            Access your student resources dashboard.
+                                        </p>
+
+                                        <button
+                                            onClick={() => navigate('/student/resources')}
+                                            className="mt-5 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-slate-200 transition hover:bg-white/10"
+                                        >
+                                            Open Resources
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div className={panelClass}>
+                                    <div className="p-5 sm:p-6">
+                                        <h2 className="text-xl font-semibold text-white">Overview</h2>
+
+                                        <div className="mt-4 space-y-3">
+                                            <div className="rounded-xl border border-white/10 bg-[#0B1220] p-4">
+                                                <p className="text-sm font-semibold text-white">
+                                                    {summary.joinedCount} module{summary.joinedCount === 1 ? '' : 's'} already in a group
+                                                </p>
+                                                <p className="mt-1 text-sm text-slate-400">
+                                                    Continue your group work from the module page.
+                                                </p>
+                                            </div>
+
+                                            <div className="rounded-xl border border-white/10 bg-[#0B1220] p-4">
+                                                <p className="text-sm font-semibold text-white">
+                                                    {summary.noGroupCount} module{summary.noGroupCount === 1 ? '' : 's'} still need a group
+                                                </p>
+                                                <p className="mt-1 text-sm text-slate-400">
+                                                    Open those modules and join a team.
+                                                </p>
+                                            </div>
+
+                                            <div className="rounded-xl border border-white/10 bg-[#0B1220] p-4">
+                                                <p className="text-sm font-semibold text-white">
+                                                    {summary.pendingCount} pending leadership request{summary.pendingCount === 1 ? '' : 's'}
+                                                </p>
+                                                <p className="mt-1 text-sm text-slate-400">
+                                                    Use the pending filter to find them quickly.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </aside>
+                        </div>
+                    </div>
+                </main>
             </div>
         </div>
     );

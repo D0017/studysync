@@ -1,294 +1,352 @@
 import { Link } from 'react-router-dom';
+import {
+  ArrowRight,
+  CalendarCheck,
+  FileText,
+  MessageSquare,
+  PlayCircle,
+  ShieldCheck,
+  Users,
+} from 'lucide-react';
+
+import landingImg from '../assets/landing2.jpg';
+import videoLessonsImg from '../assets/features/video-lessons.jpg';
+import groupDiscussionsImg from '../assets/features/group-discussions.jpg';
+import pdfResourcesImg from '../assets/features/pdf-resources.jpg';
+
+const featureCards = [
+  {
+    icon: PlayCircle,
+    image: videoLessonsImg,
+    title: 'Video lessons',
+    description:
+      'Watch guided lessons, walkthroughs, and short academic explainers whenever your group needs support.',
+    badge: 'Learn faster',
+  },
+  {
+    icon: MessageSquare,
+    image: groupDiscussionsImg,
+    title: 'Group discussions',
+    description:
+      'Keep questions, updates, and team conversations in one clear place without losing important context.',
+    badge: 'Stay connected',
+  },
+  {
+    icon: FileText,
+    image: pdfResourcesImg,
+    title: 'PDF resources',
+    description:
+      'Access notes, documents, guides, and academic materials in a simple shared resource space.',
+    badge: 'Ready to use',
+  },
+];
+
+const benefitCards = [
+  {
+    title: 'Clear group coordination',
+    description:
+      'Create and manage teams with less confusion, better structure, and smoother collaboration.',
+  },
+  {
+    title: 'Better project visibility',
+    description:
+      'Track tasks, deadlines, and progress so everyone knows what is happening next.',
+  },
+  {
+    title: 'Stronger lecturer support',
+    description:
+      'Make notices, evaluation steps, and academic communication easier to follow.',
+  },
+  {
+    title: 'Centralized learning tools',
+    description:
+      'Keep discussions, resources, and study materials in one place for easier access.',
+  },
+];
+
+const roleCards = [
+  {
+    icon: ShieldCheck,
+    title: 'Admin',
+    description:
+      'Manage accounts, create groups, and keep the system structured and secure.',
+  },
+  {
+    icon: CalendarCheck,
+    title: 'Lecturer',
+    description:
+      'Share notices, monitor activity, schedule vivas, and evaluate student work.',
+  },
+  {
+    icon: Users,
+    title: 'Student',
+    description:
+      'Join groups, manage project tasks, access learning tools, and stay connected.',
+  },
+];
 
 const LandingPage = () => {
-  const features = [
-    {
-      title: 'Module Management',
-      description:
-        'Organize modules, resources, academic content, and schedules in one streamlined platform.',
-    },
-    {
-      title: 'Student Collaboration',
-      description:
-        'Support team formation, communication, and academic collaboration with a more structured workflow.',
-    },
-    {
-      title: 'Role-Based Dashboards',
-      description:
-        'Separate experiences for Admins, Lecturers, and Students with focused tools and clear access.',
-    },
-    {
-      title: 'Leadership Requests',
-      description:
-        'Handle approvals and leadership requests through an organized and professional process.',
-    },
-    {
-      title: 'Secure Access',
-      description:
-        'University ID validation and secure authentication provide a more reliable onboarding flow.',
-    },
-    {
-      title: 'Academic Productivity',
-      description:
-        'Reduce confusion and improve visibility with a centralized LMS built for modern universities.',
-    },
-  ];
-
-  const stats = [
-    { value: '3 Roles', label: 'Admin, Lecturer, Student' },
-    { value: '1 Platform', label: 'Unified LMS experience' },
-    { value: '24/7', label: 'Accessible academic workflow' },
-  ];
-
   return (
-    <main className="bg-[#0A0A0C] text-white">
-      {/* Hero */}
-      <section className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,106,0,0.20),transparent_28%),radial-gradient(circle_at_left,rgba(255,255,255,0.05),transparent_22%)]" />
+    <main className="min-h-screen bg-[#12141A] font-sans text-[#F4F4F6] selection:bg-[#FF6A00]/20 selection:text-[#FF6A00]">
+      <div className="relative bg-[#12141A]">
+        <section className="relative flex min-h-[calc(100vh-84px)] flex-col justify-center overflow-hidden">
+          <div className="absolute inset-0">
+            <img
+              src={landingImg}
+              alt="Landing background"
+              className="h-full w-full object-cover object-center"
+            />
+          </div>
 
-        <div className="mx-auto grid min-h-[92vh] max-w-7xl items-center gap-16 px-6 py-16 lg:grid-cols-2 lg:px-10">
-          <div className="relative z-10">
-            <div className="mb-6 inline-flex items-center rounded-full border border-[#FF6A00]/20 bg-[#FF6A00]/10 px-4 py-2 text-sm font-medium text-[#FF6A00]">
-              Modern Learning Management Experience
+          <div className="absolute inset-0 bg-[#0A0A0C]/62" />
+          <div className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(10,10,12,0.58),rgba(18,20,26,0.74),rgba(18,20,26,0.96))]" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,106,0,0.12),transparent_30%)]" />
+          <div className="absolute bottom-0 left-0 right-0 h-36 bg-[linear-gradient(to_top,#12141A,transparent)]" />
+
+          <div className="relative mx-auto flex w-full max-w-7xl flex-col items-center px-4 pb-16 pt-20 text-center sm:px-6 lg:px-8 lg:pb-20 lg:pt-28">
+            <div className="mb-5 inline-flex items-center rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-slate-200 backdrop-blur-md">
+              Academic Group & Learning Management System
             </div>
 
-            <h1 className="max-w-3xl text-5xl font-black leading-tight tracking-tight md:text-6xl">
-              A modern LMS platform built for
-              <span className="block text-[#FF6A00]">smarter academic collaboration.</span>
+            <h1 className="max-w-5xl text-5xl font-extrabold tracking-tight text-white sm:text-7xl lg:text-[5.4rem] lg:leading-[1.02]">
+              Master your academic
+              <br className="hidden sm:block" /> workflow with{' '}
+              <span className="bg-linear-to-r from-[#FF6A00] to-[#FFB06A] bg-clip-text text-transparent">
+                StudySync
+              </span>
             </h1>
 
-            <p className="mt-6 max-w-2xl text-lg leading-8 text-gray-300">
-              StudySync helps universities manage modules, support lecturers, empower students,
-              and simplify collaboration through one clean and professional digital workspace.
+            <p className="mt-8 max-w-2xl text-lg leading-relaxed text-slate-300 sm:text-xl sm:leading-9">
+              Create groups, manage projects, share resources, and stay in sync
+              with lecturers — all in one simple place.
             </p>
 
-            <div className="mt-10 flex flex-wrap items-center gap-4">
+            <div className="mt-10 flex flex-col gap-4 sm:flex-row sm:items-center">
               <Link
                 to="/register"
-                className="rounded-2xl bg-[#FF6A00] px-7 py-4 text-sm font-bold text-white shadow-[0_16px_40px_rgba(255,106,0,0.38)] transition hover:scale-[1.02] hover:bg-[#ff7b22]"
+                className="group inline-flex h-12 items-center justify-center rounded-full bg-[#FF6A00] px-8 text-base font-semibold text-white shadow-[0_10px_24px_rgba(255,106,0,0.22)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#E65F00]"
               >
-                Start Now
+                Get started
+                <ArrowRight className="ml-2 h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
               </Link>
 
-              <Link
-                to="/login"
-                className="rounded-2xl border border-white/10 bg-white/5 px-7 py-4 text-sm font-bold text-white transition hover:bg-white/10"
+              <a
+                href="#features"
+                className="inline-flex h-12 items-center justify-center rounded-full border border-white/10 bg-white/5 px-8 text-base font-semibold text-slate-100 backdrop-blur-sm transition-all duration-300 hover:bg-white/10"
               >
-                Login to Portal
-              </Link>
+                Explore features
+              </a>
+            </div>
+          </div>
+        </section>
+
+        <section
+          id="features"
+          className="relative z-10 scroll-mt-28 px-4 py-20 sm:px-6 lg:px-8"
+        >
+          <div className="mx-auto max-w-7xl">
+            <div className="relative overflow-hidden rounded-[2.5rem] border border-white/10 bg-[#171A20] px-6 py-16 shadow-[0_20px_60px_rgba(0,0,0,0.18)] sm:px-10 lg:px-16 lg:py-20">
+              <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-[#FF6A00]/8 blur-[80px]" />
+
+              <div className="mx-auto max-w-3xl text-center">
+                <p className="text-sm font-bold uppercase tracking-[0.2em] text-[#FF6A00]">
+                  Features
+                </p>
+                <h2 className="mt-4 text-3xl font-bold leading-tight text-white sm:text-5xl">
+                  A better way to learn,
+                  <span className="mt-2 block text-slate-400">
+                    collaborate, and stay on track
+                  </span>
+                </h2>
+                <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-slate-300 sm:text-lg">
+                  StudySync brings lessons, discussions, and academic resources
+                  into one modern learning space that feels simple, focused, and easy to use.
+                </p>
+              </div>
+
+              <div className="mt-16 grid gap-8 lg:grid-cols-3">
+                {featureCards.map((item) => {
+                  const Icon = item.icon;
+
+                  return (
+                    <article
+                      key={item.title}
+                      className="group flex h-full flex-col overflow-hidden rounded-3xl border border-white/10 bg-[#1D2129] shadow-[0_10px_24px_rgba(0,0,0,0.12)] transition-all duration-300 hover:-translate-y-1 hover:border-[#FF6A00]/20"
+                    >
+                      <div className="relative h-56 overflow-hidden">
+                        <img
+                          src={item.image}
+                          alt={item.title}
+                          className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
+                        />
+                        <div className="absolute inset-0 bg-linear-to-t from-black/60 via-black/20 to-transparent" />
+
+                        <div className="absolute bottom-5 left-5 flex h-12 w-12 items-center justify-center rounded-xl bg-[#12141A]/88 text-[#FF6A00] shadow-sm backdrop-blur-md">
+                          <Icon className="h-5 w-5" />
+                        </div>
+
+                        <div className="absolute right-5 top-5 rounded-full bg-black/45 px-3 py-1.5 text-xs font-semibold tracking-wide text-white backdrop-blur-md">
+                          {item.badge}
+                        </div>
+                      </div>
+
+                      <div className="flex flex-1 flex-col p-6 lg:p-8">
+                        <h3 className="text-xl font-bold text-white">{item.title}</h3>
+
+                        <p className="mt-3 flex-1 text-sm leading-relaxed text-slate-300">
+                          {item.description}
+                        </p>
+
+                        <a
+                          href="#benefits"
+                          className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-[#FF6A00] transition-colors duration-300 hover:text-[#FF8A33]"
+                        >
+                          Read More
+                          <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
+                        </a>
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+
+              <div className="mt-14 flex justify-center">
+                <Link
+                  to="/register"
+                  className="inline-flex items-center justify-center rounded-full border border-white/10 bg-white/5 px-8 py-3.5 text-sm font-semibold text-white transition-all duration-300 hover:bg-white/10"
+                >
+                  Explore All Features
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Link>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section
+          id="benefits"
+          className="relative z-10 scroll-mt-28 px-4 py-20 sm:px-6 lg:px-8"
+        >
+          <div className="mx-auto max-w-7xl">
+            <div className="mx-auto max-w-3xl text-center">
+              <p className="text-sm font-bold uppercase tracking-[0.2em] text-[#FF6A00]">
+                Our Benefits
+              </p>
+              <h2 className="mt-4 text-3xl font-bold leading-tight text-white sm:text-4xl lg:text-5xl">
+                A smoother way to manage
+                <span className="mt-1 block text-slate-400">
+                  academic work together
+                </span>
+              </h2>
+              <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-slate-300 sm:text-lg">
+                StudySync helps students, lecturers, and academic teams work
+                more clearly, stay aligned, and reduce the friction that
+                usually comes with group-based learning.
+              </p>
             </div>
 
-            <div className="mt-12 grid grid-cols-1 gap-4 sm:grid-cols-3">
-              {stats.map((stat, index) => (
-                <div
-                  key={index}
-                  className="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-sm"
+            <div className="mt-16 grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
+              {benefitCards.map((item, index) => (
+                <article
+                  key={item.title}
+                  className="group relative flex h-full flex-col overflow-hidden rounded-3xl border border-white/10 bg-[#171A20] p-8 shadow-[0_10px_24px_rgba(0,0,0,0.12)] transition-all duration-300 hover:-translate-y-1 hover:border-[#FF6A00]/20"
                 >
-                  <h3 className="text-2xl font-extrabold text-white">{stat.value}</h3>
-                  <p className="mt-1 text-sm text-gray-400">{stat.label}</p>
-                </div>
+                  <div className="absolute left-0 top-0 h-1 w-full bg-linear-to-r from-[#FF6A00] to-[#FF9B4A] opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+
+                  <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-xl bg-[#FF6A00]/12 text-[#FF6A00]">
+                    <span className="text-base font-bold">0{index + 1}</span>
+                  </div>
+
+                  <h3 className="text-xl font-bold text-white">{item.title}</h3>
+
+                  <p className="mt-3 text-sm leading-relaxed text-slate-300">
+                    {item.description}
+                  </p>
+                </article>
               ))}
             </div>
           </div>
+        </section>
 
-          {/* Replaced right side content */}
-          <div className="relative z-10">
-            <div className="relative rounded-4xl border border-white/10 bg-linear-to-br from-[#1F1F23] to-[#111114] p-6 shadow-2xl">
-              <div className="mb-6 flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-400">Platform Overview</p>
-                  <h3 className="text-2xl font-bold text-white">Built for modern academic workflows</h3>
-                </div>
-                <div className="rounded-2xl bg-[#FF6A00]/15 px-4 py-2 text-sm font-semibold text-[#FF6A00]">
-                  LMS Ready
-                </div>
-              </div>
+        <section
+          id="roles"
+          className="relative z-10 scroll-mt-28 px-4 py-20 sm:px-6 lg:px-8"
+        >
+          <div className="mx-auto max-w-7xl">
+            <div className="mb-12 max-w-2xl">
+              <p className="text-sm font-bold uppercase tracking-[0.2em] text-[#FF6A00]">
+                Roles
+              </p>
+              <h2 className="mt-4 text-3xl font-bold text-white sm:text-4xl lg:text-5xl">
+                Built for every part of the academic team
+              </h2>
+              <p className="mt-5 text-lg leading-relaxed text-slate-300">
+                Everyone gets the tools they need without making the system feel
+                heavy or complicated.
+              </p>
+            </div>
 
-              <div className="space-y-4">
+            <div className="grid gap-6 md:grid-cols-3">
+              {roleCards.map((item) => {
+                const Icon = item.icon;
 
+                return (
+                  <article
+                    key={item.title}
+                    className="group flex h-full flex-col rounded-3xl border border-white/10 bg-[#171A20] p-8 shadow-[0_10px_24px_rgba(0,0,0,0.12)] transition-all duration-300 hover:-translate-y-1 hover:border-[#FF6A00]/20"
+                  >
+                    <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#FF6A00]/10 text-[#FF6A00]">
+                      <Icon className="h-6 w-6" />
+                    </div>
 
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="rounded-3xl border border-white/10 bg-white/5 p-5">
-                    <p className="text-sm font-semibold text-[#FF6A00]">For Students</p>
-                    <h4 className="mt-2 text-lg font-bold text-white">Collaborate with clarity</h4>
-                    <p className="mt-2 text-sm leading-6 text-gray-300">
-                      Access modules, participate in groups, and stay connected with coursework in one place.
+                    <h3 className="text-2xl font-bold text-white">{item.title}</h3>
+
+                    <p className="mt-3 text-base leading-relaxed text-slate-300">
+                      {item.description}
                     </p>
-                  </div>
-
-                  <div className="rounded-3xl border border-white/10 bg-white/5 p-5">
-                    <p className="text-sm font-semibold text-[#FF6A00]">For Lecturers</p>
-                    <h4 className="mt-2 text-lg font-bold text-white">Guide learning effectively</h4>
-                    <p className="mt-2 text-sm leading-6 text-gray-300">
-                      Manage module activities, support engagement, and maintain academic structure with ease.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="rounded-3xl border border-white/10 bg-white/5 p-6">
-                  <p className="text-sm text-gray-400">What StudySync helps you do</p>
-
-                  <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                    {[
-                      'Manage academic modules',
-                      'Streamline group collaboration',
-                      'Support role-based access',
-                      'Improve course coordination',
-                      'Create a professional LMS experience',
-                      'Keep learning workflows organized',
-                    ].map((item, idx) => (
-                      <div
-                        key={idx}
-                        className="flex items-center gap-3 rounded-2xl border border-white/5 bg-black/10 px-4 py-3"
-                      >
-                        <div className="h-2.5 w-2.5 rounded-full bg-[#FF6A00]" />
-                        <p className="text-sm text-gray-200">{item}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              <div className="pointer-events-none absolute -right-10 -top-10 h-28 w-28 rounded-full bg-[#FF6A00]/20 blur-3xl" />
-              <div className="pointer-events-none absolute -bottom-10 -left-10 h-28 w-28 rounded-full bg-white/10 blur-3xl" />
+                  </article>
+                );
+              })}
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* Features */}
-      <section id="features" className="bg-[#F4F4F6] py-24 text-[#1F1F23]">
-        <div className="mx-auto max-w-7xl px-6 lg:px-10">
-          <div className="max-w-2xl">
-            <p className="text-sm font-bold uppercase tracking-[0.2em] text-[#FF6A00]">Core Features</p>
-            <h2 className="mt-3 text-4xl font-black tracking-tight">
-              Everything needed for a modern learning management system
-            </h2>
-            <p className="mt-4 text-lg text-gray-600">
-              Built for academic administration, course coordination, and student collaboration with
-              a polished and professional experience.
-            </p>
-          </div>
+        <section className="relative z-10 px-4 pb-24 pt-10 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-7xl">
+            <div className="relative overflow-hidden rounded-[2.5rem] border border-white/10 bg-[#1F1F23] px-8 py-16 shadow-[0_20px_60px_rgba(0,0,0,0.20)] sm:px-16 sm:py-20 lg:py-24">
+              <div className="absolute -right-24 -top-24 h-96 w-96 rounded-full bg-[#FF6A00]/16 blur-[100px]" />
+              <div className="absolute -bottom-24 -left-24 h-96 w-96 rounded-full bg-white/5 blur-[100px]" />
 
-          <div className="mt-14 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-            {features.map((feature, index) => (
-              <div
-                key={index}
-                className="rounded-3xl border border-gray-200 bg-white p-7 shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-xl"
-              >
-                <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-[#FF6A00]/10 text-lg font-bold text-[#FF6A00]">
-                  0{index + 1}
-                </div>
-                <h3 className="text-xl font-bold text-[#1F1F23]">{feature.title}</h3>
-                <p className="mt-3 leading-7 text-gray-600">{feature.description}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+              <div className="relative z-10 max-w-3xl">
+                <h2 className="text-3xl font-bold leading-tight text-white sm:text-5xl">
+                  Ready to make academic teamwork feel easier?
+                </h2>
 
-      {/* Benefits */}
-      <section id="benefits" className="bg-[#0A0A0C] py-24">
-        <div className="mx-auto grid max-w-7xl gap-12 px-6 lg:grid-cols-2 lg:px-10">
-          <div>
-            <p className="text-sm font-bold uppercase tracking-[0.2em] text-[#FF6A00]">Why StudySync</p>
-            <h2 className="mt-3 text-4xl font-black tracking-tight text-white">
-              Designed to feel professional, modern, and easy to use
-            </h2>
-            <p className="mt-5 text-lg leading-8 text-gray-300">
-              StudySync gives your LMS a premium identity with intuitive flows for administration,
-              teaching, and student engagement.
-            </p>
-          </div>
+                <p className="mt-6 text-lg leading-relaxed text-slate-300 sm:text-xl">
+                  Bring group management, project coordination, and collaborative
+                  learning into one place with StudySync.
+                </p>
 
-          <div className="grid gap-5">
-            {[
-              'Professional UI that builds trust with students and lecturers',
-              'Centralized academic workflows instead of scattered systems',
-              'Clear role-based structure for admins, lecturers, and students',
-              'Modern visual identity aligned with university-grade platforms',
-            ].map((item, index) => (
-              <div
-                key={index}
-                className="rounded-3xl border border-white/10 bg-[#1F1F23] p-6"
-              >
-                <div className="flex items-start gap-4">
-                  <div className="mt-1 flex h-8 w-8 items-center justify-center rounded-full bg-[#FF6A00] text-sm font-bold text-white">
-                    ✓
-                  </div>
-                  <p className="text-base leading-7 text-gray-200">{item}</p>
+                <div className="mt-10 flex flex-col gap-4 sm:flex-row">
+                  <Link
+                    to="/register"
+                    className="inline-flex h-14 items-center justify-center rounded-full bg-[#FF6A00] px-8 text-base font-semibold text-white shadow-[0_8px_20px_rgba(255,106,0,0.22)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#E65F00]"
+                  >
+                    Start with StudySync
+                  </Link>
+
+                  <Link
+                    to="/login"
+                    className="inline-flex h-14 items-center justify-center rounded-full border border-white/10 bg-white/5 px-8 text-base font-semibold text-white backdrop-blur-md transition-all duration-300 hover:bg-white/10"
+                  >
+                    Go to sign in
+                  </Link>
                 </div>
               </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Roles */}
-      <section id="roles" className="bg-[#F4F4F6] py-24 text-[#1F1F23]">
-        <div className="mx-auto max-w-7xl px-6 lg:px-10">
-          <div className="text-center">
-            <p className="text-sm font-bold uppercase tracking-[0.2em] text-[#FF6A00]">User Roles</p>
-            <h2 className="mt-3 text-4xl font-black tracking-tight">Built for every academic stakeholder</h2>
-          </div>
-
-          <div className="mt-14 grid gap-6 md:grid-cols-3">
-            <div className="rounded-3xl bg-white p-8 shadow-sm ring-1 ring-gray-200">
-              <h3 className="text-2xl font-bold">Admins</h3>
-              <p className="mt-4 text-gray-600">
-                Manage users, create modules, review requests, and maintain the entire academic structure.
-              </p>
-            </div>
-
-            <div className="rounded-3xl bg-[#1F1F23] p-8 text-white shadow-xl">
-              <div className="mb-4 inline-flex rounded-full bg-[#FF6A00]/15 px-3 py-1 text-xs font-bold text-[#FF6A00]">
-                Most Active
-              </div>
-              <h3 className="text-2xl font-bold">Lecturers</h3>
-              <p className="mt-4 text-gray-300">
-                Oversee modules, guide learners, and support collaboration with a more structured academic workflow.
-              </p>
-            </div>
-
-            <div className="rounded-3xl bg-white p-8 shadow-sm ring-1 ring-gray-200">
-              <h3 className="text-2xl font-bold">Students</h3>
-              <p className="mt-4 text-gray-600">
-                Access modules, join groups, collaborate with peers, and stay aligned with course activities.
-              </p>
             </div>
           </div>
-        </div>
-      </section>
-
-      {/* CTA */}
-      <section className="bg-[#0A0A0C] py-24">
-        <div className="mx-auto max-w-5xl px-6 lg:px-10">
-          <div className="rounded-4xl border border-white/10 bg-linear-to-r from-[#1F1F23] to-[#111114] p-10 text-center shadow-2xl">
-            <p className="text-sm font-bold uppercase tracking-[0.2em] text-[#FF6A00]">Get Started</p>
-            <h2 className="mt-4 text-4xl font-black tracking-tight text-white">
-              Bring a polished LMS experience to your academic environment
-            </h2>
-            <p className="mx-auto mt-5 max-w-2xl text-lg leading-8 text-gray-300">
-              Create your account and start managing modules, users, collaboration, and learning workflows with StudySync.
-            </p>
-
-            <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
-              <Link
-                to="/register"
-                className="rounded-2xl bg-[#FF6A00] px-7 py-4 text-sm font-bold text-white shadow-[0_16px_40px_rgba(255,106,0,0.38)] transition hover:scale-[1.02] hover:bg-[#ff7b22]"
-              >
-                Create Account
-              </Link>
-              <Link
-                to="/login"
-                className="rounded-2xl border border-white/10 bg-white/5 px-7 py-4 text-sm font-bold text-white transition hover:bg-white/10"
-              >
-                Sign In
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
+        </section>
+      </div>
     </main>
   );
 };
