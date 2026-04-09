@@ -337,12 +337,12 @@ const StudentDashboard = () => {
 
                     <button
                         onClick={() => {
-                            navigate('/');
+                            navigate('/discussion');
                             setSidebarOpen(false);
                         }}
                         className={navItemClass(false)}
                     >
-                        Home
+                        Discussion Board
                     </button>
                 </div>
             </div>
@@ -395,7 +395,7 @@ const StudentDashboard = () => {
         <div className="min-h-screen w-full bg-[#020817] text-white">
             {sidebarOpen && (
                 <div className="fixed inset-0 z-50 bg-black/60 lg:hidden">
-                    <div className="h-full w-[290px] border-r border-white/10 bg-[#0B1220] shadow-2xl">
+                    <div className="h-full w-72.5 border-r border-white/10 bg-[#0B1220] shadow-2xl">
                         <div className="sidebar-scroll h-full overflow-y-auto">
                             <SidebarContent />
                         </div>
@@ -408,8 +408,8 @@ const StudentDashboard = () => {
                 </div>
             )}
 
-            <div className="min-h-screen bg-[#020817] lg:pl-[290px]">
-                <aside className="fixed inset-y-0 left-0 z-30 hidden w-[290px] border-r border-white/10 bg-[#0B1220] lg:block">
+            <div className="min-h-screen bg-[#020817] lg:pl-72.5">
+                <aside className="fixed inset-y-0 left-0 z-30 hidden w-72.5 border-r border-white/10 bg-[#0B1220] lg:block">
                     <div className="sidebar-scroll h-full overflow-y-auto">
                         <SidebarContent />
                     </div>
