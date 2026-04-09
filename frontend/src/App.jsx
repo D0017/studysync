@@ -14,6 +14,7 @@ import LecturerDashboard from './components/LecturerDashboard';
 import ProtectedRoute from './components/ProtectedRoute';
 import Navbar from './components/Navbar';
 import LandingPage from './pages/LandingPage';
+import DiscussionBoard from './components/discussion/DiscussionBoard';
 
 function AppContent() {
   const location = useLocation();
@@ -22,6 +23,7 @@ function AppContent() {
     location.pathname.startsWith('/admin') ||
     location.pathname.startsWith('/student') ||
     location.pathname.startsWith('/lecturer') ||
+    location.pathname.startsWith('/discussion') ||
     location.pathname === '/login' ||
     location.pathname === '/register';
 
@@ -34,6 +36,7 @@ function AppContent() {
         <Route path="/" element={<LandingPage />} />
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/discussion" element={<DiscussionBoard />} />
 
         {/* Admin routes */}
         <Route element={<ProtectedRoute allowedRoles={['ADMIN']} />}>
