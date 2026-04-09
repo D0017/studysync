@@ -111,7 +111,7 @@ const LandingPage = () => {
             <h1 className="max-w-5xl text-5xl font-extrabold tracking-tight text-white sm:text-7xl lg:text-[5.4rem] lg:leading-[1.02]">
               Master your academic
               <br className="hidden sm:block" /> workflow with{' '}
-              <span className="bg-gradient-to-r from-[#FF6A00] to-[#FFB06A] bg-clip-text text-transparent">
+              <span className="bg-linear-to-r from-[#FF6A00] to-[#FFB06A] bg-clip-text text-transparent">
                 StudySync
               </span>
             </h1>
@@ -179,7 +179,7 @@ const LandingPage = () => {
                           alt={item.title}
                           className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
                         />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+                        <div className="absolute inset-0 bg-linear-to-t from-black/60 via-black/20 to-transparent" />
 
                         <div className="absolute bottom-5 left-5 flex h-12 w-12 items-center justify-center rounded-xl bg-[#12141A]/88 text-[#FF6A00] shadow-sm backdrop-blur-md">
                           <Icon className="h-5 w-5" />
@@ -251,7 +251,7 @@ const LandingPage = () => {
                   key={item.title}
                   className="group relative flex h-full flex-col overflow-hidden rounded-3xl border border-white/10 bg-[#171A20] p-8 shadow-[0_10px_24px_rgba(0,0,0,0.12)] transition-all duration-300 hover:-translate-y-1 hover:border-[#FF6A00]/20"
                 >
-                  <div className="absolute left-0 top-0 h-1 w-full bg-gradient-to-r from-[#FF6A00] to-[#FF9B4A] opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+                  <div className="absolute left-0 top-0 h-1 w-full bg-linear-to-r from-[#FF6A00] to-[#FF9B4A] opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
 
                   <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-xl bg-[#FF6A00]/12 text-[#FF6A00]">
                     <span className="text-base font-bold">0{index + 1}</span>

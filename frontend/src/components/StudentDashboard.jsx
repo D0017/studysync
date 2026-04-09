@@ -337,12 +337,12 @@ const StudentDashboard = () => {
 
                     <button
                         onClick={() => {
-                            navigate('/');
+                            navigate('/discussion');
                             setSidebarOpen(false);
                         }}
                         className={navItemClass(false)}
                     >
-                        Home
+                        Discussion Board
                     </button>
                 </div>
             </div>
