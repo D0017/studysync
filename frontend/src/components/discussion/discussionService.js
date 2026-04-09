@@ -10,7 +10,12 @@ const getStoredPosts = () => {
 };
 
 const savePosts = (posts) => {
-  localStorage.setItem(POSTS_KEY, JSON.stringify(posts));
+  try {
+    localStorage.setItem(POSTS_KEY, JSON.stringify(posts));
+  } catch (error) {
+    console.error("Failed to save posts:", error);
+    throw new Error("Storage limit reached");
+  }
 };
 
 const getStoredFollows = () => {
@@ -33,26 +38,13 @@ const getCurrentUser = () => {
   }
 };
 
-const fileToDataUrl = (file) =>
-  new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () =>
-      resolve({
-        id: crypto.randomUUID(),
-        name: file.name,
-        type: file.type,
-        url: reader.result,
-      });
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-
 const normalizeUser = (user) => {
   if (!user) {
     return {
       id: "guest",
       name: "Guest User",
       role: "GUEST",
+      itNumber: "",
     };
   }
 
@@ -60,10 +52,64 @@ const normalizeUser = (user) => {
     id: user.email || user.id || user.username || user.fullName || crypto.randomUUID(),
     name: user.fullName || user.name || "StudySync User",
     role: user.role || "STUDENT",
+    itNumber:
+      user.itNumber ||
+      user.studentId ||
+      user.registrationNumber ||
+      user.userId ||
+      "",
   };
 };
 
-const createPost = async ({ content, files }) => {
+const fileToDataUrl = (file) =>
+  new Promise((resolve, reject) => {
+    if (file.type.startsWith("image/")) {
+      const img = new Image();
+      const reader = new FileReader();
+
+      reader.onload = (event) => {
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          const maxWidth = 1200;
+          const scale = Math.min(1, maxWidth / img.width);
+
+          canvas.width = img.width * scale;
+          canvas.height = img.height * scale;
+
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+          const compressed = canvas.toDataURL("image/jpeg", 0.75);
+
+          resolve({
+            id: crypto.randomUUID(),
+            name: file.name,
+            type: "image/jpeg",
+            url: compressed,
+          });
+        };
+
+        img.onerror = reject;
+        img.src = event.target.result;
+      };
+
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    } else {
+      const reader = new FileReader();
+      reader.onload = () =>
+        resolve({
+          id: crypto.randomUUID(),
+          name: file.name,
+          type: file.type,
+          url: reader.result,
+        });
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    }
+  });
+
+const createPost = async ({ content, files, authorItNumber }) => {
   const rawUser = getCurrentUser();
   const user = normalizeUser(rawUser);
 
@@ -74,6 +120,7 @@ const createPost = async ({ content, files }) => {
     authorId: user.id,
     authorName: user.name,
     authorRole: user.role,
+    authorItNumber: authorItNumber || user.itNumber || "",
     content: content.trim(),
     attachments,
     commentsEnabled: true,
@@ -103,13 +150,14 @@ const toggleLike = (postId) => {
   const updated = posts.map((post) => {
     if (post.id !== postId) return post;
 
-    const alreadyLiked = post.likes.includes(user.id);
+    const likes = Array.isArray(post.likes) ? post.likes : [];
+    const alreadyLiked = likes.includes(user.id);
 
     return {
       ...post,
       likes: alreadyLiked
-        ? post.likes.filter((id) => id !== user.id)
-        : [...post.likes, user.id],
+        ? likes.filter((id) => id !== user.id)
+        : [...likes, user.id],
     };
   });
 
@@ -124,13 +172,14 @@ const toggleReshare = (postId) => {
   const updated = posts.map((post) => {
     if (post.id !== postId) return post;
 
-    const alreadyReshared = post.reshares.includes(user.id);
+    const reshares = Array.isArray(post.reshares) ? post.reshares : [];
+    const alreadyReshared = reshares.includes(user.id);
 
     return {
       ...post,
       reshares: alreadyReshared
-        ? post.reshares.filter((id) => id !== user.id)
-        : [...post.reshares, user.id],
+        ? reshares.filter((id) => id !== user.id)
+        : [...reshares, user.id],
     };
   });
 
@@ -146,18 +195,21 @@ const addComment = (postId, content) => {
     if (post.id !== postId) return post;
     if (!post.commentsEnabled) return post;
 
+    const comments = Array.isArray(post.comments) ? post.comments : [];
+
     const newComment = {
       id: crypto.randomUUID(),
       authorId: user.id,
       authorName: user.name,
       authorRole: user.role,
+      authorItNumber: user.itNumber || "",
       content: content.trim(),
       createdAt: new Date().toISOString(),
     };
 
     return {
       ...post,
-      comments: [...post.comments, newComment],
+      comments: [...comments, newComment],
     };
   });
 

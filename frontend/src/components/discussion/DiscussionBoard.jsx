@@ -1,11 +1,17 @@
 import { useEffect, useMemo, useState } from "react";
-import PostCard from "./PostCard";
 import discussionService from "./discussionService";
-import discussionBg from "../../assets/discussion-bg.jpg";
+import bg from "../../assets/substack.jpg";
+
+function formatDateTime(dateString) {
+  try {
+    return new Date(dateString).toLocaleString();
+  } catch {
+    return dateString || "";
+  }
+}
 
 export default function DiscussionBoard() {
-  const storedUser = discussionService.getCurrentUser();
-  const isStudent = storedUser?.role === "STUDENT";
+  const storedUser = discussionService.getCurrentUser?.() || null;
 
   const currentUserId =
     storedUser?.email ||
@@ -14,21 +20,115 @@ export default function DiscussionBoard() {
     storedUser?.fullName ||
     "guest";
 
+  const currentUserItNumber =
+    storedUser?.itNumber ||
+    storedUser?.studentId ||
+    storedUser?.registrationNumber ||
+    storedUser?.userId ||
+    "";
+
+  const isStudent = storedUser?.role === "STUDENT";
+
   const [posts, setPosts] = useState([]);
   const [content, setContent] = useState("");
   const [files, setFiles] = useState([]);
   const [search, setSearch] = useState("");
-  const [activeTab, setActiveTab] = useState("all");
-  const [sideFilter, setSideFilter] = useState("home");
+  const [tab, setTab] = useState("all");
+  const [panelFilter, setPanelFilter] = useState("home");
+  const [activityFilter, setActivityFilter] = useState("liked");
   const [error, setError] = useState("");
+  const [openComments, setOpenComments] = useState({});
+  const [commentInputs, setCommentInputs] = useState({});
 
-  const refreshPosts = () => {
-    setPosts(discussionService.getAllPosts());
+  const loadPosts = () => {
+    try {
+      const rawPosts = discussionService.getAllPosts?.() || [];
+
+      const safePosts = rawPosts.map((post, index) => ({
+        id: post?.id || `post-${index}`,
+        authorId: post?.authorId || "unknown",
+        authorName: post?.authorName || "StudySync User",
+        authorRole: post?.authorRole || "STUDENT",
+        authorItNumber:
+          post?.authorItNumber ||
+          post?.itNumber ||
+          post?.authorStudentId ||
+          post?.authorRegistrationNumber ||
+          "",
+        content: post?.content || "",
+        attachments: Array.isArray(post?.attachments) ? post.attachments : [],
+        commentsEnabled:
+          typeof post?.commentsEnabled === "boolean" ? post.commentsEnabled : true,
+        pinnedCommentId: post?.pinnedCommentId || null,
+        likes: Array.isArray(post?.likes) ? post.likes : [],
+        reshares: Array.isArray(post?.reshares) ? post.reshares : [],
+        comments: Array.isArray(post?.comments) ? post.comments : [],
+        createdAt: post?.createdAt || new Date().toISOString(),
+      }));
+
+      setPosts(safePosts);
+    } catch (err) {
+      console.error("Failed to load discussion posts:", err);
+      setPosts([]);
+      setError("Could not load discussion posts.");
+    }
   };
 
   useEffect(() => {
-    refreshPosts();
+    loadPosts();
   }, []);
+
+  const handleFilesChange = (e) => {
+    const selected = Array.from(e.target.files || []);
+
+    const valid = selected.filter((file) => {
+      const validType =
+        file.type.startsWith("image/") || file.type.startsWith("video/");
+      const validSize = file.size <= 2 * 1024 * 1024;
+      return validType && validSize;
+    });
+
+    if (selected.length !== valid.length) {
+      setError("Only image/video files under 2MB are allowed.");
+    } else {
+      setError("");
+    }
+
+    setFiles(valid);
+  };
+
+  const handleCreatePost = async (e) => {
+    e.preventDefault();
+
+    if (!isStudent) {
+      setError("Only students can create posts.");
+      return;
+    }
+
+    if (!content.trim()) {
+      setError("Write something before publishing.");
+      return;
+    }
+
+    try {
+      setError("");
+
+      await discussionService.createPost?.({
+        content,
+        files,
+        authorItNumber: currentUserItNumber,
+      });
+
+      setContent("");
+      setFiles([]);
+      setPanelFilter("home");
+      setTab("all");
+      loadPosts();
+    } catch (err) {
+      console.error("Publish failed:", err);
+      setError("Could not publish. Try a smaller image or fewer files.");
+    }
+  };
 
   const focusCreateBox = () => {
     const box = document.querySelector("textarea");
@@ -38,14 +138,20 @@ export default function DiscussionBoard() {
     }
   };
 
+  const isAuthor = (post) => post.authorId === currentUserId;
+  const isResharedByMe = (post) => (post.reshares || []).includes(currentUserId);
+  const isLikedByMe = (post) => (post.likes || []).includes(currentUserId);
+  const isCommentedByMe = (post) =>
+    (post.comments || []).some((comment) => comment.authorId === currentUserId);
+
   const filteredPosts = useMemo(() => {
     let data = [...posts];
 
-    if (activeTab === "open") {
+    if (tab === "open") {
       data = data.filter((post) => post.commentsEnabled);
     }
 
-    if (activeTab === "closed") {
+    if (tab === "closed") {
       data = data.filter((post) => !post.commentsEnabled);
     }
 
@@ -53,305 +159,609 @@ export default function DiscussionBoard() {
       const q = search.toLowerCase();
       data = data.filter(
         (post) =>
-          post.content.toLowerCase().includes(q) ||
-          post.authorName.toLowerCase().includes(q)
+          (post.content || "").toLowerCase().includes(q) ||
+          (post.authorName || "").toLowerCase().includes(q) ||
+          (post.authorItNumber || "").toLowerCase().includes(q)
       );
     }
 
-    if (sideFilter === "subscriptions") {
-      data = data.filter((post) => discussionService.isFollowing(post.authorId));
-    }
-
-    if (sideFilter === "activity") {
-      data = data.filter(
-        (post) =>
-          post.likes.length > 0 ||
-          post.comments.length > 0 ||
-          post.reshares.length > 0
-      );
-    }
-
-    if (sideFilter === "profile") {
+    if (panelFilter === "profile") {
       data = data.filter((post) => post.authorId === currentUserId);
     }
 
-    return data;
-  }, [posts, search, activeTab, sideFilter, currentUserId]);
+    if (panelFilter === "liked") {
+      data = data.filter((post) => isLikedByMe(post));
+    }
 
-  const suggestedAuthors = useMemo(() => {
-    const map = new Map();
+    if (panelFilter === "activity") {
+      if (activityFilter === "liked") {
+        data = data.filter((post) => isLikedByMe(post));
+      }
+
+      if (activityFilter === "reposted") {
+        data = data.filter((post) => isResharedByMe(post));
+      }
+
+      if (activityFilter === "commented") {
+        data = data.filter((post) => isCommentedByMe(post));
+      }
+    }
+
+    return data;
+  }, [posts, search, tab, panelFilter, activityFilter, currentUserId]);
+
+  const suggestedPeople = useMemo(() => {
+    const seen = new Map();
 
     posts.forEach((post) => {
-      if (!map.has(post.authorId)) {
-        map.set(post.authorId, {
+      if (!seen.has(post.authorId) && post.authorId !== currentUserId) {
+        seen.set(post.authorId, {
           id: post.authorId,
           name: post.authorName,
-          role: post.authorRole,
-          followers: discussionService.getFollowedCountForUser(post.authorId),
+          itNumber: post.authorItNumber,
+          followers: discussionService.getFollowedCountForUser?.(post.authorId) || 0,
         });
       }
     });
 
-    return Array.from(map.values()).slice(0, 4);
-  }, [posts]);
+    return Array.from(seen.values()).slice(0, 4);
+  }, [posts, currentUserId]);
 
-  const handleFilesChange = (e) => {
-    const selected = Array.from(e.target.files || []);
-    setFiles(selected);
+  const navButtonClass = (key) =>
+    `flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left transition duration-300 ${
+      panelFilter === key
+        ? "bg-white/10 text-white shadow-[0_0_18px_rgba(255,106,0,0.10)]"
+        : "text-gray-300 hover:bg-white/5 hover:text-white"
+    }`;
+
+  const toggleCommentsPanel = (postId) => {
+    setOpenComments((prev) => ({
+      ...prev,
+      [postId]: !prev[postId],
+    }));
   };
 
-  const handleCreatePost = async (e) => {
-    e.preventDefault();
-
-    if (!isStudent) {
-      setError("Only students can create discussion posts.");
-      return;
+  const handleLike = (postId) => {
+    try {
+      discussionService.toggleLike?.(postId);
+      loadPosts();
+    } catch (err) {
+      console.error(err);
     }
-
-    if (!content.trim()) {
-      setError("Post content is required.");
-      return;
-    }
-
-    setError("");
-
-    await discussionService.createPost({
-      content,
-      files,
-    });
-
-    setContent("");
-    setFiles([]);
-    setSideFilter("home");
-    setActiveTab("all");
-    refreshPosts();
   };
 
-  const leftNavItems = [
-    {
-      key: "home",
-      label: "Home",
-      icon: "⌂",
-      action: () => {
-        setSideFilter("home");
-        window.scrollTo({ top: 0, behavior: "smooth" });
-      },
-    },
-    {
-      key: "subscriptions",
-      label: "Subscriptions",
-      icon: "▣",
-      action: () => {
-        setSideFilter("subscriptions");
-      },
-    },
-    {
-      key: "chat",
-      label: "Chat",
-      icon: "☰",
-      action: () => {
-        focusCreateBox();
-      },
-    },
-    {
-      key: "activity",
-      label: "Activity",
-      icon: "◔",
-      action: () => {
-        setSideFilter("activity");
-      },
-    },
-    {
-      key: "explore",
-      label: "Explore",
-      icon: "⌕",
-      action: () => {
-        setSideFilter("home");
-        setSearch("");
-        setActiveTab("all");
-      },
-    },
-    {
-      key: "profile",
-      label: "Profile",
-      icon: "◎",
-      action: () => {
-        setSideFilter("profile");
-      },
-    },
-  ];
+  const handleReshare = (postId) => {
+    try {
+      discussionService.toggleReshare?.(postId);
+      loadPosts();
+      setPanelFilter("activity");
+      setActivityFilter("reposted");
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
-  const boardTitle =
-    sideFilter === "subscriptions"
-      ? "Subscribed Discussions"
-      : sideFilter === "activity"
-      ? "Recent Activity"
-      : sideFilter === "profile"
-      ? "My Posts"
-      : "StudySync Discussions";
+  const handleCommentInput = (postId, value) => {
+    setCommentInputs((prev) => ({
+      ...prev,
+      [postId]: value,
+    }));
+  };
 
-  const boardDescription =
-    sideFilter === "subscriptions"
-      ? "Posts from people you subscribed to."
-      : sideFilter === "activity"
-      ? "Posts with likes, comments, or reshares."
-      : sideFilter === "profile"
-      ? "Your own questions, posts, and updates."
-      : "Ask questions, share ideas, pin the best answer, and keep the campus conversation alive.";
+  const handleAddComment = (postId) => {
+    const text = commentInputs[postId] || "";
+    if (!text.trim()) return;
+
+    try {
+      discussionService.addComment?.(postId, text);
+      setCommentInputs((prev) => ({
+        ...prev,
+        [postId]: "",
+      }));
+      setOpenComments((prev) => ({
+        ...prev,
+        [postId]: true,
+      }));
+      loadPosts();
+      setPanelFilter("activity");
+      setActivityFilter("commented");
+    } catch (err) {
+      console.error(err);
+      setError("Could not add comment.");
+    }
+  };
+
+  const handleToggleCommentSection = (postId, ownerCheck) => {
+    if (!ownerCheck) return;
+
+    try {
+      discussionService.toggleComments?.(postId);
+      loadPosts();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleDeletePost = (postId, ownerCheck) => {
+    if (!ownerCheck) return;
+
+    const ok = window.confirm("Are you sure you want to delete this post?");
+    if (!ok) return;
+
+    try {
+      discussionService.deletePost?.(postId);
+      loadPosts();
+    } catch (err) {
+      console.error(err);
+      setError("Could not delete post.");
+    }
+  };
+
+  const handlePinComment = (postId, commentId, ownerCheck) => {
+    if (!ownerCheck) return;
+
+    try {
+      discussionService.pinComment?.(postId, commentId);
+      loadPosts();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const showComposer = panelFilter === "home";
 
   return (
     <div
-      className="min-h-screen bg-cover bg-center bg-no-repeat text-white"
+      className="min-h-screen text-white"
       style={{
-        backgroundImage: `url(${discussionBg})`,
+        backgroundImage: `url(${bg})`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
       }}
     >
-      <div className="min-h-screen bg-gradient-to-br from-black/90 via-black/80 to-[#0A0A0C]/92 backdrop-blur-[2px]">
-        <div className="mx-auto grid max-w-[1600px] grid-cols-1 gap-6 px-4 py-6 lg:grid-cols-[260px_minmax(0,1fr)_420px]">
-          <aside className="hidden rounded-[32px] border border-[#FF6A00]/15 bg-gradient-to-b from-[#1F1F23]/92 to-[#111115]/92 p-6 shadow-[0_0_0_1px_rgba(255,106,0,0.05),0_12px_40px_rgba(0,0,0,0.45)] backdrop-blur-md lg:block">
-            <div className="mb-8 flex items-center gap-3">
-              <div className="rounded-2xl bg-[#FF6A00] p-3 text-lg font-bold text-white shadow-[0_0_22px_rgba(255,106,0,0.45)]">
-                S
+      <div className="min-h-screen bg-black/80 backdrop-blur-[2px]">
+        <div className="mx-auto grid max-w-[1600px] grid-cols-1 gap-6 px-4 py-6 lg:grid-cols-[260px_minmax(0,1fr)_360px]">
+          <aside className="hidden lg:block">
+            <div className="rounded-[32px] border border-[#FF6A00]/15 bg-gradient-to-b from-[#1F1F23]/92 to-[#111115]/92 p-6 shadow-[0_12px_40px_rgba(0,0,0,0.45)]">
+              <div className="mb-8 flex items-center gap-3">
+                <div className="rounded-2xl bg-[#FF6A00] p-3 text-lg font-bold text-white shadow-[0_0_20px_rgba(255,106,0,0.35)]">
+                  S
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold">StudySync</h2>
+                  <p className="text-sm text-gray-300">Discussion Board</p>
+                </div>
               </div>
-              <div>
-                <h1 className="text-xl font-bold">StudySync</h1>
-                <p className="text-sm text-gray-300">Discussion Board</p>
-              </div>
-            </div>
 
-            <div className="mb-6 h-px bg-gradient-to-r from-transparent via-[#FF6A00]/40 to-transparent" />
+              <div className="mb-4 h-px bg-gradient-to-r from-transparent via-[#FF6A00]/40 to-transparent" />
 
-            <nav className="space-y-2">
-              {leftNavItems.map((item) => (
+              <button
+                onClick={() => (window.location.href = "/student-dashboard")}
+                className="mb-6 w-full rounded-2xl border border-white/15 bg-white/10 px-4 py-3 text-sm font-semibold text-white backdrop-blur-md transition duration-300 hover:bg-white/15 hover:shadow-[0_0_20px_rgba(255,255,255,0.08)]"
+              >
+                ← Back to Student Dashboard
+              </button>
+
+              <div className="space-y-2">
                 <button
-                  key={item.key}
-                  onClick={item.action}
-                  className={`flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left transition duration-300 ${
-                    sideFilter === item.key
-                      ? "bg-white/10 text-white shadow-[0_0_20px_rgba(255,106,0,0.10)]"
-                      : "text-gray-300 hover:bg-white/5 hover:text-white"
-                  }`}
+                  className={navButtonClass("home")}
+                  onClick={() => {
+                    setPanelFilter("home");
+                    setSearch("");
+                    setTab("all");
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                  }}
                 >
-                  <span className="text-lg">{item.icon}</span>
-                  <span className="font-medium">{item.label}</span>
+                  <span>⌂</span>
+                  <span className="font-medium">Home</span>
                 </button>
-              ))}
-            </nav>
 
-            <button
-              className="mt-8 w-full rounded-2xl bg-[#FF6A00] px-4 py-3 font-semibold text-white shadow-[0_0_28px_rgba(255,106,0,0.28)] transition duration-300 hover:-translate-y-0.5 hover:opacity-95 hover:shadow-[0_0_34px_rgba(255,106,0,0.4)]"
-              onClick={focusCreateBox}
-            >
-              Create
-            </button>
+                <button
+                  className={navButtonClass("liked")}
+                  onClick={() => {
+                    setPanelFilter("liked");
+                    setSearch("");
+                    setTab("all");
+                  }}
+                >
+                  <span>♥</span>
+                  <span className="font-medium">Liked Posts</span>
+                </button>
+
+                <button
+                  className={navButtonClass("activity")}
+                  onClick={() => {
+                    setPanelFilter("activity");
+                    setActivityFilter("liked");
+                    setSearch("");
+                    setTab("all");
+                  }}
+                >
+                  <span>◔</span>
+                  <span className="font-medium">Activity</span>
+                </button>
+
+                <button
+                  className={navButtonClass("profile")}
+                  onClick={() => {
+                    setPanelFilter("profile");
+                    setSearch("");
+                    setTab("all");
+                  }}
+                >
+                  <span>◎</span>
+                  <span className="font-medium">Profile</span>
+                </button>
+              </div>
+
+              {showComposer && (
+                <button
+                  className="mt-8 w-full rounded-2xl bg-[#FF6A00] px-4 py-3 font-semibold text-white shadow-[0_0_28px_rgba(255,106,0,0.28)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_0_34px_rgba(255,106,0,0.40)]"
+                  onClick={focusCreateBox}
+                >
+                  Create
+                </button>
+              )}
+            </div>
           </aside>
 
           <main>
-            <div className="relative mb-6 overflow-hidden rounded-[32px] border border-[#FF6A00]/12 bg-gradient-to-br from-[#23232a]/95 via-[#1F1F23]/94 to-[#18181d]/94 p-6 shadow-[0_0_0_1px_rgba(255,255,255,0.03),0_16px_46px_rgba(0,0,0,0.42)] backdrop-blur-md transition duration-300 hover:shadow-[0_0_0_1px_rgba(255,106,0,0.10),0_18px_50px_rgba(0,0,0,0.5)]">
-              <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-[#FF6A00] to-transparent opacity-80" />
-              <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-[#FF6A00]/10 blur-3xl" />
-              <div className="pointer-events-none absolute -left-10 bottom-0 h-32 w-32 rounded-full bg-[#FF6A00]/5 blur-3xl" />
+            {showComposer && (
+              <div className="relative mb-6 overflow-hidden rounded-[32px] border border-[#FF6A00]/12 bg-gradient-to-br from-[#23232a]/95 via-[#1F1F23]/94 to-[#18181d]/94 p-6 shadow-[0_16px_46px_rgba(0,0,0,0.42)] backdrop-blur-md">
+                <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-[#FF6A00] to-transparent opacity-80" />
+                <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-[#FF6A00]/10 blur-3xl" />
 
-              <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
-                <div>
-                  <h2 className="text-3xl font-bold tracking-tight text-white">
-                    {boardTitle}
-                  </h2>
-                  <p className="mt-2 text-[17px] text-gray-300">
-                    {boardDescription}
-                  </p>
-                </div>
-
-                <div className="flex flex-wrap gap-2">
-                  {["all", "open", "closed"].map((tab) => (
-                    <button
-                      key={tab}
-                      onClick={() => setActiveTab(tab)}
-                      className={`rounded-full px-4 py-2 text-sm font-semibold capitalize transition duration-300 ${
-                        activeTab === tab
-                          ? "bg-[#FF6A00] text-white shadow-[0_0_20px_rgba(255,106,0,0.25)]"
-                          : "border border-white/10 bg-black/20 text-gray-200 hover:border-[#FF6A00]/40 hover:text-white"
-                      }`}
-                    >
-                      {tab}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <form onSubmit={handleCreatePost}>
-                <textarea
-                  value={content}
-                  onChange={(e) => setContent(e.target.value)}
-                  placeholder="Ask your question, share notes, or start a university discussion..."
-                  rows={5}
-                  className="w-full rounded-[28px] border border-white/10 bg-[#0A0A0C]/95 px-5 py-4 text-[16px] text-white outline-none transition duration-300 placeholder:text-gray-500 focus:border-[#FF6A00] focus:shadow-[0_0_0_1px_rgba(255,106,0,0.20),0_0_24px_rgba(255,106,0,0.12)]"
-                />
-
-                <div className="mt-4 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                  <div className="flex flex-wrap items-center gap-3">
-                    <label className="cursor-pointer rounded-full border border-white/10 bg-black/25 px-4 py-2 text-sm font-medium text-gray-200 transition duration-300 hover:border-[#FF6A00]/40 hover:text-[#FF6A00]">
-                      Add image / video
-                      <input
-                        type="file"
-                        accept="image/*,video/*"
-                        multiple
-                        className="hidden"
-                        onChange={handleFilesChange}
-                      />
-                    </label>
-
-                    {files.length > 0 && (
-                      <span className="text-sm text-gray-300">
-                        {files.length} file(s) selected
-                      </span>
-                    )}
+                <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
+                  <div>
+                    <h1 className="text-3xl font-bold">StudySync Discussions</h1>
+                    <p className="mt-2 text-[17px] text-gray-300">
+                      Ask questions, share ideas, pin the best answer, and keep the campus conversation alive.
+                    </p>
                   </div>
+
+                  <div className="flex flex-wrap gap-2">
+                    {["all", "open", "closed"].map((item) => (
+                      <button
+                        key={item}
+                        onClick={() => setTab(item)}
+                        className={`rounded-full px-4 py-2 text-sm font-semibold capitalize transition ${
+                          tab === item
+                            ? "bg-[#FF6A00] text-white shadow-[0_0_20px_rgba(255,106,0,0.25)]"
+                            : "border border-white/10 bg-black/20 text-gray-200 hover:border-[#FF6A00]/40"
+                        }`}
+                      >
+                        {item}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <form onSubmit={handleCreatePost}>
+                  <textarea
+                    value={content}
+                    onChange={(e) => setContent(e.target.value)}
+                    placeholder="Ask your question, share notes, or start a university discussion..."
+                    rows={5}
+                    className="w-full rounded-[28px] border border-white/10 bg-[#0A0A0C]/95 px-5 py-4 text-[16px] text-white outline-none transition placeholder:text-gray-500 focus:border-[#FF6A00] focus:shadow-[0_0_24px_rgba(255,106,0,0.12)]"
+                  />
+
+                  <div className="mt-4 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                    <div className="flex flex-wrap items-center gap-3">
+                      <label className="cursor-pointer rounded-full border border-white/10 bg-black/25 px-4 py-2 text-sm font-medium text-gray-200 transition hover:border-[#FF6A00]/40 hover:text-[#FF6A00]">
+                        Add image / video
+                        <input
+                          type="file"
+                          accept="image/*,video/*"
+                          multiple
+                          className="hidden"
+                          onChange={handleFilesChange}
+                        />
+                      </label>
+
+                      {files.length > 0 && (
+                        <span className="text-sm text-gray-300">
+                          {files.length} file(s) selected
+                        </span>
+                      )}
+                    </div>
+
+                    <button
+                      type="submit"
+                      className="rounded-full bg-[#FF6A00] px-6 py-3 font-semibold text-white shadow-[0_0_24px_rgba(255,106,0,0.22)] transition hover:-translate-y-0.5 hover:shadow-[0_0_30px_rgba(255,106,0,0.35)]"
+                    >
+                      Publish Post
+                    </button>
+                  </div>
+
+                  {error && (
+                    <div className="mt-4 rounded-2xl border border-red-400/20 bg-red-400/10 px-4 py-3 text-sm text-red-300">
+                      {error}
+                    </div>
+                  )}
+                </form>
+              </div>
+            )}
+
+            {panelFilter === "activity" && (
+              <div className="mb-6 rounded-[32px] border border-[#FF6A00]/12 bg-gradient-to-br from-[#23232a]/95 via-[#1F1F23]/94 to-[#18181d]/94 p-6 shadow-[0_16px_46px_rgba(0,0,0,0.42)] backdrop-blur-md">
+                <div className="flex flex-wrap gap-3">
+                  <button
+                    onClick={() => setActivityFilter("liked")}
+                    className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
+                      activityFilter === "liked"
+                        ? "bg-[#FF6A00] text-white shadow-[0_0_20px_rgba(255,106,0,0.25)]"
+                        : "border border-white/10 bg-black/20 text-gray-200"
+                    }`}
+                  >
+                    Liked
+                  </button>
 
                   <button
-                    type="submit"
-                    className="rounded-full bg-[#FF6A00] px-6 py-3 font-semibold text-white shadow-[0_0_24px_rgba(255,106,0,0.22)] transition duration-300 hover:-translate-y-0.5 hover:opacity-95 hover:shadow-[0_0_30px_rgba(255,106,0,0.35)]"
+                    onClick={() => setActivityFilter("reposted")}
+                    className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
+                      activityFilter === "reposted"
+                        ? "bg-[#FF6A00] text-white shadow-[0_0_20px_rgba(255,106,0,0.25)]"
+                        : "border border-white/10 bg-black/20 text-gray-200"
+                    }`}
                   >
-                    Publish Post
+                    Reposted
+                  </button>
+
+                  <button
+                    onClick={() => setActivityFilter("commented")}
+                    className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
+                      activityFilter === "commented"
+                        ? "bg-[#FF6A00] text-white shadow-[0_0_20px_rgba(255,106,0,0.25)]"
+                        : "border border-white/10 bg-black/20 text-gray-200"
+                    }`}
+                  >
+                    Commented
                   </button>
                 </div>
-
-                {error && (
-                  <div className="mt-4 rounded-2xl border border-red-400/20 bg-red-400/10 px-4 py-3 text-sm text-red-300">
-                    {error}
-                  </div>
-                )}
-              </form>
-            </div>
+              </div>
+            )}
 
             <div className="space-y-5">
               {filteredPosts.length === 0 ? (
-                <div className="relative overflow-hidden rounded-[28px] border border-[#FF6A00]/10 bg-gradient-to-br from-[#23232a]/95 via-[#1F1F23]/94 to-[#18181d]/94 p-10 text-center text-gray-300 shadow-[0_0_0_1px_rgba(255,255,255,0.03),0_12px_40px_rgba(0,0,0,0.35)] backdrop-blur-md transition duration-300 hover:-translate-y-1 hover:shadow-[0_0_0_1px_rgba(255,106,0,0.08),0_16px_46px_rgba(0,0,0,0.42)]">
-                  <div className="pointer-events-none absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-[#FF6A00]/70 to-transparent" />
-                  {sideFilter === "subscriptions"
-                    ? "No subscribed posts yet."
-                    : sideFilter === "activity"
-                    ? "No recent activity yet."
-                    : sideFilter === "profile"
-                    ? "You have not posted anything yet."
-                    : "No posts yet. Start the first StudySync discussion."}
+                <div className="rounded-[28px] border border-[#FF6A00]/10 bg-gradient-to-br from-[#23232a]/95 via-[#1F1F23]/94 to-[#18181d]/94 p-10 text-center text-gray-300 shadow-[0_12px_40px_rgba(0,0,0,0.35)]">
+                  No posts found for this section.
                 </div>
               ) : (
-                filteredPosts.map((post) => (
-                  <div
-                    key={post.id}
-                    className="transition duration-300 hover:-translate-y-1"
-                  >
-                    <PostCard post={post} refreshPosts={refreshPosts} />
-                  </div>
-                ))
+                filteredPosts.map((post) => {
+                  const owner = isAuthor(post);
+                  const resharedByMe = isResharedByMe(post);
+
+                  const pinnedComment = post.comments.find(
+                    (comment) => comment.id === post.pinnedCommentId
+                  );
+                  const normalComments = post.comments.filter(
+                    (comment) => comment.id !== post.pinnedCommentId
+                  );
+
+                  return (
+                    <div
+                      key={post.id}
+                      className="rounded-[28px] border border-[#FF6A00]/10 bg-gradient-to-br from-[#23232a]/95 via-[#1F1F23]/94 to-[#18181d]/94 p-6 shadow-[0_12px_40px_rgba(0,0,0,0.35)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_16px_46px_rgba(0,0,0,0.42)]"
+                    >
+                      <div className="mb-4 flex items-start justify-between gap-4">
+                        <div>
+                          <h3 className="text-lg font-semibold text-white">
+                            {post.authorName}
+                          </h3>
+
+                          <p className="text-sm text-gray-400">
+                            {[post.authorItNumber, formatDateTime(post.createdAt)]
+                              .filter(Boolean)
+                              .join(" · ")}
+                          </p>
+
+                          {activityFilter === "reposted" && resharedByMe && !owner && panelFilter === "activity" && (
+                            <span className="mt-2 inline-block rounded-full border border-[#FF6A00]/20 bg-[#FF6A00]/10 px-3 py-1 text-xs font-semibold text-[#FFB066]">
+                              Reposted by you
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="flex flex-wrap items-center gap-2">
+                          {!post.commentsEnabled && (
+                            <span className="rounded-full border border-red-400/20 bg-red-400/10 px-3 py-1 text-xs font-semibold text-red-300">
+                              Comments closed
+                            </span>
+                          )}
+
+                          {owner && (
+                            <>
+                              <button
+                                onClick={() => handleToggleCommentSection(post.id, owner)}
+                                className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                                  post.commentsEnabled
+                                    ? "border border-yellow-400/20 bg-yellow-400/10 text-yellow-300"
+                                    : "border border-green-400/20 bg-green-400/10 text-green-300"
+                                }`}
+                              >
+                                {post.commentsEnabled ? "Close comments" : "Open comments"}
+                              </button>
+
+                              <button
+                                onClick={() => handleDeletePost(post.id, owner)}
+                                className="rounded-full border border-red-400/20 bg-red-400/10 px-3 py-1 text-xs font-semibold text-red-300"
+                              >
+                                Delete
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      </div>
+
+                      <p className="whitespace-pre-wrap text-[16px] leading-7 text-gray-100">
+                        {post.content}
+                      </p>
+
+                      {post.attachments.length > 0 && (
+                        <div
+                          className={`mt-5 grid gap-3 ${
+                            post.attachments.length > 1 ? "grid-cols-2" : "grid-cols-1"
+                          }`}
+                        >
+                          {post.attachments.map((file) => {
+                            const isImage = file?.type?.startsWith("image/");
+                            const isVideo = file?.type?.startsWith("video/");
+
+                            return (
+                              <div
+                                key={file.id || file.url}
+                                className="overflow-hidden rounded-[22px] border border-white/10 bg-black/20"
+                              >
+                                {isImage && (
+                                  <img
+                                    src={file.url}
+                                    alt={file.name || "attachment"}
+                                    className="h-[320px] w-full object-cover"
+                                  />
+                                )}
+
+                                {isVideo && (
+                                  <video
+                                    src={file.url}
+                                    controls
+                                    className="h-[320px] w-full object-cover"
+                                  />
+                                )}
+
+                                {!isImage && !isVideo && (
+                                  <div className="p-4 text-sm text-gray-300">
+                                    {file.name || "Attachment"}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+
+                      <div className="mt-5 flex flex-wrap items-center gap-3 border-t border-white/10 pt-4">
+                        <button
+                          onClick={() => handleLike(post.id)}
+                          className={`rounded-full border px-4 py-2 text-sm transition ${
+                            isLikedByMe(post)
+                              ? "border-[#FF6A00]/40 bg-[#FF6A00]/10 text-[#FFB066]"
+                              : "border-white/10 bg-black/20 text-gray-200 hover:border-[#FF6A00]/40 hover:text-white"
+                          }`}
+                        >
+                          ♥ {post.likes.length}
+                        </button>
+
+                        <button
+                          onClick={() => toggleCommentsPanel(post.id)}
+                          className="rounded-full border border-white/10 bg-black/20 px-4 py-2 text-sm text-gray-200 transition hover:border-[#FF6A00]/40 hover:text-white"
+                        >
+                          💬 {post.comments.length}
+                        </button>
+
+                        <button
+                          onClick={() => handleReshare(post.id)}
+                          className={`rounded-full border px-4 py-2 text-sm transition ${
+                            resharedByMe
+                              ? "border-[#FF6A00]/40 bg-[#FF6A00]/10 text-[#FFB066]"
+                              : "border-white/10 bg-black/20 text-gray-200 hover:border-[#FF6A00]/40 hover:text-white"
+                          }`}
+                        >
+                          🔁 {post.reshares.length}
+                        </button>
+                      </div>
+
+                      {openComments[post.id] && (
+                        <div className="mt-5 rounded-[24px] border border-white/10 bg-black/20 p-4">
+                          {pinnedComment && (
+                            <div className="mb-4 rounded-[18px] border border-[#FF6A00]/25 bg-[#FF6A00]/10 p-4">
+                              <div className="mb-2 flex items-center justify-between gap-3">
+                                <div>
+                                  <p className="font-semibold text-white">
+                                    {pinnedComment.authorName}
+                                  </p>
+                                  <p className="text-xs text-gray-400">
+                                    {formatDateTime(pinnedComment.createdAt)}
+                                  </p>
+                                </div>
+                                <span className="rounded-full bg-[#FF6A00] px-3 py-1 text-xs font-semibold text-white">
+                                  Pinned answer
+                                </span>
+                              </div>
+                              <p className="text-gray-100">{pinnedComment.content}</p>
+                            </div>
+                          )}
+
+                          {normalComments.length > 0 ? (
+                            <div className="space-y-3">
+                              {normalComments.map((comment) => (
+                                <div
+                                  key={comment.id}
+                                  className="rounded-[18px] border border-white/10 bg-[#1A1A20] p-4"
+                                >
+                                  <div className="mb-2 flex items-center justify-between gap-3">
+                                    <div>
+                                      <p className="font-medium text-white">
+                                        {comment.authorName}
+                                      </p>
+                                      <p className="text-xs text-gray-400">
+                                        {formatDateTime(comment.createdAt)}
+                                      </p>
+                                    </div>
+
+                                    {owner && (
+                                      <button
+                                        onClick={() =>
+                                          handlePinComment(post.id, comment.id, owner)
+                                        }
+                                        className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-gray-200 transition hover:border-[#FF6A00]/40 hover:text-[#FF6A00]"
+                                      >
+                                        Pin
+                                      </button>
+                                    )}
+                                  </div>
+
+                                  <p className="text-gray-100">{comment.content}</p>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <p className="text-sm text-gray-400">No comments yet.</p>
+                          )}
+
+                          {post.commentsEnabled && (
+                            <div className="mt-4">
+                              <textarea
+                                value={commentInputs[post.id] || ""}
+                                onChange={(e) =>
+                                  handleCommentInput(post.id, e.target.value)
+                                }
+                                placeholder="Write a comment..."
+                                rows={3}
+                                className="w-full rounded-[18px] border border-white/10 bg-[#0A0A0C]/95 px-4 py-3 text-white outline-none transition placeholder:text-gray-500 focus:border-[#FF6A00]"
+                              />
+
+                              <div className="mt-3 flex justify-end">
+                                <button
+                                  onClick={() => handleAddComment(post.id)}
+                                  className="rounded-full bg-[#FF6A00] px-5 py-2.5 font-semibold text-white"
+                                >
+                                  Comment
+                                </button>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })
               )}
             </div>
           </main>
 
           <aside className="space-y-5">
-            <div className="rounded-[28px] border border-[#FF6A00]/10 bg-gradient-to-br from-[#15151a]/94 via-[#111115]/94 to-[#0f0f13]/94 p-5 shadow-[0_12px_36px_rgba(0,0,0,0.36)] backdrop-blur-md transition duration-300 hover:shadow-[0_16px_42px_rgba(0,0,0,0.42)]">
-              <div className="rounded-[22px] border border-white/10 bg-[#0A0A0C]/95 px-4 py-3 transition duration-300 focus-within:border-[#FF6A00]/40 focus-within:shadow-[0_0_20px_rgba(255,106,0,0.08)]">
+            <div className="rounded-[28px] border border-[#FF6A00]/10 bg-gradient-to-br from-[#15151a]/94 via-[#111115]/94 to-[#0f0f13]/94 p-5 shadow-[0_12px_36px_rgba(0,0,0,0.36)]">
+              <div className="rounded-[22px] border border-white/10 bg-[#0A0A0C]/95 px-4 py-3">
                 <input
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
@@ -361,24 +771,23 @@ export default function DiscussionBoard() {
               </div>
             </div>
 
-            <div className="relative overflow-hidden rounded-[28px] border border-[#FF6A00]/10 bg-gradient-to-br from-[#15151a]/94 via-[#111115]/94 to-[#0f0f13]/94 p-6 shadow-[0_12px_36px_rgba(0,0,0,0.36)] backdrop-blur-md transition duration-300 hover:-translate-y-1 hover:shadow-[0_16px_42px_rgba(0,0,0,0.42)]">
-              <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-[#FF6A00]/80 to-transparent" />
+            <div className="rounded-[28px] border border-[#FF6A00]/10 bg-gradient-to-br from-[#15151a]/94 via-[#111115]/94 to-[#0f0f13]/94 p-6 shadow-[0_12px_36px_rgba(0,0,0,0.36)]">
               <div className="mb-5 text-center">
                 <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#FF6A00] text-xl font-bold shadow-[0_0_22px_rgba(255,106,0,0.35)]">
                   S
                 </div>
-                <h3 className="text-2xl font-bold">StudySync Feed</h3>
+                <h4 className="text-2xl font-bold">StudySync Feed</h4>
                 <p className="mt-2 text-gray-300">
                   A modern discussion space for students.
                 </p>
               </div>
 
               <button
-                className="mb-3 w-full rounded-2xl bg-[#FF6A00] px-4 py-3 font-semibold text-white shadow-[0_0_20px_rgba(255,106,0,0.24)] transition duration-300 hover:-translate-y-0.5 hover:opacity-95"
+                className="mb-3 w-full rounded-2xl bg-[#FF6A00] px-4 py-3 font-semibold text-white"
                 onClick={() => {
-                  setSideFilter("home");
+                  setPanelFilter("home");
                   setSearch("");
-                  setActiveTab("all");
+                  setTab("all");
                   window.scrollTo({ top: 0, behavior: "smooth" });
                 }}
               >
@@ -386,58 +795,40 @@ export default function DiscussionBoard() {
               </button>
 
               <button
-                className="w-full rounded-2xl bg-white/10 px-4 py-3 font-semibold text-gray-100 transition duration-300 hover:bg-white/15"
-                onClick={() => setSideFilter("activity")}
+                className="w-full rounded-2xl bg-white/10 px-4 py-3 font-semibold text-gray-100"
+                onClick={() => {
+                  setPanelFilter("activity");
+                  setActivityFilter("liked");
+                }}
               >
                 View Activity
               </button>
             </div>
 
-            <div className="relative overflow-hidden rounded-[28px] border border-[#FF6A00]/10 bg-gradient-to-br from-[#15151a]/94 via-[#111115]/94 to-[#0f0f13]/94 p-6 shadow-[0_12px_36px_rgba(0,0,0,0.36)] backdrop-blur-md transition duration-300 hover:-translate-y-1 hover:shadow-[0_16px_42px_rgba(0,0,0,0.42)]">
-              <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-[#FF6A00]/75 to-transparent" />
+            <div className="rounded-[28px] border border-[#FF6A00]/10 bg-gradient-to-br from-[#15151a]/94 via-[#111115]/94 to-[#0f0f13]/94 p-6 shadow-[0_12px_36px_rgba(0,0,0,0.36)]">
               <h4 className="mb-4 text-2xl font-bold">Suggested people</h4>
 
               <div className="space-y-4">
-                {suggestedAuthors.length === 0 ? (
+                {suggestedPeople.length === 0 ? (
                   <p className="text-gray-300">No suggestions yet.</p>
                 ) : (
-                  suggestedAuthors.map((author) => {
-                    const following = discussionService.isFollowing(author.id);
-
-                    return (
-                      <div
-                        key={author.id}
-                        className="rounded-2xl border border-white/10 bg-black/20 p-4 transition duration-300 hover:border-[#FF6A00]/20 hover:bg-black/25"
-                      >
-                        <div className="flex items-center justify-between gap-3">
-                          <div className="min-w-0">
-                            <p className="truncate font-semibold text-white">{author.name}</p>
-                            <p className="text-sm text-gray-300">
-                              {author.role} · {author.followers} followers
-                            </p>
-                          </div>
-
-                          {isStudent &&
-                            author.id !== (storedUser?.email || storedUser?.fullName) && (
-                              <button
-                                onClick={() => {
-                                  discussionService.toggleFollow(author.id);
-                                  refreshPosts();
-                                  setSideFilter("subscriptions");
-                                }}
-                                className={`rounded-full px-4 py-2 text-sm font-semibold transition duration-300 ${
-                                  following
-                                    ? "border border-white/10 bg-white/5 text-gray-100"
-                                    : "bg-[#FF6A00] text-white shadow-[0_0_16px_rgba(255,106,0,0.16)]"
-                                }`}
-                              >
-                                {following ? "Subscribed" : "Subscribe"}
-                              </button>
-                            )}
-                        </div>
+                  suggestedPeople.map((person) => (
+                    <div
+                      key={person.id}
+                      className="rounded-2xl border border-white/10 bg-black/20 p-4"
+                    >
+                      <div className="min-w-0">
+                        <p className="truncate font-semibold text-white">
+                          {person.name}
+                        </p>
+                        <p className="text-sm text-gray-300">
+                          {[person.itNumber, `${person.followers} followers`]
+                            .filter(Boolean)
+                            .join(" · ")}
+                        </p>
                       </div>
-                    );
-                  })
+                    </div>
+                  ))
                 )}
               </div>
             </div>
