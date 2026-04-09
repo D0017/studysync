@@ -96,14 +96,6 @@ const getAllPosts = () => {
   return posts.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 };
 
-const updatePost = (updatedPost) => {
-  const posts = getStoredPosts().map((post) =>
-    post.id === updatedPost.id ? updatedPost : post
-  );
-  savePosts(posts);
-  return updatedPost;
-};
-
 const toggleLike = (postId) => {
   const user = normalizeUser(getCurrentUser());
   const posts = getStoredPosts();
@@ -112,6 +104,7 @@ const toggleLike = (postId) => {
     if (post.id !== postId) return post;
 
     const alreadyLiked = post.likes.includes(user.id);
+
     return {
       ...post,
       likes: alreadyLiked
@@ -132,6 +125,7 @@ const toggleReshare = (postId) => {
     if (post.id !== postId) return post;
 
     const alreadyReshared = post.reshares.includes(user.id);
+
     return {
       ...post,
       reshares: alreadyReshared
@@ -210,9 +204,11 @@ const pinComment = (postId, commentId) => {
 const deletePost = (postId) => {
   const user = normalizeUser(getCurrentUser());
   const posts = getStoredPosts();
+
   const filtered = posts.filter(
     (post) => !(post.id === postId && post.authorId === user.id)
   );
+
   savePosts(filtered);
   return getAllPosts();
 };

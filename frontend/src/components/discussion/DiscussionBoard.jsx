@@ -106,33 +106,67 @@ export default function DiscussionBoard() {
           </div>
 
           <nav className="space-y-2">
-            {[
-              "Home",
-              "Subscriptions",
-              "Chat",
-              "Activity",
-              "Explore",
-              "Profile",
-            ].map((item, index) => (
-              <button
-                key={item}
-                className={`flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left transition ${
-                  index === 0
-                    ? "bg-white/8 text-white"
-                    : "text-gray-400 hover:bg-white/5 hover:text-white"
-                }`}
-              >
-                <span className="text-lg">
-                  {["⌂", "▣", "☰", "◔", "⌕", "◎"][index]}
-                </span>
-                <span className="font-medium">{item}</span>
-              </button>
-            ))}
+          <button
+            className="flex w-full items-center gap-3 rounded-2xl bg-white/8 px-4 py-3 text-left text-white transition"
+            onClick={() => window.location.href = "/discussion"}
+          >
+            <span className="text-lg">⌂</span>
+            <span className="font-medium">Home</span>
+          </button>
+
+          <button
+            className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-gray-400 transition hover:bg-white/5 hover:text-white"
+            onClick={() => alert("Subscriptions feature will be added next.")}
+          >
+            <span className="text-lg">▣</span>
+            <span className="font-medium">Subscriptions</span>
+          </button>
+
+          <button
+            className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-gray-400 transition hover:bg-white/5 hover:text-white"
+            onClick={() => alert("Chat feature will be added next.")}
+          >
+            <span className="text-lg">☰</span>
+            <span className="font-medium">Chat</span>
+          </button>
+
+          <button
+            className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-gray-400 transition hover:bg-white/5 hover:text-white"
+            onClick={() => alert("Activity feature will be added next.")}
+          >
+            <span className="text-lg">◔</span>
+            <span className="font-medium">Activity</span>
+          </button>
+
+          <button
+            className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-gray-400 transition hover:bg-white/5 hover:text-white"
+            onClick={() => alert("Explore feature will be added next.")}
+          >
+            <span className="text-lg">⌕</span>
+            <span className="font-medium">Explore</span>
+          </button>
+
+          <button
+            className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-gray-400 transition hover:bg-white/5 hover:text-white"
+            onClick={() => alert("Profile feature will be added next.")}
+          >
+            <span className="text-lg">◎</span>
+            <span className="font-medium">Profile</span>
+          </button>
           </nav>
 
-          <button className="mt-8 w-full rounded-2xl bg-[#FF6A00] px-4 py-3 font-semibold text-white transition hover:opacity-90">
+          <button
+            className="mt-8 w-full rounded-2xl bg-[#FF6A00] px-4 py-3 font-semibold text-white transition hover:opacity-90"
+            onClick={() => {
+              const box = document.querySelector("textarea");
+              if (box) {
+                box.focus();
+                box.scrollIntoView({ behavior: "smooth", block: "center" });
+              }
+            }}
+          >
             Create
-          </button>
+        </button>
         </aside>
 
         <main>
@@ -243,11 +277,17 @@ export default function DiscussionBoard() {
               </p>
             </div>
 
-            <button className="mb-3 w-full rounded-2xl bg-[#FF6A00] px-4 py-3 font-semibold text-white transition hover:opacity-90">
+            <button
+              className="mb-3 w-full rounded-2xl bg-[#FF6A00] px-4 py-3 font-semibold text-white transition hover:opacity-90"
+              onClick={() => window.location.href = "/discussion"}
+            >
               Open Board
             </button>
 
-            <button className="w-full rounded-2xl bg-white/10 px-4 py-3 font-semibold text-gray-200 transition hover:bg-white/15">
+            <button
+              className="w-full rounded-2xl bg-white/10 px-4 py-3 font-semibold text-gray-200 transition hover:bg-white/15"
+              onClick={() => alert("Activity feature will be added next.")}
+            >
               View Activity
             </button>
           </div>
