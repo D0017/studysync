@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import discussionService from "./discussionService";
 import bg from "../../assets/substack.jpg";
 
@@ -40,7 +40,7 @@ export default function DiscussionBoard() {
   const [openComments, setOpenComments] = useState({});
   const [commentInputs, setCommentInputs] = useState({});
 
-  const loadPosts = () => {
+  const loadPosts = useCallback(() => {
     try {
       const rawPosts = discussionService.getAllPosts?.() || [];
 
@@ -72,11 +72,17 @@ export default function DiscussionBoard() {
       setPosts([]);
       setError("Could not load discussion posts.");
     }
-  };
+  }, []);
 
   useEffect(() => {
-    loadPosts();
-  }, []);
+    const timeoutId = window.setTimeout(() => {
+      loadPosts();
+    }, 0);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [loadPosts]);
 
   const handleFilesChange = (e) => {
     const selected = Array.from(e.target.files || []);
@@ -144,7 +150,7 @@ export default function DiscussionBoard() {
   const isCommentedByMe = (post) =>
     (post.comments || []).some((comment) => comment.authorId === currentUserId);
 
-  const filteredPosts = useMemo(() => {
+  const filteredPosts = (() => {
     let data = [...posts];
 
     if (tab === "open") {
@@ -188,9 +194,9 @@ export default function DiscussionBoard() {
     }
 
     return data;
-  }, [posts, search, tab, panelFilter, activityFilter, currentUserId]);
+  })();
 
-  const suggestedPeople = useMemo(() => {
+  const suggestedPeople = (() => {
     const seen = new Map();
 
     posts.forEach((post) => {
@@ -205,13 +211,13 @@ export default function DiscussionBoard() {
     });
 
     return Array.from(seen.values()).slice(0, 4);
-  }, [posts, currentUserId]);
+  })();
 
   const navButtonClass = (key) =>
-    `flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left transition duration-300 ${
+    `group relative flex w-full items-center gap-3 overflow-hidden rounded-2xl px-4 py-3.5 text-left transition-all duration-300 ${
       panelFilter === key
-        ? "bg-white/10 text-white shadow-[0_0_18px_rgba(255,106,0,0.10)]"
-        : "text-gray-300 hover:bg-white/5 hover:text-white"
+        ? "border border-[#FF6A00]/30 bg-gradient-to-r from-[#FF6A00]/18 via-[#FF6A00]/10 to-transparent text-white shadow-[0_10px_24px_rgba(255,106,0,0.16)]"
+        : "border border-transparent text-gray-300 hover:border-white/10 hover:bg-white/[0.06] hover:text-white"
     }`;
 
   const toggleCommentsPanel = (postId) => {
@@ -320,88 +326,150 @@ export default function DiscussionBoard() {
       }}
     >
       <div className="min-h-screen bg-black/80 backdrop-blur-[2px]">
-        <div className="mx-auto grid max-w-[1600px] grid-cols-1 gap-6 px-4 py-6 lg:grid-cols-[260px_minmax(0,1fr)_360px]">
+        <div className="mx-auto grid max-w-400 grid-cols-1 gap-6 px-4 py-6 lg:grid-cols-[260px_minmax(0,1fr)_360px]">
           <aside className="hidden lg:block">
-            <div className="rounded-[32px] border border-[#FF6A00]/15 bg-gradient-to-b from-[#1F1F23]/92 to-[#111115]/92 p-6 shadow-[0_12px_40px_rgba(0,0,0,0.45)]">
-              <div className="mb-8 flex items-center gap-3">
-                <div className="rounded-2xl bg-[#FF6A00] p-3 text-lg font-bold text-white shadow-[0_0_20px_rgba(255,106,0,0.35)]">
-                  S
+            <div className="sticky top-6 overflow-hidden rounded-[30px] border border-white/10 bg-linear-to-b from-[#1d1d22]/95 via-[#15151a]/95 to-[#101014]/95 shadow-[0_20px_50px_rgba(0,0,0,0.45)] backdrop-blur-xl">
+              <div className="pointer-events-none absolute inset-x-0 top-0 h-0.75 bg-gradient-to-r from-transparent via-[#FF6A00] to-transparent opacity-90" />
+              <div className="pointer-events-none absolute -left-10 top-10 h-28 w-28 rounded-full bg-[#FF6A00]/10 blur-3xl" />
+
+              <div className="relative p-5">
+                <div className="mb-6 flex items-center gap-3 rounded-[24px] border border-white/8 bg-white/[0.03] px-4 py-4">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-[#FF7A00] to-[#FF5A00] text-xl font-extrabold text-white shadow-[0_10px_30px_rgba(255,106,0,0.30)]">
+                    S
+                  </div>
+
+                  <div className="min-w-0">
+                    <h2 className="truncate text-xl font-bold tracking-tight text-white">
+                      StudySync
+                    </h2>
+                    <p className="text-sm text-gray-400">Discussion Board</p>
+                  </div>
                 </div>
-                <div>
-                  <h2 className="text-xl font-bold">StudySync</h2>
-                  <p className="text-sm text-gray-300">Discussion Board</p>
+
+                <button
+                  onClick={() => (window.location.href = "/student-dashboard")}
+                  className="mb-5 flex w-full items-center justify-center rounded-2xl border border-white/10 bg-white/[0.05] px-4 py-3 text-sm font-semibold text-white transition-all duration-300 hover:border-[#FF6A00]/30 hover:bg-white/[0.08] hover:shadow-[0_10px_25px_rgba(255,255,255,0.05)]"
+                >
+                  ← Back to Student Dashboard
+                </button>
+
+                <div className="mb-5 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+
+                <div className="space-y-2">
+                  <button
+                    className={navButtonClass("home")}
+                    onClick={() => {
+                      setPanelFilter("home");
+                      setSearch("");
+                      setTab("all");
+                      window.scrollTo({ top: 0, behavior: "smooth" });
+                    }}
+                  >
+                    <span
+                      className={`flex h-10 w-10 items-center justify-center rounded-xl text-base transition-all duration-300 ${
+                        panelFilter === "home"
+                          ? "bg-[#FF6A00] text-white shadow-[0_8px_20px_rgba(255,106,0,0.28)]"
+                          : "bg-white/[0.05] text-gray-300 group-hover:bg-white/[0.08] group-hover:text-white"
+                      }`}
+                    >
+                      ⌂
+                    </span>
+                    <div className="flex min-w-0 flex-1 items-center justify-between gap-3">
+                      <span className="font-medium">Home</span>
+                      {panelFilter === "home" && (
+                        <span className="h-2.5 w-2.5 rounded-full bg-[#FF6A00]" />
+                      )}
+                    </div>
+                  </button>
+
+                  <button
+                    className={navButtonClass("liked")}
+                    onClick={() => {
+                      setPanelFilter("liked");
+                      setSearch("");
+                      setTab("all");
+                    }}
+                  >
+                    <span
+                      className={`flex h-10 w-10 items-center justify-center rounded-xl text-base transition-all duration-300 ${
+                        panelFilter === "liked"
+                          ? "bg-[#FF6A00] text-white shadow-[0_8px_20px_rgba(255,106,0,0.28)]"
+                          : "bg-white/[0.05] text-gray-300 group-hover:bg-white/[0.08] group-hover:text-white"
+                      }`}
+                    >
+                      ♥
+                    </span>
+                    <div className="flex min-w-0 flex-1 items-center justify-between gap-3">
+                      <span className="font-medium">Liked Posts</span>
+                      {panelFilter === "liked" && (
+                        <span className="h-2.5 w-2.5 rounded-full bg-[#FF6A00]" />
+                      )}
+                    </div>
+                  </button>
+
+                  <button
+                    className={navButtonClass("activity")}
+                    onClick={() => {
+                      setPanelFilter("activity");
+                      setActivityFilter("liked");
+                      setSearch("");
+                      setTab("all");
+                    }}
+                  >
+                    <span
+                      className={`flex h-10 w-10 items-center justify-center rounded-xl text-base transition-all duration-300 ${
+                        panelFilter === "activity"
+                          ? "bg-[#FF6A00] text-white shadow-[0_8px_20px_rgba(255,106,0,0.28)]"
+                          : "bg-white/[0.05] text-gray-300 group-hover:bg-white/[0.08] group-hover:text-white"
+                      }`}
+                    >
+                      ◔
+                    </span>
+                    <div className="flex min-w-0 flex-1 items-center justify-between gap-3">
+                      <span className="font-medium">Activity</span>
+                      {panelFilter === "activity" && (
+                        <span className="h-2.5 w-2.5 rounded-full bg-[#FF6A00]" />
+                      )}
+                    </div>
+                  </button>
+
+                  <button
+                    className={navButtonClass("profile")}
+                    onClick={() => {
+                      setPanelFilter("profile");
+                      setSearch("");
+                      setTab("all");
+                    }}
+                  >
+                    <span
+                      className={`flex h-10 w-10 items-center justify-center rounded-xl text-base transition-all duration-300 ${
+                        panelFilter === "profile"
+                          ? "bg-[#FF6A00] text-white shadow-[0_8px_20px_rgba(255,106,0,0.28)]"
+                          : "bg-white/[0.05] text-gray-300 group-hover:bg-white/[0.08] group-hover:text-white"
+                      }`}
+                    >
+                      ◎
+                    </span>
+                    <div className="flex min-w-0 flex-1 items-center justify-between gap-3">
+                      <span className="font-medium">Profile</span>
+                      {panelFilter === "profile" && (
+                        <span className="h-2.5 w-2.5 rounded-full bg-[#FF6A00]" />
+                      )}
+                    </div>
+                  </button>
                 </div>
+
+                {showComposer && (
+                  <div className="mt-6 rounded-[24px] border border-[#FF6A00]/15 bg-gradient-to-br from-[#FF6A00]/10 to-transparent p-3">
+                    <button
+                      className="w-full rounded-2xl bg-gradient-to-r from-[#FF7A00] to-[#FF5A00] px-4 py-3.5 font-semibold text-white shadow-[0_14px_30px_rgba(255,106,0,0.25)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_18px_35px_rgba(255,106,0,0.35)]"
+                      onClick={focusCreateBox}
+                    >
+                      Create
+                    </button>
+                  </div>
+                )}
               </div>
-
-              <div className="mb-4 h-px bg-gradient-to-r from-transparent via-[#FF6A00]/40 to-transparent" />
-
-              <button
-                onClick={() => (window.location.href = "/student-dashboard")}
-                className="mb-6 w-full rounded-2xl border border-white/15 bg-white/10 px-4 py-3 text-sm font-semibold text-white backdrop-blur-md transition duration-300 hover:bg-white/15 hover:shadow-[0_0_20px_rgba(255,255,255,0.08)]"
-              >
-                ← Back to Student Dashboard
-              </button>
-
-              <div className="space-y-2">
-                <button
-                  className={navButtonClass("home")}
-                  onClick={() => {
-                    setPanelFilter("home");
-                    setSearch("");
-                    setTab("all");
-                    window.scrollTo({ top: 0, behavior: "smooth" });
-                  }}
-                >
-                  <span>⌂</span>
-                  <span className="font-medium">Home</span>
-                </button>
-
-                <button
-                  className={navButtonClass("liked")}
-                  onClick={() => {
-                    setPanelFilter("liked");
-                    setSearch("");
-                    setTab("all");
-                  }}
-                >
-                  <span>♥</span>
-                  <span className="font-medium">Liked Posts</span>
-                </button>
-
-                <button
-                  className={navButtonClass("activity")}
-                  onClick={() => {
-                    setPanelFilter("activity");
-                    setActivityFilter("liked");
-                    setSearch("");
-                    setTab("all");
-                  }}
-                >
-                  <span>◔</span>
-                  <span className="font-medium">Activity</span>
-                </button>
-
-                <button
-                  className={navButtonClass("profile")}
-                  onClick={() => {
-                    setPanelFilter("profile");
-                    setSearch("");
-                    setTab("all");
-                  }}
-                >
-                  <span>◎</span>
-                  <span className="font-medium">Profile</span>
-                </button>
-              </div>
-
-              {showComposer && (
-                <button
-                  className="mt-8 w-full rounded-2xl bg-[#FF6A00] px-4 py-3 font-semibold text-white shadow-[0_0_28px_rgba(255,106,0,0.28)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_0_34px_rgba(255,106,0,0.40)]"
-                  onClick={focusCreateBox}
-                >
-                  Create
-                </button>
-              )}
             </div>
           </aside>
 
@@ -555,11 +623,14 @@ export default function DiscussionBoard() {
                               .join(" · ")}
                           </p>
 
-                          {activityFilter === "reposted" && resharedByMe && !owner && panelFilter === "activity" && (
-                            <span className="mt-2 inline-block rounded-full border border-[#FF6A00]/20 bg-[#FF6A00]/10 px-3 py-1 text-xs font-semibold text-[#FFB066]">
-                              Reposted by you
-                            </span>
-                          )}
+                          {activityFilter === "reposted" &&
+                            resharedByMe &&
+                            !owner &&
+                            panelFilter === "activity" && (
+                              <span className="mt-2 inline-block rounded-full border border-[#FF6A00]/20 bg-[#FF6A00]/10 px-3 py-1 text-xs font-semibold text-[#FFB066]">
+                                Reposted by you
+                              </span>
+                            )}
                         </div>
 
                         <div className="flex flex-wrap items-center gap-2">
