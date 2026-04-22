@@ -62,4 +62,28 @@ public class DiscussionService {
         return attachmentRepository.findByPost(post)
                 .orElseThrow(() -> new RuntimeException("Attachment not found"));
     }
+
+    // UPDATE POST
+    public DiscussionPost updatePost(Long postId, String content) {
+
+        DiscussionPost post = postRepository.findById(postId)
+                .orElseThrow(() -> new RuntimeException("Post not found"));
+
+        post.setContent(content);
+
+        return postRepository.save(post);
+    }
+
+    // DELETE POST
+    public void deletePost(Long postId) {
+
+        DiscussionPost post = postRepository.findById(postId)
+                .orElseThrow(() -> new RuntimeException("Post not found"));
+
+        // delete attachment if exists
+        attachmentRepository.findByPost(post)
+                .ifPresent(attachmentRepository::delete);
+
+        postRepository.delete(post);
+    }
 }
