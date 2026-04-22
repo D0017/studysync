@@ -1,10 +1,12 @@
 package com.StudySync.backend.service;
 
 import com.StudySync.backend.model.DiscussionAttachment;
+import com.StudySync.backend.model.DiscussionComment;
 import com.StudySync.backend.model.DiscussionLike;
 import com.StudySync.backend.model.DiscussionPost;
 import com.StudySync.backend.model.User;
 import com.StudySync.backend.repository.DiscussionAttachmentRepository;
+import com.StudySync.backend.repository.DiscussionCommentRepository;
 import com.StudySync.backend.repository.DiscussionLikeRepository;
 import com.StudySync.backend.repository.DiscussionPostRepository;
 import com.StudySync.backend.repository.UserRepository;
@@ -23,6 +25,7 @@ public class DiscussionService {
     private final DiscussionAttachmentRepository attachmentRepository;
     private final UserRepository userRepository;
     private final DiscussionLikeRepository likeRepository;
+    private final DiscussionCommentRepository commentRepository;
 
     // CREATE POST
     public DiscussionPost createPost(String content, Long userId, MultipartFile file) throws IOException {
@@ -36,7 +39,6 @@ public class DiscussionService {
 
         DiscussionPost savedPost = postRepository.save(post);
 
-        // If file exists → save attachment
         if (file != null && !file.isEmpty()) {
             DiscussionAttachment attachment = new DiscussionAttachment();
             attachment.setFileName(file.getOriginalFilename());
@@ -83,7 +85,6 @@ public class DiscussionService {
         DiscussionPost post = postRepository.findById(postId)
                 .orElseThrow(() -> new RuntimeException("Post not found"));
 
-        // delete attachment if exists
         attachmentRepository.findByPost(post)
                 .ifPresent(attachmentRepository::delete);
 
@@ -138,5 +139,44 @@ public class DiscussionService {
                 .orElseThrow(() -> new RuntimeException("Post not found"));
 
         return likeRepository.countByPost(post);
+    }
+
+    // ADD COMMENT
+    public DiscussionComment addComment(Long postId, Long userId, String content) {
+
+        DiscussionPost post = postRepository.findById(postId)
+                .orElseThrow(() -> new RuntimeException("Post not found"));
+
+        if (!post.isCommentsEnabled()) {
+            throw new RuntimeException("Comments are closed for this post");
+        }
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        DiscussionComment comment = new DiscussionComment();
+        comment.setContent(content);
+        comment.setPost(post);
+        comment.setAuthor(user);
+
+        return commentRepository.save(comment);
+    }
+
+    // GET COMMENTS OF A POST
+    public List<DiscussionComment> getCommentsByPost(Long postId) {
+
+        DiscussionPost post = postRepository.findById(postId)
+                .orElseThrow(() -> new RuntimeException("Post not found"));
+
+        return commentRepository.findByPostOrderByPinnedDescCreatedAtAsc(post);
+    }
+
+    // GET COMMENT COUNT
+    public long getCommentCount(Long postId) {
+
+        DiscussionPost post = postRepository.findById(postId)
+                .orElseThrow(() -> new RuntimeException("Post not found"));
+
+        return commentRepository.countByPost(post);
     }
 }
