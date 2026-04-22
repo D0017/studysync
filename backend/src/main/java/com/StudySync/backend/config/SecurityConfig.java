@@ -26,8 +26,8 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                .cors(cors -> cors.configurationSource(corsConfigurationSource())) // CORS එක Enable කරනවා
-                .csrf(csrf -> csrf.disable()) // CSRF disable කරනවා (Development වලට ලේසියි)
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/api/users/register",
@@ -35,7 +35,7 @@ public class SecurityConfig {
                                 "/api/users/forgot-password",
                                 "/api/users/reset-password"
                         ).permitAll()
-                        .anyRequest().permitAll() // දැනට හැම request එකකටම අවසර දෙනවා
+                        .anyRequest().permitAll()
                 );
         return http.build();
     }
@@ -44,11 +44,11 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        // මේකෙන් ඕනෑම localhost port එකකට (5173, 5175, 5176...) ඉඩ ලැබෙනවා
+
         configuration.setAllowedOriginPatterns(Collections.singletonList("http://localhost:*"));
 
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(Arrays.asList("*")); // හැම header එකකටම ඉඩ දෙනවා
+        configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
