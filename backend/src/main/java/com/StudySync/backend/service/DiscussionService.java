@@ -1,9 +1,11 @@
 package com.StudySync.backend.service;
 
 import com.StudySync.backend.model.DiscussionAttachment;
+import com.StudySync.backend.model.DiscussionLike;
 import com.StudySync.backend.model.DiscussionPost;
 import com.StudySync.backend.model.User;
 import com.StudySync.backend.repository.DiscussionAttachmentRepository;
+import com.StudySync.backend.repository.DiscussionLikeRepository;
 import com.StudySync.backend.repository.DiscussionPostRepository;
 import com.StudySync.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +22,7 @@ public class DiscussionService {
     private final DiscussionPostRepository postRepository;
     private final DiscussionAttachmentRepository attachmentRepository;
     private final UserRepository userRepository;
+    private final DiscussionLikeRepository likeRepository;
 
     // CREATE POST
     public DiscussionPost createPost(String content, Long userId, MultipartFile file) throws IOException {
@@ -85,5 +88,55 @@ public class DiscussionService {
                 .ifPresent(attachmentRepository::delete);
 
         postRepository.delete(post);
+    }
+
+    // LIKE POST
+    public String likePost(Long postId, Long userId) {
+
+        DiscussionPost post = postRepository.findById(postId)
+                .orElseThrow(() -> new RuntimeException("Post not found"));
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        boolean alreadyLiked = likeRepository.findByPostAndUser(post, user).isPresent();
+
+        if (alreadyLiked) {
+            return "User already liked this post";
+        }
+
+        DiscussionLike like = new DiscussionLike();
+        like.setPost(post);
+        like.setUser(user);
+
+        likeRepository.save(like);
+
+        return "Post liked successfully";
+    }
+
+    // UNLIKE POST
+    public String unlikePost(Long postId, Long userId) {
+
+        DiscussionPost post = postRepository.findById(postId)
+                .orElseThrow(() -> new RuntimeException("Post not found"));
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        DiscussionLike like = likeRepository.findByPostAndUser(post, user)
+                .orElseThrow(() -> new RuntimeException("Like not found"));
+
+        likeRepository.delete(like);
+
+        return "Post unliked successfully";
+    }
+
+    // GET LIKE COUNT
+    public long getLikeCount(Long postId) {
+
+        DiscussionPost post = postRepository.findById(postId)
+                .orElseThrow(() -> new RuntimeException("Post not found"));
+
+        return likeRepository.countByPost(post);
     }
 }

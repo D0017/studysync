@@ -60,4 +60,25 @@ public class DiscussionController {
         discussionService.deletePost(postId);
         return ResponseEntity.ok("Post deleted successfully");
     }
+
+    @PostMapping("/posts/{postId}/like")
+    public ResponseEntity<String> likePost(
+            @PathVariable Long postId,
+            @RequestParam("userId") Long userId
+    ) {
+        return ResponseEntity.ok(discussionService.likePost(postId, userId));
+    }
+
+    @DeleteMapping("/posts/{postId}/like")
+    public ResponseEntity<String> unlikePost(
+            @PathVariable Long postId,
+            @RequestParam("userId") Long userId
+    ) {
+        return ResponseEntity.ok(discussionService.unlikePost(postId, userId));
+    }
+
+    @GetMapping("/posts/{postId}/likes/count")
+    public ResponseEntity<Long> getLikeCount(@PathVariable Long postId) {
+        return ResponseEntity.ok(discussionService.getLikeCount(postId));
+    }
 }
