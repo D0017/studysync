@@ -129,4 +129,9 @@ public class DiscussionController {
     public ResponseEntity<DiscussionPost> toggleComments(@PathVariable Long postId) {
         return ResponseEntity.ok(discussionService.toggleComments(postId));
     }
+
+    @PutMapping("/comments/{commentId}/pin")
+    public ResponseEntity<DiscussionComment> pinComment(@PathVariable Long commentId) {
+        return ResponseEntity.ok(discussionService.pinComment(commentId));
+    }
 }

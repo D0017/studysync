@@ -191,4 +191,26 @@ public class DiscussionService {
         return postRepository.save(post);
     }
 
+    // PIN COMMENT
+    public DiscussionComment pinComment(Long commentId) {
+
+        DiscussionComment selectedComment = commentRepository.findById(commentId)
+                .orElseThrow(() -> new RuntimeException("Comment not found"));
+
+        DiscussionPost post = selectedComment.getPost();
+
+        List<DiscussionComment> comments = commentRepository.findByPostOrderByPinnedDescCreatedAtAsc(post);
+
+        // unpin any previously pinned comment in the same post
+        for (DiscussionComment comment : comments) {
+            if (comment.isPinned()) {
+                comment.setPinned(false);
+                commentRepository.save(comment);
+            }
+        }
+
+        selectedComment.setPinned(true);
+        return commentRepository.save(selectedComment);
+    }
+
 }
