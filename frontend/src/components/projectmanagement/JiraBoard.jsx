@@ -4,27 +4,27 @@ import { createProjectForGroup, getProjectByGroup } from '../../services/project
 import { assignIssue, createIssue, deleteIssue, getIssuesByProject, updateIssueStatus } from '../../services/issueService';
 
 const STATUS_COLUMNS = [
-    { key: 'TODO', label: 'To Do', color: 'bg-gray-100' },
-    { key: 'IN_PROGRESS', label: 'In Progress', color: 'bg-blue-100' },
-    { key: 'REVIEW', label: 'Review', color: 'bg-yellow-100' },
-    { key: 'DONE', label: 'Done', color: 'bg-green-100' }
+    { key: 'TODO', label: 'To Do', color: 'bg-[#1c1f26] border-gray-700' },
+    { key: 'IN_PROGRESS', label: 'In Progress', color: 'bg-[#1c1f26] border-blue-900/50' },
+    { key: 'REVIEW', label: 'Review', color: 'bg-[#1c1f26] border-yellow-900/50' },
+    { key: 'DONE', label: 'Done', color: 'bg-[#1c1f26] border-green-900/50' }
 ];
 
 const PRIORITIES = ['LOW', 'MEDIUM', 'HIGH', 'URGENT'];
 const TYPES = ['TASK', 'BUG', 'STORY'];
 
 const priorityColors = {
-    'LOW': 'bg-green-50 border-green-300',
-    'MEDIUM': 'bg-blue-50 border-blue-300',
-    'HIGH': 'bg-orange-50 border-orange-300',
-    'URGENT': 'bg-red-50 border-red-300'
+    'LOW': 'bg-green-900/20 border-green-700',
+    'MEDIUM': 'bg-blue-900/20 border-blue-700',
+    'HIGH': 'bg-orange-900/20 border-orange-700',
+    'URGENT': 'bg-red-900/20 border-red-700'
 };
 
 const priorityBadge = {
-    'LOW': 'bg-green-100 text-green-700',
-    'MEDIUM': 'bg-blue-100 text-blue-700',
-    'HIGH': 'bg-orange-100 text-orange-700',
-    'URGENT': 'bg-red-100 text-red-700'
+    'LOW': 'bg-green-900/50 text-green-400 border border-green-800',
+    'MEDIUM': 'bg-blue-900/50 text-blue-400 border border-blue-800',
+    'HIGH': 'bg-orange-900/50 text-orange-400 border border-orange-800',
+    'URGENT': 'bg-red-900/50 text-red-400 border border-red-800'
 };
 
 const JiraBoard = () => {
@@ -86,7 +86,6 @@ const JiraBoard = () => {
         loadProjectBoard();
     }, [loadProjectBoard]);
 
-    // Filter and search issues
     const filteredIssues = useMemo(() => {
         return issues.filter(issue => {
             const matchesPriority = !filterPriority || issue.priority === filterPriority;
@@ -136,28 +135,23 @@ const JiraBoard = () => {
         const trimmedTitle = issueForm.title.trim();
         const trimmedDescription = issueForm.description.trim();
 
-        // Check if title is empty
         if (!trimmedTitle) {
             setMessage({ type: 'error', text: 'Title cannot be empty.' });
             return false;
         }
 
-        // Check if description is empty
         if (!trimmedDescription) {
             setMessage({ type: 'error', text: 'Description cannot be empty.' });
             return false;
         }
 
-        // Check if dueDate is provided
         if (!issueForm.dueDate) {
             setMessage({ type: 'error', text: 'Due date is required.' });
             return false;
         }
 
-        // Check if dueDate is a future date
         const selectedDate = new Date(issueForm.dueDate);
         const today = new Date();
-        // Set time to midnight for both dates to compare only the date part
         today.setHours(0, 0, 0, 0);
         selectedDate.setHours(0, 0, 0, 0);
 
@@ -175,7 +169,6 @@ const JiraBoard = () => {
 
         setMessage({ type: '', text: '' });
 
-        // Validate form before submission
         if (!validateIssueForm()) {
             return;
         }
@@ -268,25 +261,25 @@ const JiraBoard = () => {
     const stats = getIssueStats();
 
     return (
-        <div className="min-h-screen bg-gray-50 p-6">
+        <div className="min-h-screen bg-[#121418] p-6 text-gray-200">
             <div className="max-w-7xl mx-auto">
                 {/* Header */}
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
                     <div>
-                        <h1 className="text-3xl font-bold text-gray-900">📊 Jira Board</h1>
-                        <p className="text-gray-500 mt-1">Advanced project management with filtering and analytics.</p>
+                        <h1 className="text-3xl font-bold text-white">📊 Jira Board</h1>
+                        <p className="text-gray-400 mt-1">Advanced project management with filtering and analytics.</p>
                     </div>
 
                     <div className="flex gap-3">
                         <button
                             onClick={() => navigate(`/groups/${groupId}/project`)}
-                            className="bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-lg font-semibold transition"
+                            className="bg-transparent border border-gray-600 hover:bg-gray-800 text-gray-300 px-4 py-2 rounded-lg font-semibold transition"
                         >
                             Simple Board
                         </button>
                         <button
                             onClick={() => navigate(-1)}
-                            className="bg-gray-700 hover:bg-gray-800 text-white px-4 py-2 rounded-lg font-semibold transition"
+                            className="bg-[#242933] hover:bg-[#2d3340] border border-gray-700 text-white px-4 py-2 rounded-lg font-semibold transition"
                         >
                             Back
                         </button>
@@ -295,10 +288,10 @@ const JiraBoard = () => {
 
                 {message.text && (
                     <div
-                        className={`mb-6 p-4 rounded-lg text-sm font-medium ${
+                        className={`mb-6 p-4 rounded-lg text-sm font-medium border ${
                             message.type === 'success'
-                                ? 'bg-green-50 text-green-700 border border-green-200'
-                                : 'bg-red-50 text-red-700 border border-red-200'
+                                ? 'bg-green-900/30 text-green-400 border-green-800'
+                                : 'bg-red-900/30 text-red-400 border-red-800'
                         }`}
                     >
                         {message.text}
@@ -306,13 +299,13 @@ const JiraBoard = () => {
                 )}
 
                 {loading ? (
-                    <div className="bg-white rounded-2xl shadow border border-gray-100 p-6">
-                        <p className="text-gray-500">Loading Jira board...</p>
+                    <div className="bg-[#1c1f26] rounded-2xl shadow-lg border border-gray-800 p-6">
+                        <p className="text-gray-400">Loading Jira board...</p>
                     </div>
                 ) : !project ? (
-                    <div className="bg-white rounded-2xl shadow border border-gray-100 p-6">
-                        <h2 className="text-2xl font-bold text-gray-900 mb-2">Create Project Workspace</h2>
-                        <p className="text-gray-500 mb-4">
+                    <div className="bg-[#1c1f26] rounded-2xl shadow-lg border border-gray-800 p-6">
+                        <h2 className="text-2xl font-bold text-white mb-2">Create Project Workspace</h2>
+                        <p className="text-gray-400 mb-4">
                             No project exists for this group yet. Create one to start managing issues.
                         </p>
                         <form onSubmit={handleCreateProject} className="flex flex-col md:flex-row gap-3">
@@ -321,7 +314,7 @@ const JiraBoard = () => {
                                 value={createProjectName}
                                 onChange={(e) => setCreateProjectName(e.target.value)}
                                 placeholder="Project name (optional)"
-                                className="flex-1 border border-gray-300 rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-500"
+                                className="flex-1 bg-[#121418] border border-gray-700 text-white rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-500"
                             />
                             <button
                                 type="submit"
@@ -335,22 +328,22 @@ const JiraBoard = () => {
                     <>
                         {/* Project Info & Stats */}
                         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                            <div className="bg-white rounded-2xl shadow border border-gray-100 p-4">
-                                <p className="text-gray-500 text-sm font-semibold">PROJECT</p>
-                                <h3 className="text-lg font-bold text-gray-900 mt-1">{project.name}</h3>
-                                <p className="text-gray-600 text-xs mt-2">Group: {project.groupName}</p>
+                            <div className="bg-[#1c1f26] rounded-2xl shadow-lg border border-gray-800 p-4">
+                                <p className="text-gray-400 text-sm font-semibold">PROJECT</p>
+                                <h3 className="text-lg font-bold text-white mt-1">{project.name}</h3>
+                                <p className="text-gray-500 text-xs mt-2">Group: {project.groupName}</p>
                             </div>
-                            <div className="bg-white rounded-2xl shadow border border-gray-100 p-4">
-                                <p className="text-gray-500 text-sm font-semibold">TOTAL ISSUES</p>
-                                <h3 className="text-2xl font-bold text-gray-900 mt-1">{stats.total}</h3>
+                            <div className="bg-[#1c1f26] rounded-2xl shadow-lg border border-gray-800 p-4">
+                                <p className="text-gray-400 text-sm font-semibold">TOTAL ISSUES</p>
+                                <h3 className="text-2xl font-bold text-white mt-1">{stats.total}</h3>
                             </div>
-                            <div className="bg-white rounded-2xl shadow border border-gray-100 p-4">
-                                <p className="text-gray-500 text-sm font-semibold">PROGRESS</p>
+                            <div className="bg-[#1c1f26] rounded-2xl shadow-lg border border-gray-800 p-4">
+                                <p className="text-gray-400 text-sm font-semibold">PROGRESS</p>
                                 <div className="mt-2">
                                     <div className="flex justify-between items-end">
-                                        <h3 className="text-2xl font-bold text-green-600">{getProgressPercentage()}%</h3>
+                                        <h3 className="text-2xl font-bold text-green-500">{getProgressPercentage()}%</h3>
                                     </div>
-                                    <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
+                                    <div className="w-full bg-gray-700 rounded-full h-2 mt-2">
                                         <div
                                             className="bg-green-500 h-2 rounded-full transition-all"
                                             style={{ width: `${getProgressPercentage()}%` }}
@@ -358,31 +351,31 @@ const JiraBoard = () => {
                                     </div>
                                 </div>
                             </div>
-                            <div className="bg-white rounded-2xl shadow border border-gray-100 p-4">
-                                <p className="text-gray-500 text-sm font-semibold">STATUS BREAKDOWN</p>
+                            <div className="bg-[#1c1f26] rounded-2xl shadow-lg border border-gray-800 p-4">
+                                <p className="text-gray-400 text-sm font-semibold">STATUS BREAKDOWN</p>
                                 <div className="mt-2 space-y-1 text-xs">
-                                    <p className="text-blue-600">📌 {stats.todo} To Do</p>
-                                    <p className="text-orange-600">⚡ {stats.inProgress} In Progress</p>
-                                    <p className="text-yellow-600">👀 {stats.review} Review</p>
-                                    <p className="text-green-600">✅ {stats.done} Done</p>
+                                    <p className="text-blue-400">📌 {stats.todo} To Do</p>
+                                    <p className="text-orange-400">⚡ {stats.inProgress} In Progress</p>
+                                    <p className="text-yellow-400">👀 {stats.review} Review</p>
+                                    <p className="text-green-400">✅ {stats.done} Done</p>
                                 </div>
                             </div>
                         </div>
 
                         {/* Filters */}
-                        <div className="bg-white rounded-2xl shadow border border-gray-100 p-4 mb-6">
+                        <div className="bg-[#1c1f26] rounded-2xl shadow-lg border border-gray-800 p-4 mb-6">
                             <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                                 <input
                                     type="text"
                                     placeholder="Search issues..."
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
-                                    className="border border-gray-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                                    className="bg-[#121418] border border-gray-700 text-white rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-500"
                                 />
                                 <select
                                     value={filterPriority}
                                     onChange={(e) => setFilterPriority(e.target.value)}
-                                    className="border border-gray-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                                    className="bg-[#121418] border border-gray-700 text-white rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
                                 >
                                     <option value="">All Priorities</option>
                                     {PRIORITIES.map((p) => (
@@ -392,7 +385,7 @@ const JiraBoard = () => {
                                 <select
                                     value={filterType}
                                     onChange={(e) => setFilterType(e.target.value)}
-                                    className="border border-gray-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                                    className="bg-[#121418] border border-gray-700 text-white rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
                                 >
                                     <option value="">All Types</option>
                                     {TYPES.map((t) => (
@@ -402,7 +395,7 @@ const JiraBoard = () => {
                                 <select
                                     value={filterAssignee}
                                     onChange={(e) => setFilterAssignee(e.target.value)}
-                                    className="border border-gray-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                                    className="bg-[#121418] border border-gray-700 text-white rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
                                 >
                                     <option value="">All Assignees</option>
                                     {members.map((member) => (
@@ -416,7 +409,7 @@ const JiraBoard = () => {
                                         setFilterAssignee('');
                                         setSearchQuery('');
                                     }}
-                                    className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-2 rounded-lg font-semibold text-sm transition"
+                                    className="bg-[#242933] hover:bg-[#2d3340] border border-gray-700 text-gray-300 px-3 py-2 rounded-lg font-semibold text-sm transition"
                                 >
                                     Clear Filters
                                 </button>
@@ -439,36 +432,36 @@ const JiraBoard = () => {
 
                         {/* Create Issue Form */}
                         {showCreateForm && (
-                            <div className="bg-white rounded-2xl shadow border border-gray-100 p-6 mb-6">
-                                <h3 className="text-xl font-bold text-gray-900 mb-4">Create New Issue</h3>
-                                <p className="text-sm text-gray-500 mb-4">Fields marked with <span className="text-red-600">*</span> are required</p>
+                            <div className="bg-[#1c1f26] rounded-2xl shadow-lg border border-gray-800 p-6 mb-6">
+                                <h3 className="text-xl font-bold text-white mb-4">Create New Issue</h3>
+                                <p className="text-sm text-gray-400 mb-4">Fields marked with <span className="text-red-500">*</span> are required</p>
                                 <form onSubmit={handleCreateIssue} className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div className="md:col-span-2">
-                                        <label className="block text-sm font-semibold text-gray-700 mb-1">Title <span className="text-red-600">*</span></label>
+                                        <label className="block text-sm font-semibold text-gray-300 mb-1">Title <span className="text-red-500">*</span></label>
                                         <input
                                             type="text"
                                             value={issueForm.title}
                                             onChange={(e) => setIssueForm((prev) => ({ ...prev, title: e.target.value }))}
                                             placeholder="Enter issue title"
-                                            className="w-full border border-gray-300 rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-500"
+                                            className="w-full bg-[#121418] border border-gray-700 text-white rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-500"
                                         />
                                     </div>
                                     <div className="md:col-span-2">
-                                        <label className="block text-sm font-semibold text-gray-700 mb-1">Description <span className="text-red-600">*</span></label>
+                                        <label className="block text-sm font-semibold text-gray-300 mb-1">Description <span className="text-red-500">*</span></label>
                                         <textarea
                                             value={issueForm.description}
                                             onChange={(e) => setIssueForm((prev) => ({ ...prev, description: e.target.value }))}
                                             placeholder="Enter issue description"
-                                            className="w-full border border-gray-300 rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-500"
+                                            className="w-full bg-[#121418] border border-gray-700 text-white rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-500"
                                             rows={3}
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-semibold text-gray-700 mb-1">Type</label>
+                                        <label className="block text-sm font-semibold text-gray-300 mb-1">Type</label>
                                         <select
                                             value={issueForm.type}
                                             onChange={(e) => setIssueForm((prev) => ({ ...prev, type: e.target.value }))}
-                                            className="w-full border border-gray-300 rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-500"
+                                            className="w-full bg-[#121418] border border-gray-700 text-white rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-500"
                                         >
                                             {TYPES.map((type) => (
                                                 <option key={type} value={type}>{type}</option>
@@ -476,11 +469,11 @@ const JiraBoard = () => {
                                         </select>
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-semibold text-gray-700 mb-1">Priority</label>
+                                        <label className="block text-sm font-semibold text-gray-300 mb-1">Priority</label>
                                         <select
                                             value={issueForm.priority}
                                             onChange={(e) => setIssueForm((prev) => ({ ...prev, priority: e.target.value }))}
-                                            className="w-full border border-gray-300 rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-500"
+                                            className="w-full bg-[#121418] border border-gray-700 text-white rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-500"
                                         >
                                             {PRIORITIES.map((priority) => (
                                                 <option key={priority} value={priority}>{priority}</option>
@@ -488,33 +481,33 @@ const JiraBoard = () => {
                                         </select>
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-semibold text-gray-700 mb-1">Due Date</label>
+                                        <label className="block text-sm font-semibold text-gray-300 mb-1">Due Date</label>
                                         <input
                                             type="date"
                                             value={issueForm.dueDate}
                                             onChange={(e) => setIssueForm((prev) => ({ ...prev, dueDate: e.target.value }))}
-                                            className="w-full border border-gray-300 rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-500"
+                                            className="w-full bg-[#121418] border border-gray-700 text-white rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-500 style-color-scheme-dark"
                                         />
                                         {issueForm.dueDate && (
                                             <p className="text-xs text-gray-500 mt-1">Must be a future date</p>
                                         )}
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-semibold text-gray-700 mb-1">Story Points</label>
+                                        <label className="block text-sm font-semibold text-gray-300 mb-1">Story Points</label>
                                         <input
                                             type="number"
                                             placeholder="Optional"
                                             value={issueForm.storyPoints}
                                             onChange={(e) => setIssueForm((prev) => ({ ...prev, storyPoints: e.target.value }))}
-                                            className="w-full border border-gray-300 rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-500"
+                                            className="w-full bg-[#121418] border border-gray-700 text-white rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-500"
                                         />
                                     </div>
                                     <div className="md:col-span-2">
-                                        <label className="block text-sm font-semibold text-gray-700 mb-1">Assign to</label>
+                                        <label className="block text-sm font-semibold text-gray-300 mb-1">Assign to</label>
                                         <select
                                             value={issueForm.assigneeId}
                                             onChange={(e) => setIssueForm((prev) => ({ ...prev, assigneeId: e.target.value }))}
-                                            className="w-full border border-gray-300 rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-500"
+                                            className="w-full bg-[#121418] border border-gray-700 text-white rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-500"
                                         >
                                             <option value="">Select a team member (Optional)</option>
                                             {members.map((member) => (
@@ -528,7 +521,7 @@ const JiraBoard = () => {
                                             disabled={!issueForm.title.trim() || !issueForm.description.trim() || !issueForm.dueDate || (issueForm.dueDate && new Date(issueForm.dueDate) < new Date().setHours(0,0,0,0) && new Date(issueForm.dueDate).setHours(0,0,0,0) < new Date().setHours(0,0,0,0))}
                                             className={`font-semibold px-6 py-3 rounded-lg transition ${
                                                 !issueForm.title.trim() || !issueForm.description.trim() || !issueForm.dueDate
-                                                    ? 'bg-gray-400 text-gray-600 cursor-not-allowed'
+                                                    ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
                                                     : 'bg-blue-600 hover:bg-blue-700 text-white'
                                             }`}
                                         >
@@ -537,7 +530,7 @@ const JiraBoard = () => {
                                         <button
                                             type="button"
                                             onClick={() => setShowCreateForm(false)}
-                                            className="bg-gray-300 hover:bg-gray-400 text-gray-700 font-semibold px-6 py-3 rounded-lg transition"
+                                            className="bg-[#242933] hover:bg-[#2d3340] border border-gray-700 text-gray-300 font-semibold px-6 py-3 rounded-lg transition"
                                         >
                                             Cancel
                                         </button>
@@ -549,10 +542,10 @@ const JiraBoard = () => {
                         {/* Kanban Board */}
                         <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
                             {STATUS_COLUMNS.map((column) => (
-                                <div key={column.key} className={`${column.color} rounded-2xl shadow border border-gray-200 p-4`}>
+                                <div key={column.key} className={`${column.color} rounded-2xl shadow border p-4`}>
                                     <div className="flex justify-between items-center mb-3">
-                                        <h4 className="text-lg font-bold text-gray-900">{column.label}</h4>
-                                        <span className="bg-white px-2 py-1 rounded text-xs font-bold text-gray-700 border border-gray-300">
+                                        <h4 className="text-lg font-bold text-white">{column.label}</h4>
+                                        <span className="bg-[#121418] px-2 py-1 rounded text-xs font-bold text-gray-400 border border-gray-700">
                                             {groupedIssues[column.key].length}
                                         </span>
                                     </div>
@@ -561,68 +554,46 @@ const JiraBoard = () => {
                                             <p className="text-sm text-gray-500">No issues</p>
                                         ) : (
                                             groupedIssues[column.key].map((issue) => (
-                                                <div key={issue.id} className={`${priorityColors[issue.priority]} border-2 rounded-xl p-3`}>
+                                                <div key={issue.id} className={`${priorityColors[issue.priority]} border rounded-xl p-3 shadow-sm`}>
                                                     <div className="flex justify-between items-start gap-2">
-                                                        <p className="text-xs font-bold text-blue-700 bg-blue-100 px-2 py-1 rounded">{issue.issueKey}</p>
+                                                        <p className="text-xs font-bold text-blue-400 bg-blue-900/40 border border-blue-800 px-2 py-1 rounded">{issue.issueKey}</p>
                                                         <span className={`text-xs font-semibold px-2 py-1 rounded ${priorityBadge[issue.priority]}`}>
                                                             {issue.priority}
                                                         </span>
                                                     </div>
                                                     <div className="flex items-center justify-between gap-2 mt-2">
-                                                        <h5 className="font-semibold text-gray-900">{issue.title}</h5>
+                                                        <h5 className="font-semibold text-gray-200">{issue.title}</h5>
                                                         <button
                                                             onClick={() => handleDeleteIssue(issue.id)}
-                                                            className="text-lg hover:opacity-70 transition flex-shrink-0"
+                                                            className="text-gray-400 hover:text-red-400 hover:opacity-100 transition flex-shrink-0"
                                                             title="Delete issue"
                                                         >
                                                             🗑️
                                                         </button>
                                                     </div>
                                                     {issue.description && (
-                                                        <p className="text-xs text-gray-600 mt-1 line-clamp-2">{issue.description}</p>
+                                                        <p className="text-xs text-gray-400 mt-1 line-clamp-2">{issue.description}</p>
                                                     )}
-                                                    <div className="flex gap-2 mt-2 flex-wrap">
-                                                        <span className="bg-white px-2 py-1 rounded text-xs font-semibold border border-gray-300">{issue.type}</span>
-                                                        {issue.storyPoints && (
-                                                            <span className="bg-purple-100 text-purple-700 px-2 py-1 rounded text-xs font-semibold">
-                                                                {issue.storyPoints}pts
-                                                            </span>
-                                                        )}
-                                                    </div>
-
-                                                    {issue.dueDate && (
-                                                        <p className="text-xs text-gray-500 mt-2">📅 {new Date(issue.dueDate).toLocaleDateString()}</p>
-                                                    )}
-
-                                                    <div className="mt-3 space-y-2">
+                                                    <div className="flex gap-2 mt-3 flex-wrap items-center">
                                                         <select
                                                             value={issue.status}
                                                             onChange={(e) => handleStatusChange(issue.id, e.target.value)}
-                                                            className="w-full border border-gray-300 rounded-lg p-2 text-xs font-semibold bg-white focus:ring-2 focus:ring-blue-500"
+                                                            className="text-xs bg-[#121418] border border-gray-700 text-gray-300 rounded p-1 outline-none focus:ring-2 focus:ring-blue-500"
                                                         >
-                                                            {STATUS_COLUMNS.map((statusColumn) => (
-                                                                <option key={statusColumn.key} value={statusColumn.key}>
-                                                                    {statusColumn.label}
-                                                                </option>
+                                                            {STATUS_COLUMNS.map((col) => (
+                                                                <option key={col.key} value={col.key}>{col.label}</option>
                                                             ))}
                                                         </select>
                                                         <select
                                                             value={issue.assignee?.id || ''}
                                                             onChange={(e) => handleAssigneeChange(issue.id, e.target.value)}
-                                                            className="w-full border border-gray-300 rounded-lg p-2 text-xs bg-white focus:ring-2 focus:ring-blue-500"
+                                                            className="text-xs bg-[#121418] border border-gray-700 text-gray-300 rounded p-1 outline-none focus:ring-2 focus:ring-blue-500"
                                                         >
                                                             <option value="">Unassigned</option>
                                                             {members.map((member) => (
-                                                                <option key={member.id} value={member.id}>
-                                                                    {member.fullName}
-                                                                </option>
+                                                                <option key={member.id} value={member.id}>{member.fullName}</option>
                                                             ))}
                                                         </select>
-                                                        {issue.assignee && (
-                                                            <div className="bg-white rounded p-2 text-xs border border-gray-300">
-                                                                👤 Assigned to: <strong>{issue.assignee.fullName}</strong>
-                                                            </div>
-                                                        )}
                                                     </div>
                                                 </div>
                                             ))
