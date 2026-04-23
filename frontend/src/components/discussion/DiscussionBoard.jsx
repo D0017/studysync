@@ -13,14 +13,16 @@ function formatDateTime(dateString) {
 export default function DiscussionBoard() {
   const storedUser = discussionService.getCurrentUser?.() || null;
 
-  const currentUserId =
-    storedUser?.email ||
+  const currentUserId = String(
     storedUser?.id ||
-    storedUser?.username ||
-    storedUser?.fullName ||
-    "guest";
+      storedUser?.email ||
+      storedUser?.username ||
+      storedUser?.fullName ||
+      "guest"
+  );
 
   const currentUserItNumber =
+    storedUser?.universityId ||
     storedUser?.itNumber ||
     storedUser?.studentId ||
     storedUser?.registrationNumber ||
@@ -40,13 +42,13 @@ export default function DiscussionBoard() {
   const [openComments, setOpenComments] = useState({});
   const [commentInputs, setCommentInputs] = useState({});
 
-  const loadPosts = useCallback(() => {
+  const loadPosts = useCallback(async () => {
     try {
-      const rawPosts = discussionService.getAllPosts?.() || [];
+      const rawPosts = await discussionService.getAllPosts?.();
 
-      const safePosts = rawPosts.map((post, index) => ({
+      const safePosts = (rawPosts || []).map((post, index) => ({
         id: post?.id || `post-${index}`,
-        authorId: post?.authorId || "unknown",
+        authorId: String(post?.authorId || "unknown"),
         authorName: post?.authorName || "StudySync User",
         authorRole: post?.authorRole || "STUDENT",
         authorItNumber:
@@ -87,15 +89,12 @@ export default function DiscussionBoard() {
   const handleFilesChange = (e) => {
     const selected = Array.from(e.target.files || []);
 
-    const valid = selected.filter((file) => {
-      const validType =
-        file.type.startsWith("image/") || file.type.startsWith("video/");
-      const validSize = file.size <= 2 * 1024 * 1024;
-      return validType && validSize;
-    });
+    const valid = selected.filter(
+      (file) => file.type.startsWith("image/") || file.type.startsWith("video/")
+    );
 
     if (selected.length !== valid.length) {
-      setError("Only image/video files under 2MB are allowed.");
+      setError("Only image/video files are allowed.");
     } else {
       setError("");
     }
@@ -129,10 +128,10 @@ export default function DiscussionBoard() {
       setFiles([]);
       setPanelFilter("home");
       setTab("all");
-      loadPosts();
+      await loadPosts();
     } catch (err) {
       console.error("Publish failed:", err);
-      setError("Could not publish. Try a smaller image or fewer files.");
+      setError("Could not publish. Please try again.");
     }
   };
 
@@ -144,11 +143,13 @@ export default function DiscussionBoard() {
     }
   };
 
-  const isAuthor = (post) => post.authorId === currentUserId;
+  const isAuthor = (post) => String(post.authorId) === currentUserId;
   const isResharedByMe = (post) => (post.reshares || []).includes(currentUserId);
   const isLikedByMe = (post) => (post.likes || []).includes(currentUserId);
   const isCommentedByMe = (post) =>
-    (post.comments || []).some((comment) => comment.authorId === currentUserId);
+    (post.comments || []).some(
+      (comment) => String(comment.authorId) === currentUserId
+    );
 
   const filteredPosts = (() => {
     let data = [...posts];
@@ -172,7 +173,7 @@ export default function DiscussionBoard() {
     }
 
     if (panelFilter === "profile") {
-      data = data.filter((post) => post.authorId === currentUserId);
+      data = data.filter((post) => String(post.authorId) === currentUserId);
     }
 
     if (panelFilter === "liked") {
@@ -200,12 +201,13 @@ export default function DiscussionBoard() {
     const seen = new Map();
 
     posts.forEach((post) => {
-      if (!seen.has(post.authorId) && post.authorId !== currentUserId) {
+      if (!seen.has(post.authorId) && String(post.authorId) !== currentUserId) {
         seen.set(post.authorId, {
           id: post.authorId,
           name: post.authorName,
           itNumber: post.authorItNumber,
-          followers: discussionService.getFollowedCountForUser?.(post.authorId) || 0,
+          followers:
+            discussionService.getFollowedCountForUser?.(post.authorId) || 0,
         });
       }
     });
@@ -227,19 +229,19 @@ export default function DiscussionBoard() {
     }));
   };
 
-  const handleLike = (postId) => {
+  const handleLike = async (postId) => {
     try {
-      discussionService.toggleLike?.(postId);
-      loadPosts();
+      await discussionService.toggleLike?.(postId);
+      await loadPosts();
     } catch (err) {
       console.error(err);
     }
   };
 
-  const handleReshare = (postId) => {
+  const handleReshare = async (postId) => {
     try {
-      discussionService.toggleReshare?.(postId);
-      loadPosts();
+      await discussionService.toggleReshare?.(postId);
+      await loadPosts();
       setPanelFilter("activity");
       setActivityFilter("reposted");
     } catch (err) {
@@ -254,12 +256,12 @@ export default function DiscussionBoard() {
     }));
   };
 
-  const handleAddComment = (postId) => {
+  const handleAddComment = async (postId) => {
     const text = commentInputs[postId] || "";
     if (!text.trim()) return;
 
     try {
-      discussionService.addComment?.(postId, text);
+      await discussionService.addComment?.(postId, text);
       setCommentInputs((prev) => ({
         ...prev,
         [postId]: "",
@@ -268,7 +270,7 @@ export default function DiscussionBoard() {
         ...prev,
         [postId]: true,
       }));
-      loadPosts();
+      await loadPosts();
       setPanelFilter("activity");
       setActivityFilter("commented");
     } catch (err) {
@@ -277,38 +279,38 @@ export default function DiscussionBoard() {
     }
   };
 
-  const handleToggleCommentSection = (postId, ownerCheck) => {
+  const handleToggleCommentSection = async (postId, ownerCheck) => {
     if (!ownerCheck) return;
 
     try {
-      discussionService.toggleComments?.(postId);
-      loadPosts();
+      await discussionService.toggleComments?.(postId);
+      await loadPosts();
     } catch (err) {
       console.error(err);
     }
   };
 
-  const handleDeletePost = (postId, ownerCheck) => {
+  const handleDeletePost = async (postId, ownerCheck) => {
     if (!ownerCheck) return;
 
     const ok = window.confirm("Are you sure you want to delete this post?");
     if (!ok) return;
 
     try {
-      discussionService.deletePost?.(postId);
-      loadPosts();
+      await discussionService.deletePost?.(postId);
+      await loadPosts();
     } catch (err) {
       console.error(err);
       setError("Could not delete post.");
     }
   };
 
-  const handlePinComment = (postId, commentId, ownerCheck) => {
+  const handlePinComment = async (postId, commentId, ownerCheck) => {
     if (!ownerCheck) return;
 
     try {
-      discussionService.pinComment?.(postId, commentId);
-      loadPosts();
+      await discussionService.pinComment?.(postId, commentId);
+      await loadPosts();
     } catch (err) {
       console.error(err);
     }
