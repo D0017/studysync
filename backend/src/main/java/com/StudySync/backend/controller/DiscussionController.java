@@ -124,4 +124,9 @@ public class DiscussionController {
                 discussionService.getCommentCount(postId)
         );
     }
+
+    @PutMapping("/posts/{postId}/toggle-comments")
+    public ResponseEntity<DiscussionPost> toggleComments(@PathVariable Long postId) {
+        return ResponseEntity.ok(discussionService.toggleComments(postId));
+    }
 }

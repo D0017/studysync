@@ -179,4 +179,16 @@ public class DiscussionService {
 
         return commentRepository.countByPost(post);
     }
+
+    // TOGGLE COMMENTS
+    public DiscussionPost toggleComments(Long postId) {
+
+        DiscussionPost post = postRepository.findById(postId)
+                .orElseThrow(() -> new RuntimeException("Post not found"));
+
+        post.setCommentsEnabled(!post.isCommentsEnabled());
+
+        return postRepository.save(post);
+    }
+
 }
