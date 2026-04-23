@@ -1,5 +1,6 @@
 package com.StudySync.backend.controller;
 
+import com.StudySync.backend.dto.DiscussionAttachmentResponse;
 import com.StudySync.backend.model.DiscussionAttachment;
 import com.StudySync.backend.model.DiscussionComment;
 import com.StudySync.backend.model.DiscussionPost;
@@ -10,6 +11,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.io.IOException;
 import java.util.List;
@@ -27,9 +29,9 @@ public class DiscussionController {
     public ResponseEntity<DiscussionPost> createPost(
             @RequestParam("content") String content,
             @RequestParam("userId") Long userId,
-            @RequestParam(value = "file", required = false) MultipartFile file
+            @RequestParam(value = "files", required = false) MultipartFile[] files
     ) throws IOException {
-        DiscussionPost savedPost = discussionService.createPost(content, userId, file);
+        DiscussionPost savedPost = discussionService.createPost(content, userId, files);
         return ResponseEntity.ok(savedPost);
     }
 
@@ -39,14 +41,37 @@ public class DiscussionController {
         return ResponseEntity.ok(discussionService.getAllPosts());
     }
 
+    // GET ATTACHMENTS OF POST
+    @GetMapping("/posts/{postId}/attachments")
+    public ResponseEntity<List<DiscussionAttachmentResponse>> getAttachments(@PathVariable Long postId) {
+        List<DiscussionAttachmentResponse> response = discussionService.getAttachmentsByPostId(postId)
+                .stream()
+                .map(attachment -> new DiscussionAttachmentResponse(
+                        attachment.getId(),
+                        attachment.getFileName(),
+                        attachment.getContentType(),
+                        attachment.getFileSize(),
+                        ServletUriComponentsBuilder.fromCurrentContextPath()
+                                .path("/api/discussions/attachments/")
+                                .path(String.valueOf(attachment.getId()))
+                                .path("/download")
+                                .toUriString()
+                ))
+                .toList();
+
+        return ResponseEntity.ok(response);
+    }
+
     // DOWNLOAD ATTACHMENT
-    @GetMapping("/posts/{postId}/attachment")
-    public ResponseEntity<byte[]> downloadAttachment(@PathVariable Long postId) {
-        DiscussionAttachment attachment = discussionService.getAttachmentByPostId(postId);
+    @GetMapping("/attachments/{attachmentId}/download")
+    public ResponseEntity<byte[]> downloadAttachment(@PathVariable Long attachmentId) {
+        DiscussionAttachment attachment = discussionService.getAttachmentById(attachmentId);
 
         return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION,
-                        "attachment; filename=\"" + attachment.getFileName() + "\"")
+                .header(
+                        HttpHeaders.CONTENT_DISPOSITION,
+                        "attachment; filename=\"" + attachment.getFileName() + "\""
+                )
                 .contentType(MediaType.parseMediaType(attachment.getContentType()))
                 .body(attachment.getData());
     }
@@ -91,7 +116,47 @@ public class DiscussionController {
         return ResponseEntity.ok(discussionService.getLikeCount(postId));
     }
 
-    // ========================= COMMENTS =========================
+    // CHECK IF USER LIKED
+    @GetMapping("/posts/{postId}/likes/check")
+    public ResponseEntity<Boolean> hasUserLiked(
+            @PathVariable Long postId,
+            @RequestParam("userId") Long userId
+    ) {
+        return ResponseEntity.ok(discussionService.hasUserLiked(postId, userId));
+    }
+
+    // RESHARE POST
+    @PostMapping("/posts/{postId}/reshare")
+    public ResponseEntity<String> resharePost(
+            @PathVariable Long postId,
+            @RequestParam("userId") Long userId
+    ) {
+        return ResponseEntity.ok(discussionService.resharePost(postId, userId));
+    }
+
+    // UNRESHARE POST
+    @DeleteMapping("/posts/{postId}/reshare")
+    public ResponseEntity<String> unresharePost(
+            @PathVariable Long postId,
+            @RequestParam("userId") Long userId
+    ) {
+        return ResponseEntity.ok(discussionService.unresharePost(postId, userId));
+    }
+
+    // GET RESHARE COUNT
+    @GetMapping("/posts/{postId}/reshares/count")
+    public ResponseEntity<Long> getReshareCount(@PathVariable Long postId) {
+        return ResponseEntity.ok(discussionService.getReshareCount(postId));
+    }
+
+    // CHECK IF USER RESHARED
+    @GetMapping("/posts/{postId}/reshares/check")
+    public ResponseEntity<Boolean> hasUserReshared(
+            @PathVariable Long postId,
+            @RequestParam("userId") Long userId
+    ) {
+        return ResponseEntity.ok(discussionService.hasUserReshared(postId, userId));
+    }
 
     // ADD COMMENT
     @PostMapping("/posts/{postId}/comments")
@@ -125,11 +190,13 @@ public class DiscussionController {
         );
     }
 
+    // TOGGLE COMMENTS
     @PutMapping("/posts/{postId}/toggle-comments")
     public ResponseEntity<DiscussionPost> toggleComments(@PathVariable Long postId) {
         return ResponseEntity.ok(discussionService.toggleComments(postId));
     }
 
+    // PIN COMMENT
     @PutMapping("/comments/{commentId}/pin")
     public ResponseEntity<DiscussionComment> pinComment(@PathVariable Long commentId) {
         return ResponseEntity.ok(discussionService.pinComment(commentId));

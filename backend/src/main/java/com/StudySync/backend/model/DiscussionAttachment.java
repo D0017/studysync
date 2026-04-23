@@ -1,5 +1,6 @@
 package com.StudySync.backend.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -27,7 +28,8 @@ public class DiscussionAttachment {
     @Column(nullable = false, columnDefinition = "LONGBLOB")
     private byte[] data;
 
-    @OneToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "post_id", nullable = false, unique = true)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "post_id", nullable = false)
+    @JsonIgnore
     private DiscussionPost post;
 }

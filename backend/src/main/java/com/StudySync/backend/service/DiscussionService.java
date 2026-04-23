@@ -4,11 +4,13 @@ import com.StudySync.backend.model.DiscussionAttachment;
 import com.StudySync.backend.model.DiscussionComment;
 import com.StudySync.backend.model.DiscussionLike;
 import com.StudySync.backend.model.DiscussionPost;
+import com.StudySync.backend.model.DiscussionReshare;
 import com.StudySync.backend.model.User;
 import com.StudySync.backend.repository.DiscussionAttachmentRepository;
 import com.StudySync.backend.repository.DiscussionCommentRepository;
 import com.StudySync.backend.repository.DiscussionLikeRepository;
 import com.StudySync.backend.repository.DiscussionPostRepository;
+import com.StudySync.backend.repository.DiscussionReshareRepository;
 import com.StudySync.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -26,9 +28,10 @@ public class DiscussionService {
     private final UserRepository userRepository;
     private final DiscussionLikeRepository likeRepository;
     private final DiscussionCommentRepository commentRepository;
+    private final DiscussionReshareRepository reshareRepository;
 
     // CREATE POST
-    public DiscussionPost createPost(String content, Long userId, MultipartFile file) throws IOException {
+    public DiscussionPost createPost(String content, Long userId, MultipartFile[] files) throws IOException {
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
@@ -39,15 +42,19 @@ public class DiscussionService {
 
         DiscussionPost savedPost = postRepository.save(post);
 
-        if (file != null && !file.isEmpty()) {
-            DiscussionAttachment attachment = new DiscussionAttachment();
-            attachment.setFileName(file.getOriginalFilename());
-            attachment.setContentType(file.getContentType());
-            attachment.setFileSize(file.getSize());
-            attachment.setData(file.getBytes());
-            attachment.setPost(savedPost);
+        if (files != null) {
+            for (MultipartFile file : files) {
+                if (file != null && !file.isEmpty()) {
+                    DiscussionAttachment attachment = new DiscussionAttachment();
+                    attachment.setFileName(file.getOriginalFilename());
+                    attachment.setContentType(file.getContentType());
+                    attachment.setFileSize(file.getSize());
+                    attachment.setData(file.getBytes());
+                    attachment.setPost(savedPost);
 
-            attachmentRepository.save(attachment);
+                    attachmentRepository.save(attachment);
+                }
+            }
         }
 
         return savedPost;
@@ -58,13 +65,14 @@ public class DiscussionService {
         return postRepository.findAllByOrderByCreatedAtDesc();
     }
 
-    // GET ATTACHMENT BY POST
-    public DiscussionAttachment getAttachmentByPostId(Long postId) {
+    // GET ATTACHMENTS OF A POST
+    public List<DiscussionAttachment> getAttachmentsByPostId(Long postId) {
+        return attachmentRepository.findByPostIdOrderByIdAsc(postId);
+    }
 
-        DiscussionPost post = postRepository.findById(postId)
-                .orElseThrow(() -> new RuntimeException("Post not found"));
-
-        return attachmentRepository.findByPost(post)
+    // GET ATTACHMENT BY ID
+    public DiscussionAttachment getAttachmentById(Long attachmentId) {
+        return attachmentRepository.findById(attachmentId)
                 .orElseThrow(() -> new RuntimeException("Attachment not found"));
     }
 
@@ -85,8 +93,10 @@ public class DiscussionService {
         DiscussionPost post = postRepository.findById(postId)
                 .orElseThrow(() -> new RuntimeException("Post not found"));
 
-        attachmentRepository.findByPost(post)
-                .ifPresent(attachmentRepository::delete);
+        attachmentRepository.deleteByPost(post);
+        likeRepository.deleteByPost(post);
+        reshareRepository.deleteByPost(post);
+        commentRepository.deleteByPost(post);
 
         postRepository.delete(post);
     }
@@ -100,7 +110,7 @@ public class DiscussionService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        boolean alreadyLiked = likeRepository.findByPostAndUser(post, user).isPresent();
+        boolean alreadyLiked = likeRepository.existsByPostAndUser(post, user);
 
         if (alreadyLiked) {
             return "User already liked this post";
@@ -139,6 +149,78 @@ public class DiscussionService {
                 .orElseThrow(() -> new RuntimeException("Post not found"));
 
         return likeRepository.countByPost(post);
+    }
+
+    // CHECK IF USER LIKED
+    public boolean hasUserLiked(Long postId, Long userId) {
+        DiscussionPost post = postRepository.findById(postId)
+                .orElseThrow(() -> new RuntimeException("Post not found"));
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        return likeRepository.existsByPostAndUser(post, user);
+    }
+
+    // RESHARE POST
+    public String resharePost(Long postId, Long userId) {
+
+        DiscussionPost post = postRepository.findById(postId)
+                .orElseThrow(() -> new RuntimeException("Post not found"));
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        boolean alreadyReshared = reshareRepository.existsByPostAndUser(post, user);
+
+        if (alreadyReshared) {
+            return "User already reshared this post";
+        }
+
+        DiscussionReshare reshare = new DiscussionReshare();
+        reshare.setPost(post);
+        reshare.setUser(user);
+
+        reshareRepository.save(reshare);
+
+        return "Post reshared successfully";
+    }
+
+    // UNRESHARE POST
+    public String unresharePost(Long postId, Long userId) {
+
+        DiscussionPost post = postRepository.findById(postId)
+                .orElseThrow(() -> new RuntimeException("Post not found"));
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        DiscussionReshare reshare = reshareRepository.findByPostAndUser(post, user)
+                .orElseThrow(() -> new RuntimeException("Reshare not found"));
+
+        reshareRepository.delete(reshare);
+
+        return "Post unreshared successfully";
+    }
+
+    // GET RESHARE COUNT
+    public long getReshareCount(Long postId) {
+
+        DiscussionPost post = postRepository.findById(postId)
+                .orElseThrow(() -> new RuntimeException("Post not found"));
+
+        return reshareRepository.countByPost(post);
+    }
+
+    // CHECK IF USER RESHARED
+    public boolean hasUserReshared(Long postId, Long userId) {
+        DiscussionPost post = postRepository.findById(postId)
+                .orElseThrow(() -> new RuntimeException("Post not found"));
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        return reshareRepository.existsByPostAndUser(post, user);
     }
 
     // ADD COMMENT
@@ -201,7 +283,6 @@ public class DiscussionService {
 
         List<DiscussionComment> comments = commentRepository.findByPostOrderByPinnedDescCreatedAtAsc(post);
 
-        // unpin any previously pinned comment in the same post
         for (DiscussionComment comment : comments) {
             if (comment.isPinned()) {
                 comment.setPinned(false);
@@ -212,5 +293,4 @@ public class DiscussionService {
         selectedComment.setPinned(true);
         return commentRepository.save(selectedComment);
     }
-
 }

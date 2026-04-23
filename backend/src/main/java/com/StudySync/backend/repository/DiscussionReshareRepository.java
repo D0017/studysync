@@ -1,15 +1,15 @@
 package com.StudySync.backend.repository;
 
-import com.StudySync.backend.model.DiscussionLike;
 import com.StudySync.backend.model.DiscussionPost;
+import com.StudySync.backend.model.DiscussionReshare;
 import com.StudySync.backend.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;
 
-public interface DiscussionLikeRepository extends JpaRepository<DiscussionLike, Long> {
+public interface DiscussionReshareRepository extends JpaRepository<DiscussionReshare, Long> {
 
-    Optional<DiscussionLike> findByPostAndUser(DiscussionPost post, User user);
+    Optional<DiscussionReshare> findByPostAndUser(DiscussionPost post, User user);
 
     boolean existsByPostAndUser(DiscussionPost post, User user);
 

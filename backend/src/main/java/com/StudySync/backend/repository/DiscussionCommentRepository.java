@@ -11,4 +11,6 @@ public interface DiscussionCommentRepository extends JpaRepository<DiscussionCom
     List<DiscussionComment> findByPostOrderByPinnedDescCreatedAtAsc(DiscussionPost post);
 
     long countByPost(DiscussionPost post);
+
+    void deleteByPost(DiscussionPost post);
 }
