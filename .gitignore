@@ -18,6 +18,7 @@ backend/HELP.md
 *.log
 hs_err_pid*
 
+
 # --- Frontend (React / Vite) ---
 frontend/node_modules/
 frontend/dist/
@@ -29,12 +30,16 @@ yarn-debug.log*
 yarn-error.log*
 
 # --- Security & Environment ---
-
 **/.env
 **/.env.local
 **/.env.development.local
 **/.env.test.local
 **/.env.production.local
+!**/.env.example
+
+# --- Local uploads / generated files ---
+uploads/
+backend/uploads/
 
 # --- Package Files ---
 *.jar
